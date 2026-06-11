@@ -35,17 +35,19 @@ def init_db():
             avdelning  TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS protocols (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            maskin_nr     TEXT NOT NULL,
-            datum         TEXT,
-            type          TEXT,
-            kund          TEXT,
-            anlaggning    TEXT,
-            tekniker      TEXT,
-            modell        TEXT,
-            items_json    TEXT,
-            saved_at      TEXT,
-            resolved_json TEXT DEFAULT '{}'
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            maskin_nr        TEXT NOT NULL,
+            datum            TEXT,
+            type             TEXT,
+            kund             TEXT,
+            anlaggning       TEXT,
+            tekniker         TEXT,
+            modell           TEXT,
+            items_json       TEXT,
+            saved_at         TEXT,
+            resolved_json    TEXT DEFAULT '{}',
+            workflow_status  TEXT DEFAULT 'inkommen',
+            workflow_log     TEXT DEFAULT '[]'
         );
         CREATE INDEX IF NOT EXISTS idx_protocols_maskin ON protocols(maskin_nr);
         CREATE TABLE IF NOT EXISTS users (
@@ -199,7 +201,10 @@ def recent_protocols():
     for r in rows:
         d = dict(r)
         d['items']    = json.loads(d['items_json'] or '[]')
-        d['resolved'] = json.loads(d.get('resolved_json') or '{}')
+        d['resolved']      = json.loads(d.get('resolved_json') or '{}')
+        d['workflow_log']  = json.loads(d.get('workflow_log') or '[]')
+        if 'workflow_status' not in d or not d['workflow_status']:
+            d['workflow_status'] = 'inkommen'
         del d['items_json'], d['resolved_json']
         result.append(d)
     return jsonify(result)
@@ -242,6 +247,40 @@ def resolve_item(protocol_id):
         db.execute('UPDATE protocols SET resolved_json=? WHERE id=?',
                    (json.dumps(resolved, ensure_ascii=False), protocol_id))
     return jsonify({'resolved': resolved})
+
+# ── Workflow ──────────────────────────────────────────────────
+
+WORKFLOW_STEPS = ['inkommen', 'granskad', 'atgard', 'avslutad']
+WORKFLOW_LABELS = {
+    'inkommen': 'Inkommen',
+    'granskad': 'Granskad',
+    'atgard':   'Åtgärd beslutad',
+    'avslutad': 'Avslutad',
+}
+
+@app.route('/api/protocols/<int:protocol_id>/workflow', methods=['PATCH'])
+def update_workflow(protocol_id):
+    data   = request.get_json()
+    status = data.get('status')
+    note   = data.get('note', '').strip()
+    user   = session.get('user', {})
+    if status not in WORKFLOW_STEPS:
+        return jsonify({'error': 'Ogiltigt status'}), 400
+    with get_db() as db:
+        row = db.execute('SELECT workflow_log FROM protocols WHERE id=?', (protocol_id,)).fetchone()
+        if not row:
+            return jsonify({'error': 'Protokoll ej hittat'}), 404
+        log = json.loads(row['workflow_log'] or '[]')
+        log.append({
+            'status': status,
+            'label':  WORKFLOW_LABELS[status],
+            'by':     user.get('name', 'Okänd'),
+            'at':     datetime.now().strftime('%Y-%m-%d %H:%M'),
+            'note':   note,
+        })
+        db.execute('UPDATE protocols SET workflow_status=?, workflow_log=? WHERE id=?',
+                   (status, json.dumps(log, ensure_ascii=False), protocol_id))
+    return jsonify({'workflow_status': status, 'workflow_log': log})
 
 @app.route('/api/protocols', methods=['POST'])
 def save_protocol():

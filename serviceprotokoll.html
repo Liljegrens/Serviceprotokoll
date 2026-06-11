@@ -94,6 +94,54 @@
   .recent-badges { display: flex; gap: 5px; flex-shrink: 0; }
   .recent-empty { color: rgba(255,255,255,0.45); font-size: 13px; font-style: italic; padding: 8px 0; }
 
+  /* workflow badges */
+  .wf-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px;
+    white-space: nowrap;
+  }
+  .wf-inkommen  { background: #fff3e0; color: #e65100; }
+  .wf-granskad  { background: #e3f2fd; color: #1565c0; }
+  .wf-atgard    { background: #f3e5f5; color: #6a1b9a; }
+  .wf-avslutad  { background: var(--ok-bg); color: var(--ok); }
+
+  /* workflow panel in modal */
+  .workflow-panel {
+    border-top: 1px solid #f0f0f0; margin-top: 16px; padding-top: 14px;
+  }
+  .workflow-steps {
+    display: flex; gap: 0; margin-bottom: 14px; border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .wf-step {
+    flex: 1; padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 700;
+    color: #aaa; background: #f9f9f9; cursor: pointer; transition: all 0.15s;
+    border-right: 1px solid var(--border); line-height: 1.3;
+  }
+  .wf-step:last-child { border-right: none; }
+  .wf-step.active { background: var(--brand); color: #fff; }
+  .wf-step.done   { background: var(--ok-bg); color: var(--ok); }
+  .wf-step.clickable:hover { background: #e8eef3; color: var(--brand); }
+  .wf-note-row { display: flex; gap: 8px; align-items: center; }
+  .wf-note-input {
+    flex: 1; border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .wf-note-input:focus { outline: none; border-color: var(--brand); }
+  .wf-save-btn {
+    padding: 7px 16px; background: var(--brand); color: #fff; border: none;
+    border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
+    white-space: nowrap;
+  }
+  .wf-save-btn:hover { background: var(--brand-light); }
+  .wf-log { margin-top: 12px; }
+  .wf-log-item {
+    font-size: 12px; padding: 6px 10px; border-radius: 6px;
+    background: #f5f7f9; margin-bottom: 5px; display: flex; gap: 8px; align-items: baseline;
+  }
+  .wf-log-label { font-weight: 700; color: var(--brand); }
+  .wf-log-by    { color: var(--gray); }
+  .wf-log-note  { color: #444; font-style: italic; flex: 1; }
+
   .register-bar {
     background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
     border-radius: 10px; padding: 14px 20px; margin-bottom: 32px;
@@ -291,8 +339,17 @@
     border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
     cursor: pointer; margin-top: 16px; transition: background 0.15s;
   }
+  /* overridden when inside .action-btns */
+  .action-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .save-btn { flex: 1; padding: 14px; background: var(--brand); color: #fff;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s; margin-top: 0; }
   .save-btn:hover { background: var(--brand-light); }
   .save-btn:disabled { background: #90a4ae; cursor: default; }
+  .email-btn { flex: 1; padding: 14px; background: #fff; color: var(--brand);
+    border: 2px solid var(--brand); border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; }
+  .email-btn:hover { background: var(--bg); }
   .save-confirm { display: none; text-align: center; font-weight: 600; font-size: 14px; margin-top: 10px; }
   .save-confirm.visible { display: block; }
   .save-confirm.ok-msg { color: var(--ok); }
@@ -548,7 +605,10 @@
         <div class="stat-box akut"><div class="num" id="cnt-akut">0</div><div class="lbl">Akut</div></div>
       </div>
       <div class="summary-notes" id="summary-notes"></div>
-      <button class="save-btn" id="save-btn" onclick="saveProtocol()">💾 Spara protokoll</button>
+      <div class="action-btns">
+        <button class="save-btn" id="save-btn" onclick="saveProtocol()">💾 Spara protokoll</button>
+        <button class="email-btn" id="email-btn" onclick="sendEmail()">📧 Skicka via e-post</button>
+      </div>
       <div class="save-confirm" id="save-confirm"></div>
     </div>
   </div>
@@ -742,7 +802,7 @@ async function loadRecentProtocols() {
         <div class="recent-badges">
           ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
           ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
-          ${openIssues === 0 && (s.akut + s.bevaka) > 0 ? `<span class="badge ok">✓ Klart</span>` : ''}
+          <span class="wf-badge wf-${rec.workflow_status||'inkommen'}">${wfLabel(rec.workflow_status)}</span>
         </div>`;
       div.onclick = () => openHistoryModal(rec);
       list.appendChild(div);
@@ -1010,6 +1070,7 @@ function renderModalBody(rec) {
     });
     html += '</div>';
   }
+  html += renderWorkflowPanel(rec);
   document.getElementById('modal-body').innerHTML = html;
 }
 
@@ -1027,6 +1088,83 @@ async function toggleResolved(protocolId, nr) {
     if (maskin) loadHistory(maskin);
   } catch(e) {
     alert('Kunde inte spara: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// WORKFLOW
+// ═══════════════════════════════════════════════════
+const WF_STEPS  = ['inkommen','granskad','atgard','avslutad'];
+const WF_LABELS = { inkommen:'Inkommen', granskad:'Granskad', atgard:'Åtgärd beslutad', avslutad:'Avslutad' };
+
+function wfLabel(s) { return WF_LABELS[s] || 'Inkommen'; }
+
+function renderWorkflowPanel(rec) {
+  const status  = rec.workflow_status || 'inkommen';
+  const log     = rec.workflow_log || [];
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const curIdx  = WF_STEPS.indexOf(status);
+  const nextStep = WF_STEPS[curIdx + 1];
+
+  let html = `<div class="workflow-panel">
+    <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--gray);margin-bottom:10px;font-weight:700;">Handläggning</h3>
+    <div class="workflow-steps">`;
+
+  WF_STEPS.forEach((step, i) => {
+    const isDone   = i < curIdx;
+    const isActive = i === curIdx;
+    const cls = isDone ? 'done' : isActive ? 'active' : '';
+    html += `<div class="wf-step ${cls}">${WF_LABELS[step]}</div>`;
+  });
+
+  html += `</div>`;
+
+  // Admin: nästa steg-knapp + notering
+  if (isAdmin && nextStep) {
+    html += `<div class="wf-note-row">
+      <input class="wf-note-input" id="wf-note-input" type="text"
+        placeholder="Notering (valfritt)..."
+        onkeydown="if(event.key==='Enter')advanceWorkflow(${rec.id},'${nextStep}')">
+      <button class="wf-save-btn" onclick="advanceWorkflow(${rec.id},'${nextStep}')">
+        → ${WF_LABELS[nextStep]}
+      </button>
+    </div>`;
+  } else if (status === 'avslutad') {
+    html += `<div style="font-size:13px;color:var(--ok);font-weight:600;margin-top:4px;">✓ Ärendet är avslutat</div>`;
+  }
+
+  // Logg
+  if (log.length) {
+    html += `<div class="wf-log">`;
+    log.forEach(e => {
+      html += `<div class="wf-log-item">
+        <span class="wf-log-label">${e.label}</span>
+        <span class="wf-log-by">${e.by} · ${e.at}</span>
+        ${e.note ? `<span class="wf-log-note">${e.note}</span>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+async function advanceWorkflow(protocolId, nextStatus) {
+  const note = (document.getElementById('wf-note-input') || {}).value || '';
+  try {
+    const res = await apiFetch(`/api/protocols/${protocolId}/workflow`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus, note })
+    });
+    _currentModalRec.workflow_status = res.workflow_status;
+    _currentModalRec.workflow_log    = res.workflow_log;
+    renderModalBody(_currentModalRec);
+    // Uppdatera startsidan
+    loadRecentProtocols();
+  } catch(e) {
+    alert('Kunde inte uppdatera: ' + e.message);
   }
 }
 
@@ -1112,6 +1250,98 @@ function openProtocol(type) {
   document.getElementById('history-banner').classList.remove('visible');
   document.getElementById('save-confirm').classList.remove('visible');
   updateSummary();
+}
+
+function sendEmail() {
+  const maskin    = document.getElementById('f-maskin').value.trim();
+  const datum     = document.getElementById('f-datum').value;
+  const tekniker  = document.getElementById('f-tekniker').value.trim();
+  const modell    = document.getElementById('f-modell').value.trim();
+  const typLabel  = currentType === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+
+  // Maskininfo från infokortet
+  const infoFields = {};
+  document.querySelectorAll('#machine-info-grid .mi-field').forEach(f => {
+    infoFields[f.querySelector('.mi-label').textContent] = f.querySelector('.mi-val').textContent;
+  });
+  const kund    = infoFields['Kund'] || '';
+  const adress  = infoFields['Adress'] || '';
+  const kontakt = infoFields['Kontaktperson'] || '';
+
+  // Samla punkter
+  const items = [];
+  document.querySelectorAll('.check-item').forEach(div => {
+    const checked = div.querySelector('input[type=radio]:checked');
+    if (!checked) return;
+    const nr      = div.querySelector('.item-nr').textContent.trim();
+    const label   = div.querySelector('.item-label').textContent.trim();
+    const comment = (div.querySelector('.comment-box textarea') || {}).value || '';
+    items.push({ nr, label, status: checked.value, comment });
+  });
+
+  const ok      = items.filter(i => i.status === '1');
+  const bevaka  = items.filter(i => i.status === '2');
+  const akut    = items.filter(i => i.status === '3');
+  const total   = items.length;
+
+  // Bygg e-posttext
+  const nl = '%0D%0A';  // radbrytning i mailto
+  let body = '';
+
+  const line = (t='') => body += encodeURIComponent(t) + nl;
+
+  line('SERVICEPROTOKOLL – LILJEGRENS I TYRESÖ AB');
+  line('═'.repeat(48));
+  line();
+  line(`Typ:          ${typLabel}`);
+  line(`Objektnummer: ${maskin}`);
+  line(`Kund:         ${kund}`);
+  line(`Adress:       ${adress}`);
+  if (kontakt) line(`Kontakt:      ${kontakt}`);
+  line(`Maskin:       ${modell}`);
+  line(`Datum:        ${datum}`);
+  line(`Tekniker:     ${tekniker}`);
+  line();
+
+  // Övergripande status
+  if (akut.length)        line(`⚠ STATUS: AKUTA ANMÄRKNINGAR (${akut.length} st) – åtgärd krävs`);
+  else if (bevaka.length) line(`● STATUS: Bevakningspunkter (${bevaka.length} st) – följ upp`);
+  else if (ok.length)     line(`✓ STATUS: Allt kontrollerat och godkänt`);
+  line();
+  line(`Resultat: ${ok.length} OK  |  ${bevaka.length} Bevaka  |  ${akut.length} Akut  (av ${total} kontrollerade)`);
+  line();
+
+  if (akut.length) {
+    line('─'.repeat(48));
+    line('AKUTA ÅTGÄRDER');
+    line('─'.repeat(48));
+    akut.forEach(i => {
+      line(`  Nr ${i.nr}: ${i.label}`);
+      if (i.comment) line(`         → ${i.comment}`);
+    });
+    line();
+  }
+
+  if (bevaka.length) {
+    line('─'.repeat(48));
+    line('BEVAKNINGSPUNKTER');
+    line('─'.repeat(48));
+    bevaka.forEach(i => {
+      line(`  Nr ${i.nr}: ${i.label}`);
+      if (i.comment) line(`         → ${i.comment}`);
+    });
+    line();
+  }
+
+  line('─'.repeat(48));
+  line(`Godkända punkter: ${ok.length} av ${total}`);
+  line();
+  line('Med vänliga hälsningar,');
+  line(`${tekniker}`);
+  line('Liljegrens i Tyresö AB');
+
+  const subject = encodeURIComponent(`Serviceprotokoll – ${maskin} – ${datum}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 function goBack() {
