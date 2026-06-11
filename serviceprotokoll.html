@@ -1556,14 +1556,6 @@ function printRecord(rec) {
 
   <div class="items">${itemsHtml}</div>
 
-  ${wfLog.length ? `<div class="wf"><h3>Handläggningslogg</h3>
-    ${wfLog.map(e=>`<div class="wfe">
-      <span class="wl">${e.label}</span>
-      <span class="wb">${e.by} · ${e.at}</span>
-      ${e.note?`<span class="wn">${e.note}</span>`:''}
-    </div>`).join('')}
-  </div>` : ''}
-
   <div class="footer">
     <span>Liljegrens i Tyresö AB · Serviceprotokoll</span>
     <span>Utskrivet ${new Date().toLocaleDateString('sv-SE')}</span>
