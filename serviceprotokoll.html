@@ -1036,10 +1036,12 @@ function showMachineTypeNotice(detectedType, beskrivning) {
     card.after(notice);
   }
   const label = getMachineTypeLabel(beskrivning);
-  const hasTemplate = ['verkstad','flygande'].includes(detectedType);
+  // Typer som har en egen protokollmall
+  const TYPES_WITH_TEMPLATE = ['verkstad', 'flygande', 'kaly'];
+  const hasTemplate = TYPES_WITH_TEMPLATE.includes(detectedType);
   notice.innerHTML = hasTemplate
-    ? `<span>⚠ Denna maskin är registrerad som <strong>${label}</strong> — protokollet är anpassat.</span>`
-    : `<span>⚠ Denna maskin är registrerad som <strong>${label}</strong> (${beskrivning}). Inget eget protokoll finns ännu — komprimatorprotokollet används.</span>`;
+    ? `<span>ℹ️ Kärlvändarprotokoll laddat för <strong>${label}</strong></span>`
+    : `<span>⚠ Maskintyp <strong>${label}</strong> saknar eget protokoll — komprimatorprotokollet används.</span>`;
 }
 
 function hideMachineTypeNotice() {
