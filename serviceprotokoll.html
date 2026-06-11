@@ -935,9 +935,9 @@ async function lookupMachine(val) {
       { label: 'Kontaktperson', val: m.kontakt },
       { label: 'Telefon',       val: m.telefon, tel: true },
       { label: 'Märke / Typ',   val: modStr },
-      { label: 'Årsmodell',     val: m.arsmodell },
-      { label: 'Tillv.nr',      val: m.tillvnr },
-      { label: 'Avdelning',     val: m.avdelning },
+      { label: 'Årsmodell',    val: m.arsmodell },
+      { label: 'Tillv.nr',     val: m.tillvnr },
+      { label: 'Beskrivning',  val: m.beskrivning },
     ].filter(f => f.val);
 
     infoGrid.innerHTML = fields.map(f => `
@@ -948,6 +948,14 @@ async function lookupMachine(val) {
           : f.val}</div>
       </div>`).join('');
 
+    // Auto-detektera maskintyp från beskrivning
+    const detectedType = detectMachineType(m.beskrivning || '');
+    if (detectedType && detectedType !== currentType) {
+      showMachineTypeNotice(detectedType, m.beskrivning);
+    } else {
+      hideMachineTypeNotice();
+    }
+
     badge.textContent = '✓ ' + m.kund;
     badge.className = 'machine-lookup-badge visible';
     infoCard.classList.add('visible');
@@ -957,6 +965,56 @@ async function lookupMachine(val) {
     badge.className = 'machine-lookup-badge error visible';
     infoCard.classList.remove('visible');
   }
+}
+
+// ─── Maskintyp-detektering ───────────────────────────────────
+// Lägg till fler koder här när nya protokollmallar skapas
+const MASKINTYP_MAP = {
+  'KÄLY':  { type: 'kaly',  label: 'Kärlvändare' },
+  'VLOCK': { type: 'vlock', label: 'V-lock' },
+  'LVXK':  { type: 'lvxk',  label: 'Lastväxlarkomprimator' },
+  // Komprimatorer – faller tillbaka på nuvarande mall
+  'KOMP':  { type: 'verkstad', label: 'Komprimator' },
+};
+
+function detectMachineType(beskrivning) {
+  const b = beskrivning.toUpperCase();
+  for (const [kod, info] of Object.entries(MASKINTYP_MAP)) {
+    if (b.includes(kod)) return info.type;
+  }
+  return null; // okänd → ingen notis
+}
+
+function getMachineTypeLabel(beskrivning) {
+  const b = beskrivning.toUpperCase();
+  for (const [kod, info] of Object.entries(MASKINTYP_MAP)) {
+    if (b.includes(kod)) return info.label;
+  }
+  return beskrivning;
+}
+
+function showMachineTypeNotice(detectedType, beskrivning) {
+  let notice = document.getElementById('machine-type-notice');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'machine-type-notice';
+    notice.style.cssText = `
+      background:#fff3e0; border:1.5px solid #f57f17; border-radius:8px;
+      padding:10px 14px; margin-top:10px; font-size:13px; color:#e65100;
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;`;
+    const card = document.getElementById('machine-info-card');
+    card.after(notice);
+  }
+  const label = getMachineTypeLabel(beskrivning);
+  const hasTemplate = ['verkstad','flygande'].includes(detectedType);
+  notice.innerHTML = hasTemplate
+    ? `<span>⚠ Denna maskin är registrerad som <strong>${label}</strong> — protokollet är anpassat.</span>`
+    : `<span>⚠ Denna maskin är registrerad som <strong>${label}</strong> (${beskrivning}). Inget eget protokoll finns ännu — komprimatorprotokollet används.</span>`;
+}
+
+function hideMachineTypeNotice() {
+  const n = document.getElementById('machine-type-notice');
+  if (n) n.remove();
 }
 
 // ═══════════════════════════════════════════════════

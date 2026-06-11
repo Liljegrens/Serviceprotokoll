@@ -22,3 +22,4 @@ Thumbs.db
 # Engångsskript
 seed_users.py
 migrate_db.py
+migrate_beskrivning.py

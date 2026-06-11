@@ -13,7 +13,7 @@ conn.execute('''CREATE TABLE IF NOT EXISTS machines (
     inkopar TEXT DEFAULT '', notering TEXT DEFAULT '')''')
 
 for col, typ in [('adress','TEXT'),('stad','TEXT'),('kontakt','TEXT'),
-                 ('telefon','TEXT'),('tillvnr','TEXT'),('arsmodell','TEXT'),('avdelning','TEXT')]:
+                 ('telefon','TEXT'),('tillvnr','TEXT'),('arsmodell','TEXT'),('beskrivning','TEXT')]:
     try:
         conn.execute(f'ALTER TABLE machines ADD COLUMN {col} {typ} DEFAULT ""')
     except Exception:
@@ -38,11 +38,13 @@ for _, row in df.iterrows():
     except: tillvnr = row['Utrustningsinfo: Tillverkningsnummer'].strip()
     try: arsmod = str(int(float(row['Utrustningsinfo: Årsmodell'].strip()))) if row['Utrustningsinfo: Årsmodell'].strip() else ''
     except: arsmod = row['Utrustningsinfo: Årsmodell'].strip()
-    avd     = row['Avdelning'].strip()
+    # ↓ Justera kolumnnamnet nedan om det skiljer sig i din Excel-fil
+    BESKRIVNING_KOLUMN = 'Utrustningsinfo: Beskrivning'
+    beskr   = row[BESKRIVNING_KOLUMN].strip() if BESKRIVNING_KOLUMN in row else ''
     anl     = f'{adress}, {stad}' if stad else adress
 
     conn.execute('''INSERT INTO machines
-        (nr,kund,anlaggning,fabrikat,modell,adress,stad,kontakt,telefon,tillvnr,arsmodell,avdelning)
+        (nr,kund,anlaggning,fabrikat,modell,adress,stad,kontakt,telefon,tillvnr,arsmodell,beskrivning)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(nr) DO UPDATE SET
             kund=excluded.kund, anlaggning=excluded.anlaggning,
@@ -50,8 +52,8 @@ for _, row in df.iterrows():
             adress=excluded.adress, stad=excluded.stad,
             kontakt=excluded.kontakt, telefon=excluded.telefon,
             tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
-            avdelning=excluded.avdelning''',
-        (nr, kund, anl, marke, typ, adress, stad, kontakt, telefon, tillvnr, arsmod, avd))
+            beskrivning=excluded.beskrivning''',
+        (nr, kund, anl, marke, typ, adress, stad, kontakt, telefon, tillvnr, arsmod, beskr))
     imported += 1
 
 conn.commit()

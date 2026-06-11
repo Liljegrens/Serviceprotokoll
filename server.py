@@ -32,7 +32,7 @@ def init_db():
             telefon    TEXT DEFAULT '',
             tillvnr    TEXT DEFAULT '',
             arsmodell  TEXT DEFAULT '',
-            avdelning  TEXT DEFAULT ''
+            beskrivning TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS protocols (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -152,6 +152,7 @@ def upload_machines():
     cMod  = col('modell')
     cInk  = col('inköp') or col('inkop')
     cNot  = col('anteckn')
+    cBesk = col('beskrivning')
 
     machines = []
     for row in rows[header_row + 1:]:
@@ -159,23 +160,25 @@ def upload_machines():
         if not nr:
             continue
         machines.append({
-            'nr':         nr,
-            'kund':       str(row[cKund] or '').strip() if cKund is not None else '',
-            'anlaggning': str(row[cAnl]  or '').strip() if cAnl  is not None else '',
-            'fabrikat':   str(row[cFab]  or '').strip() if cFab  is not None else '',
-            'modell':     str(row[cMod]  or '').strip() if cMod  is not None else '',
-            'inkopar':    str(row[cInk]  or '').strip() if cInk  is not None else '',
-            'notering':   str(row[cNot]  or '').strip() if cNot  is not None else '',
+            'nr':          nr,
+            'kund':        str(row[cKund] or '').strip() if cKund is not None else '',
+            'anlaggning':  str(row[cAnl]  or '').strip() if cAnl  is not None else '',
+            'fabrikat':    str(row[cFab]  or '').strip() if cFab  is not None else '',
+            'modell':      str(row[cMod]  or '').strip() if cMod  is not None else '',
+            'inkopar':     str(row[cInk]  or '').strip() if cInk  is not None else '',
+            'notering':    str(row[cNot]  or '').strip() if cNot  is not None else '',
+            'beskrivning': str(row[cBesk] or '').strip() if cBesk is not None else '',
         })
 
     with get_db() as db:
         db.executemany("""
-            INSERT INTO machines (nr, kund, anlaggning, fabrikat, modell, inkopar, notering)
-            VALUES (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering)
+            INSERT INTO machines (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning)
+            VALUES (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning)
             ON CONFLICT(nr) DO UPDATE SET
                 kund=excluded.kund, anlaggning=excluded.anlaggning,
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
-                inkopar=excluded.inkopar, notering=excluded.notering
+                inkopar=excluded.inkopar, notering=excluded.notering,
+                beskrivning=excluded.beskrivning
         """, machines)
 
     return jsonify({'imported': len(machines)})
