@@ -188,6 +188,22 @@ def get_machine(nr):
 
 # ── Protocols ────────────────────────────────────────────────
 
+@app.route('/api/protocols/recent')
+def recent_protocols():
+    limit = min(int(request.args.get('limit', 15)), 50)
+    with get_db() as db:
+        rows = db.execute(
+            'SELECT * FROM protocols ORDER BY saved_at DESC LIMIT ?', (limit,)
+        ).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d['items']    = json.loads(d['items_json'] or '[]')
+        d['resolved'] = json.loads(d.get('resolved_json') or '{}')
+        del d['items_json'], d['resolved_json']
+        result.append(d)
+    return jsonify(result)
+
 @app.route('/api/protocols/<maskin_nr>')
 def get_protocols(maskin_nr):
     with get_db() as db:

@@ -69,6 +69,31 @@
   }
   .user-bar span { color: #fff; font-size: 13px; font-weight: 600; }
 
+  /* ─── RECENT PROTOCOLS ─── */
+  .recent-section {
+    width: 100%; max-width: 640px; margin-top: 28px;
+  }
+  .recent-section h3 {
+    color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+  }
+  .recent-list { display: flex; flex-direction: column; gap: 8px; }
+  .recent-item {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 9px; padding: 12px 16px; cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+    transition: background 0.12s;
+  }
+  .recent-item:hover { background: rgba(255,255,255,0.18); }
+  .recent-icon { font-size: 20px; flex-shrink: 0; }
+  .recent-main { flex: 1; min-width: 0; }
+  .recent-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .recent-maskin { color: #fff; font-weight: 700; font-size: 14px; }
+  .recent-kund { color: rgba(255,255,255,0.75); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .recent-sub { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 2px; }
+  .recent-badges { display: flex; gap: 5px; flex-shrink: 0; }
+  .recent-empty { color: rgba(255,255,255,0.45); font-size: 13px; font-style: italic; padding: 8px 0; }
+
   .register-bar {
     background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
     border-radius: 10px; padding: 14px 20px; margin-bottom: 32px;
@@ -460,6 +485,15 @@
       <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
     </div>
   </div>
+
+  <!-- Senaste protokoll -->
+  <div class="recent-section">
+    <h3>Senaste protokoll</h3>
+    <div class="recent-list" id="recent-list">
+      <div class="recent-empty">Laddar...</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══════════ PROTOCOL PAGE ═══════════ -->
@@ -631,6 +665,7 @@ async function initAuth() {
     showPage('start');
     updateUserGreeting();
     checkRegisterStatus();
+    loadRecentProtocols();
   }
 }
 
@@ -665,6 +700,7 @@ async function doLogin() {
     showPage('start');
     updateUserGreeting();
     checkRegisterStatus();
+    loadRecentProtocols();
   } catch {
     err.textContent = 'Fel namn eller PIN — försök igen.';
     document.getElementById('login-pin').value = '';
@@ -676,6 +712,44 @@ async function doLogout() {
   currentUser = null;
   await loadUserList();
   showPage('login');
+}
+
+async function loadRecentProtocols() {
+  const list = document.getElementById('recent-list');
+  try {
+    const recs = await apiFetch('/api/protocols/recent?limit=15');
+    if (!recs.length) {
+      list.innerHTML = '<div class="recent-empty">Inga sparade protokoll än.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    recs.forEach(rec => {
+      const s = summarizeStatus(rec.items);
+      const resolvedCount = Object.keys(rec.resolved || {}).length;
+      const openIssues = (s.bevaka + s.akut) - resolvedCount;
+      const icon = rec.type === 'flygande' ? '🚗' : '🔧';
+      const div = document.createElement('div');
+      div.className = 'recent-item';
+      div.innerHTML = `
+        <span class="recent-icon">${icon}</span>
+        <div class="recent-main">
+          <div class="recent-top">
+            <span class="recent-maskin">${rec.maskin_nr}</span>
+            <span class="recent-kund">${rec.kund || ''}</span>
+          </div>
+          <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
+        </div>
+        <div class="recent-badges">
+          ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
+          ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
+          ${openIssues === 0 && (s.akut + s.bevaka) > 0 ? `<span class="badge ok">✓ Klart</span>` : ''}
+        </div>`;
+      div.onclick = () => openHistoryModal(rec);
+      list.appendChild(div);
+    });
+  } catch {
+    list.innerHTML = '<div class="recent-empty">Kunde inte ladda protokoll.</div>';
+  }
 }
 
 function showPage(page) {
