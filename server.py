@@ -252,12 +252,10 @@ def resolve_item(protocol_id):
 
 # ── Workflow ──────────────────────────────────────────────────
 
-WORKFLOW_STEPS = ['inkommen', 'granskad', 'atgard', 'avslutad']
+WORKFLOW_STEPS = ['inkommen', 'hanterad']
 WORKFLOW_LABELS = {
     'inkommen': 'Inkommen',
-    'granskad': 'Granskad',
-    'atgard':   'Åtgärd beslutad',
-    'avslutad': 'Avslutad',
+    'hanterad': 'Hanterad',
 }
 
 @app.route('/api/protocols/<int:protocol_id>/workflow', methods=['PATCH'])

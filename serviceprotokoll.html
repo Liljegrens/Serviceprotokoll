@@ -100,14 +100,29 @@
     white-space: nowrap;
   }
   .wf-inkommen  { background: #fff3e0; color: #e65100; }
-  .wf-granskad  { background: #e3f2fd; color: #1565c0; }
-  .wf-atgard    { background: #f3e5f5; color: #6a1b9a; }
-  .wf-avslutad  { background: var(--ok-bg); color: var(--ok); }
+  .wf-hanterad  { background: var(--ok-bg); color: var(--ok); }
 
   /* workflow panel in modal */
   .workflow-panel {
     border-top: 1px solid #f0f0f0; margin-top: 16px; padding-top: 14px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   }
+  .wf-status-badge {
+    font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+  }
+  .wf-status-badge.inkommen { background: #fff8e1; color: #f57f17; }
+  .wf-status-badge.hanterad { background: var(--ok-bg); color: var(--ok); }
+  .wf-toggle-btn {
+    padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; transition: background 0.15s;
+  }
+  .wf-toggle-btn.mark   { background: var(--brand); color: #fff; }
+  .wf-toggle-btn.mark:hover { background: var(--brand-light); }
+  .wf-toggle-btn.undo   { background: var(--bg); color: var(--gray); border: 1px solid var(--border); }
+  .wf-toggle-btn.undo:hover { background: #e0e0e0; }
+  .wf-handled-by { font-size: 12px; color: var(--gray); }
+
+  /* DEAD CSS kept for reference — no longer used */
   .workflow-steps {
     display: flex; gap: 0; margin-bottom: 14px; border-radius: 8px; overflow: hidden;
     border: 1px solid var(--border);
@@ -1110,75 +1125,49 @@ async function toggleResolved(protocolId, nr) {
 // ═══════════════════════════════════════════════════
 // WORKFLOW
 // ═══════════════════════════════════════════════════
-const WF_STEPS  = ['inkommen','granskad','atgard','avslutad'];
-const WF_LABELS = { inkommen:'Inkommen', granskad:'Granskad', atgard:'Åtgärd beslutad', avslutad:'Avslutad' };
-
-function wfLabel(s) { return WF_LABELS[s] || 'Inkommen'; }
+function wfLabel(s) { return s === 'hanterad' ? 'Hanterad' : 'Inkommen'; }
 
 function renderWorkflowPanel(rec) {
   const status  = rec.workflow_status || 'inkommen';
-  const log     = Array.isArray(rec.workflow_log) ? rec.workflow_log
-                  : (typeof rec.workflow_log === 'string' ? JSON.parse(rec.workflow_log || '[]') : []);
   const isAdmin = currentUser && currentUser.role === 'admin';
-  const curIdx  = WF_STEPS.indexOf(status);
-  const nextStep = WF_STEPS[curIdx + 1];
+  const handled = status === 'hanterad';
 
-  let html = `<div class="workflow-panel">
-    <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--gray);margin-bottom:10px;font-weight:700;">Handläggning</h3>
-    <div class="workflow-steps">`;
+  // Hämta info om vem/när från logg
+  const log = Array.isArray(rec.workflow_log) ? rec.workflow_log
+              : (typeof rec.workflow_log === 'string' ? JSON.parse(rec.workflow_log || '[]') : []);
+  const lastEntry = log.length ? log[log.length - 1] : null;
 
-  WF_STEPS.forEach((step, i) => {
-    const isDone   = i < curIdx;
-    const isActive = i === curIdx;
-    const cls = isDone ? 'done' : isActive ? 'active' : '';
-    html += `<div class="wf-step ${cls}">${WF_LABELS[step]}</div>`;
-  });
+  let html = `<div class="workflow-panel">`;
 
-  html += `</div>`;
-
-  // Admin: nästa steg-knapp + notering
-  if (isAdmin && nextStep) {
-    html += `<div class="wf-note-row">
-      <input class="wf-note-input" id="wf-note-input" type="text"
-        placeholder="Notering (valfritt)..."
-        onkeydown="if(event.key==='Enter')advanceWorkflow(${rec.id},'${nextStep}')">
-      <button class="wf-save-btn" onclick="advanceWorkflow(${rec.id},'${nextStep}')">
-        → ${WF_LABELS[nextStep]}
-      </button>
-    </div>`;
-  } else if (status === 'avslutad') {
-    html += `<div style="font-size:13px;color:var(--ok);font-weight:600;margin-top:4px;">✓ Ärendet är avslutat</div>`;
-  }
-
-  // Logg
-  if (log.length) {
-    html += `<div class="wf-log">`;
-    log.forEach(e => {
-      html += `<div class="wf-log-item">
-        <span class="wf-log-label">${e.label}</span>
-        <span class="wf-log-by">${e.by} · ${e.at}</span>
-        ${e.note ? `<span class="wf-log-note">${e.note}</span>` : ''}
-      </div>`;
-    });
-    html += `</div>`;
+  if (handled) {
+    html += `<span class="wf-status-badge hanterad">✓ Hanterad</span>`;
+    if (lastEntry) {
+      html += `<span class="wf-handled-by">${lastEntry.by} · ${lastEntry.at}</span>`;
+    }
+    if (isAdmin) {
+      html += `<button class="wf-toggle-btn undo" onclick="setWorkflow(${rec.id},'inkommen')">Ångra</button>`;
+    }
+  } else {
+    html += `<span class="wf-status-badge inkommen">Inkommen</span>`;
+    if (isAdmin) {
+      html += `<button class="wf-toggle-btn mark" onclick="setWorkflow(${rec.id},'hanterad')">Markera som hanterad</button>`;
+    }
   }
 
   html += `</div>`;
   return html;
 }
 
-async function advanceWorkflow(protocolId, nextStatus) {
-  const note = (document.getElementById('wf-note-input') || {}).value || '';
+async function setWorkflow(protocolId, status) {
   try {
     const res = await apiFetch(`/api/protocols/${protocolId}/workflow`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: nextStatus, note })
+      body: JSON.stringify({ status })
     });
     _currentModalRec.workflow_status = res.workflow_status;
     _currentModalRec.workflow_log    = res.workflow_log;
     renderModalBody(_currentModalRec);
-    // Uppdatera startsidan
     loadRecentProtocols();
   } catch(e) {
     alert('Kunde inte uppdatera: ' + e.message);
