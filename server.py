@@ -47,7 +47,8 @@ def init_db():
             saved_at         TEXT,
             resolved_json    TEXT DEFAULT '{}',
             workflow_status  TEXT DEFAULT 'inkommen',
-            workflow_log     TEXT DEFAULT '[]'
+            workflow_log     TEXT DEFAULT '[]',
+            machine_type     TEXT DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS idx_protocols_maskin ON protocols(maskin_nr);
         CREATE TABLE IF NOT EXISTS users (
@@ -292,12 +293,13 @@ def save_protocol():
         return jsonify({'error': 'maskin_nr krävs'}), 400
     with get_db() as db:
         db.execute("""
-            INSERT INTO protocols (maskin_nr, datum, type, kund, anlaggning, tekniker, modell, items_json, saved_at)
-            VALUES (?,?,?,?,?,?,?,?,?)
+            INSERT INTO protocols (maskin_nr, datum, type, machine_type, kund, anlaggning, tekniker, modell, items_json, saved_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
         """, (
             data['maskin_nr'].upper(),
             data.get('datum', ''),
             data.get('type', ''),
+            data.get('machine_type', ''),
             data.get('kund', ''),
             data.get('anlaggning', ''),
             data.get('tekniker', ''),

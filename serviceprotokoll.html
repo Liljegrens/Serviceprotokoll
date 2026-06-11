@@ -724,6 +724,20 @@ const FLYGANDE_EXTRA = [
   { nr:'B9', label:'Knappdosa, aggregat och elmotor – skyddade mot väder och fukt' },
 ];
 
+const KALY_ITEMS = [
+  { section: 'HYDRAULIK' },
+  { nr:'K1', label:'Hydraulslang – slitage, sprickor och täthet' },
+  { nr:'K2', label:'Hydraulolja – nivå, färg och kvalitet' },
+  { section: 'MEKANIK' },
+  { nr:'K3', label:'Y-lagerenhet – skick och spel' },
+  { nr:'K4', label:'Hjul – skick, slitage och funktion' },
+  { section: 'YTSKIKT OCH SKYDD' },
+  { nr:'K5', label:'Lackering och korrosionsskydd – skador och roststatus' },
+  { nr:'K6', label:'Aggregat – väderskyddat, skick på kåpa och tätningar' },
+  { section: 'FUNKTION' },
+  { nr:'K7', label:'Manöver – funktion, knappar och display' },
+];
+
 // ═══════════════════════════════════════════════════
 // API HELPERS
 // ═══════════════════════════════════════════════════
@@ -860,9 +874,15 @@ function updateUserGreeting() {
 // ═══════════════════════════════════════════════════
 // MACHINE REGISTER
 // ═══════════════════════════════════════════════════
-let machineCount = 0;
-let lookupTimer  = null;
-let currentType  = null;
+let machineCount        = 0;
+let lookupTimer         = null;
+let currentType         = null;   // 'verkstad' | 'flygande'
+let currentMachineType  = null;   // 'kaly' | null | …
+
+function getChecklistItems() {
+  if (currentMachineType === 'kaly') return [...KALY_ITEMS];
+  return currentType === 'flygande' ? [...SHARED_ITEMS, ...FLYGANDE_EXTRA] : [...SHARED_ITEMS];
+}
 
 async function checkRegisterStatus() {
   try {
@@ -948,11 +968,15 @@ async function lookupMachine(val) {
           : f.val}</div>
       </div>`).join('');
 
-    // Auto-detektera maskintyp från beskrivning
+    // Auto-detektera maskintyp från beskrivning och byt checklista
     const detectedType = detectMachineType(m.beskrivning || '');
-    if (detectedType && detectedType !== currentType) {
+    if (detectedType && detectedType !== currentMachineType) {
+      currentMachineType = detectedType;
+      buildChecklist(getChecklistItems());
       showMachineTypeNotice(detectedType, m.beskrivning);
-    } else {
+    } else if (!detectedType) {
+      currentMachineType = null;
+      buildChecklist(getChecklistItems());
       hideMachineTypeNotice();
     }
 
@@ -1289,9 +1313,10 @@ async function saveProtocol() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        maskin_nr:  maskin,
-        datum:      document.getElementById('f-datum').value,
-        type:       currentType,
+        maskin_nr:    maskin,
+        datum:        document.getElementById('f-datum').value,
+        type:         currentType,
+        machine_type: currentMachineType || '',
         kund:       infoFields.kund || '',
         anlaggning: infoFields.anlaggning || '',
         tekniker:   document.getElementById('f-tekniker').value,
@@ -1323,7 +1348,8 @@ function openProtocol(type) {
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
 
-  buildChecklist(type==='flygande' ? [...SHARED_ITEMS,...FLYGANDE_EXTRA] : [...SHARED_ITEMS]);
+  currentMachineType = null;
+  buildChecklist(getChecklistItems());
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   ['f-maskin','f-modell'].forEach(id => document.getElementById(id).value='');
   // Auto-fill tekniker från inloggad användare
@@ -1495,7 +1521,10 @@ function printRecord(rec) {
                     : '✓ Allt godkänt';
 
   // Group items by section
-  const ALL = [...(window.SHARED_ITEMS||[]), ...(rec.type==='flygande' ? (window.FLYGANDE_EXTRA||[]) : [])];
+  const recMachineType = rec.machine_type || detectMachineType(rec.beskrivning || '');
+  const ALL = recMachineType === 'kaly'
+    ? [...(window.KALY_ITEMS||[])]
+    : [...(window.SHARED_ITEMS||[]), ...(rec.type==='flygande' ? (window.FLYGANDE_EXTRA||[]) : [])];
   let sections = [];
   let curSec = null;
   items.forEach(item => {
