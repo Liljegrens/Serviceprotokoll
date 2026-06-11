@@ -219,10 +219,12 @@ def get_protocols(maskin_nr):
     result = []
     for r in rows:
         d = dict(r)
-        d['items'] = json.loads(d['items_json'] or '[]')
-        d['resolved'] = json.loads(d.get('resolved_json') or '{}')
-        del d['items_json']
-        del d['resolved_json']
+        d['items']          = json.loads(d['items_json'] or '[]')
+        d['resolved']       = json.loads(d.get('resolved_json') or '{}')
+        d['workflow_log']   = json.loads(d.get('workflow_log') or '[]')
+        if not d.get('workflow_status'):
+            d['workflow_status'] = 'inkommen'
+        del d['items_json'], d['resolved_json']
         result.append(d)
     return jsonify(result)
 
