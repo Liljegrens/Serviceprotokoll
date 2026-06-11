@@ -38,9 +38,7 @@ for _, row in df.iterrows():
     except: tillvnr = row['Utrustningsinfo: Tillverkningsnummer'].strip()
     try: arsmod = str(int(float(row['Utrustningsinfo: Årsmodell'].strip()))) if row['Utrustningsinfo: Årsmodell'].strip() else ''
     except: arsmod = row['Utrustningsinfo: Årsmodell'].strip()
-    # ↓ Justera kolumnnamnet nedan om det skiljer sig i din Excel-fil
-    BESKRIVNING_KOLUMN = 'Utrustningsinfo: Beskrivning'
-    beskr   = row[BESKRIVNING_KOLUMN].strip() if BESKRIVNING_KOLUMN in row else ''
+    beskr   = str(row.iloc[9] or '').strip()  # Kolumn J (index 9)
     anl     = f'{adress}, {stad}' if stad else adress
 
     conn.execute('''INSERT INTO machines

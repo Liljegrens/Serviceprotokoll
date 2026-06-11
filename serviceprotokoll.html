@@ -970,11 +970,17 @@ async function lookupMachine(val) {
 // ─── Maskintyp-detektering ───────────────────────────────────
 // Lägg till fler koder här när nya protokollmallar skapas
 const MASKINTYP_MAP = {
-  'KÄLY':  { type: 'kaly',  label: 'Kärlvändare' },
-  'VLOCK': { type: 'vlock', label: 'V-lock' },
-  'LVXK':  { type: 'lvxk',  label: 'Lastväxlarkomprimator' },
-  // Komprimatorer – faller tillbaka på nuvarande mall
-  'KOMP':  { type: 'verkstad', label: 'Komprimator' },
+  'KÄLY':          { type: 'kaly',    label: 'Kärlvändare' },
+  'VLOCK':         { type: 'vlock',   label: 'V-lock komprimator' },
+  'LVXK':          { type: 'lvxk',   label: 'Lastväxlarkomprimator' },
+  'BALP':          { type: 'balp',   label: 'Balpressar' },
+  'VACUUM':        { type: 'vacuum', label: 'Vakuummaskin' },
+  'LDK':           { type: 'ldk',    label: 'LDK' },
+  'PALP':          { type: 'palp',   label: 'Pallpress' },
+  'LUKTREDUCERING':{ type: 'lukt',   label: 'Luktreducering' },
+  'TRÄ':           { type: 'trakross', label: 'Trä​kross' },
+  'BRICKETPRESS':  { type: 'bricket', label: 'Bricketpress' },
+  'DRAGD':         { type: 'dragd',  label: 'Dragdragare' },
 };
 
 function detectMachineType(beskrivning) {
