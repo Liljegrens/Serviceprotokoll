@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serviceprotokoll – Liljegrens</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --brand: #1a3a5c;
+    --brand-light: #2a5080;
+    --ok: #2e7d32;
+    --ok-bg: #e8f5e9;
+    --bevaka: #f57f17;
+    --bevaka-bg: #fff8e1;
+    --akut: #c62828;
+    --akut-bg: #ffebee;
+    --gray: #546e7a;
+    --border: #cfd8dc;
+    --bg: #f5f7f9;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--bg); color: #212121; font-size: 15px; }
+
+  /* ─── LOGIN PAGE ─── */
+  #login-page {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px 16px;
+    background: linear-gradient(160deg, var(--brand) 0%, var(--brand-light) 100%);
+  }
+  .login-card {
+    background: #fff; border-radius: 12px; padding: 32px 28px;
+    width: 100%; max-width: 340px; box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  }
+  .login-card h2 { font-size: 18px; font-weight: 700; color: var(--brand); margin-bottom: 20px; text-align: center; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { display: block; font-size: 12px; color: var(--gray); font-weight: 600; margin-bottom: 4px; }
+  .login-field select, .login-field input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 7px;
+    padding: 9px 12px; font-size: 15px; font-family: Arial, sans-serif;
+    transition: border-color 0.15s;
+  }
+  .login-field select:focus, .login-field input:focus { outline: none; border-color: var(--brand); }
+  .login-error { color: var(--akut); font-size: 13px; min-height: 18px; margin-bottom: 8px; text-align: center; }
+  .login-btn {
+    width: 100%; padding: 12px; background: var(--brand); color: #fff;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .login-btn:hover { background: var(--brand-light); }
+
+  /* ─── START PAGE ─── */
+  #start-page {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 32px 16px;
+    background: linear-gradient(160deg, var(--brand) 0%, var(--brand-light) 100%);
+  }
+  .logo-area { text-align: center; margin-bottom: 36px; }
+  .logo-area h1 { color: #fff; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+  .logo-area p { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 6px; }
+
+  .user-bar {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px; padding: 10px 16px; margin-bottom: 16px;
+    width: 100%; max-width: 640px; display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+  }
+  .user-bar span { color: #fff; font-size: 13px; font-weight: 600; }
+
+  .register-bar {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px; padding: 14px 20px; margin-bottom: 32px;
+    width: 100%; max-width: 640px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .register-bar span { color: rgba(255,255,255,0.9); font-size: 13px; flex: 1; min-width: 160px; }
+  .reg-status { font-size: 12px; color: rgba(255,255,255,0.65); }
+  .reg-status.loaded { color: #a5d6a7; font-weight: 600; }
+  .reg-status.error { color: #ef9a9a; }
+  .load-btn {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    color: #fff; padding: 8px 16px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; white-space: nowrap; transition: background 0.15s;
+  }
+  .load-btn:hover { background: rgba(255,255,255,0.3); }
+  #reg-file-input { display: none; }
+
+  .start-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 640px; }
+  .start-card {
+    background: #fff; border-radius: 12px; padding: 32px 28px; flex: 1 1 240px;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  }
+  .start-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
+  .start-card .icon { font-size: 48px; margin-bottom: 16px; }
+  .start-card h2 { font-size: 18px; color: var(--brand); font-weight: 700; }
+  .start-card p { font-size: 13px; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+
+  /* ─── PROTOCOL PAGE ─── */
+  #protocol-page { display: none; }
+  .top-bar {
+    background: var(--brand); color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .back-btn, .top-btn {
+    background: rgba(255,255,255,0.15); border: none; color: #fff;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    flex-shrink: 0; transition: background 0.15s;
+  }
+  .back-btn:hover, .top-btn:hover { background: rgba(255,255,255,0.28); }
+  .top-bar h1 { font-size: 16px; font-weight: 700; flex: 1; }
+
+  .protocol-body { max-width: 820px; margin: 0 auto; padding: 16px; }
+
+  /* ─── HEADER FIELDS ─── */
+  .header-card {
+    background: var(--card); border-radius: 10px; padding: 20px;
+    margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .header-card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray); margin-bottom: 14px; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width: 480px) { .field-grid { grid-template-columns: 1fr; } }
+  .field-group label { display: block; font-size: 12px; color: var(--gray); font-weight: 600; margin-bottom: 4px; }
+  .field-group input {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font-size: 14px; font-family: Arial, sans-serif; transition: border-color 0.15s;
+  }
+  .field-group input:focus { outline: none; border-color: var(--brand); }
+  .machine-lookup-badge { display: none; margin-top: 6px; font-size: 12px; color: var(--ok); font-weight: 600; }
+  .machine-lookup-badge.visible { display: block; }
+  .machine-lookup-badge.error { color: var(--akut); }
+
+  /* ─── HISTORY BANNER ─── */
+  .history-banner {
+    background: #e3f2fd; border: 1px solid #90caf9; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 16px; display: none;
+  }
+  .history-banner.visible { display: block; }
+  .history-banner h3 { font-size: 13px; font-weight: 700; color: #1565c0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    background: #fff; border-radius: 7px; padding: 10px 14px; cursor: pointer;
+    border: 1px solid #bbdefb; transition: background 0.12s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .history-item:hover { background: #e3f2fd; }
+  .hi-date { font-weight: 700; font-size: 13px; color: var(--brand); min-width: 90px; }
+  .hi-type { font-size: 12px; color: var(--gray); flex: 1; }
+  .hi-badges { display: flex; gap: 5px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.bevaka { background: var(--bevaka-bg); color: var(--bevaka); }
+  .badge.akut { background: var(--akut-bg); color: var(--akut); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; align-items: flex-start; justify-content: center;
+    padding: 24px 12px; overflow-y: auto;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 700px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); overflow: hidden; }
+  .modal-header { background: var(--brand); color: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  .modal-header h2 { flex: 1; font-size: 16px; }
+  .modal-close { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; }
+  .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+  .modal-section { margin-bottom: 18px; }
+  .modal-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--gray); margin-bottom: 10px; font-weight: 700; }
+  .modal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .modal-field .mf-label { color: var(--gray); font-size: 11px; font-weight: 600; }
+  .modal-field .mf-val { font-size: 13px; color: #212121; }
+  .hist-item-row { padding: 8px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px; align-items: baseline; font-size: 13px; }
+  .hist-item-row:last-child { border-bottom: none; }
+  .hist-item-nr { font-weight: 700; color: var(--gray); min-width: 44px; flex-shrink: 0; }
+  .hist-item-lbl { flex: 1; }
+  .hist-item-comment { font-size: 12px; color: #555; font-style: italic; padding: 2px 0 8px 54px; }
+
+  .resolved-row { opacity: 0.75; }
+  .resolved-lbl { text-decoration: line-through; color: #888; }
+  .badge.resolved-badge { background: var(--ok-bg); color: var(--ok); }
+
+  .resolve-btn {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;
+    border: 1.5px solid var(--ok); color: var(--ok); background: #fff;
+    cursor: pointer; white-space: nowrap; transition: all 0.12s;
+  }
+  .resolve-btn:hover { background: var(--ok-bg); }
+  .resolve-btn-undo { border-color: #aaa; color: #888; }
+  .resolve-btn-undo:hover { background: #f5f5f5; }
+
+  .resolve-inline { display: flex; align-items: center; gap: 5px; }
+  .resolve-name-input {
+    border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 3px 8px; font-size: 12px; width: 130px;
+    font-family: Arial, sans-serif; transition: border-color 0.15s;
+  }
+  .resolve-name-input:focus { outline: none; border-color: var(--ok); }
+
+  /* ─── SECTIONS & CHECKLIST ─── */
+  .section-header {
+    background: var(--brand); color: #fff; padding: 10px 16px;
+    border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.6px; text-transform: uppercase; margin-top: 20px;
+  }
+  .subsection-header {
+    background: #e8eef3; padding: 8px 16px; font-size: 13px;
+    font-weight: 700; color: var(--brand); border-left: 3px solid var(--brand-light);
+  }
+  .checklist-card { background: var(--card); border-radius: 0 0 8px 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .check-item { border-bottom: 1px solid #f0f0f0; padding: 12px 16px; transition: background 0.1s; }
+  .check-item:last-child { border-bottom: none; }
+  .check-item.status-ok { background: var(--ok-bg); }
+  .check-item.status-bevaka { background: var(--bevaka-bg); }
+  .check-item.status-akut { background: var(--akut-bg); }
+  .item-top { display: flex; align-items: flex-start; gap: 10px; }
+  .item-nr { font-size: 12px; font-weight: 700; color: var(--gray); min-width: 36px; padding-top: 2px; flex-shrink: 0; }
+  .item-label { flex: 1; font-size: 14px; line-height: 1.4; }
+  .item-label.sub { padding-left: 12px; color: #444; }
+  .radio-group { display: flex; gap: 6px; flex-shrink: 0; }
+  .radio-opt { display: flex; flex-direction: column; align-items: center; }
+  .radio-opt input[type=radio] { display: none; }
+  .radio-opt label {
+    width: 38px; height: 34px; border-radius: 6px; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 11px; font-weight: 700; color: var(--gray);
+    transition: all 0.12s; text-align: center; user-select: none;
+  }
+  .radio-opt input[value="1"]:checked + label { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .radio-opt input[value="2"]:checked + label { background: var(--bevaka); border-color: var(--bevaka); color: #fff; }
+  .radio-opt input[value="3"]:checked + label { background: var(--akut); border-color: var(--akut); color: #fff; }
+  .radio-opt label:hover { border-color: #90a4ae; }
+  .comment-box { margin-top: 10px; display: none; }
+  .comment-box.visible { display: block; }
+  .comment-box label { font-size: 12px; color: var(--gray); display: block; margin-bottom: 4px; }
+  .comment-box textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; font-family: Arial, sans-serif; resize: vertical; min-height: 60px;
+  }
+  .comment-box textarea:focus { outline: none; border-color: var(--brand); }
+
+  /* ─── SUMMARY ─── */
+  .summary-card { background: var(--card); border-radius: 10px; padding: 20px; margin-top: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .summary-card h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--brand); }
+  .summary-stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-box { flex: 1 1 80px; border-radius: 8px; padding: 12px; text-align: center; }
+  .stat-box.ok { background: var(--ok-bg); color: var(--ok); }
+  .stat-box.bevaka { background: var(--bevaka-bg); color: var(--bevaka); }
+  .stat-box.akut { background: var(--akut-bg); color: var(--akut); }
+  .stat-box .num { font-size: 28px; font-weight: 700; }
+  .stat-box .lbl { font-size: 12px; font-weight: 600; }
+  .overall-status { padding: 14px 16px; border-radius: 8px; font-weight: 700; font-size: 15px; margin-bottom: 16px; text-align: center; }
+  .overall-status.ok { background: var(--ok-bg); color: var(--ok); }
+  .overall-status.bevaka { background: var(--bevaka-bg); color: var(--bevaka); }
+  .overall-status.akut { background: var(--akut-bg); color: var(--akut); }
+  .summary-notes h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-note-item { padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+  .summary-note-item.bevaka { background: var(--bevaka-bg); border-left: 3px solid var(--bevaka); }
+  .summary-note-item.akut { background: var(--akut-bg); border-left: 3px solid var(--akut); }
+  .summary-note-item .snr { font-weight: 700; margin-bottom: 2px; }
+  .summary-note-item .stext { color: #555; }
+  .summary-note-item .scomment { color: #333; margin-top: 4px; font-style: italic; }
+  .save-btn {
+    width: 100%; padding: 14px; background: var(--brand); color: #fff;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 16px; transition: background 0.15s;
+  }
+  .save-btn:hover { background: var(--brand-light); }
+  .save-btn:disabled { background: #90a4ae; cursor: default; }
+  .save-confirm { display: none; text-align: center; font-weight: 600; font-size: 14px; margin-top: 10px; }
+  .save-confirm.visible { display: block; }
+  .save-confirm.ok-msg { color: var(--ok); }
+  .save-confirm.err-msg { color: var(--akut); }
+
+  /* ─── MACHINE INFO CARD ─── */
+  .machine-info-card {
+    background: #e8f4fd;
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    display: none;
+  }
+  .machine-info-card.visible { display: block; }
+  .machine-info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; }
+  .mi-field .mi-label { font-size: 11px; color: #1565c0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .mi-field .mi-val { font-size: 13px; color: #212121; }
+  .mi-field a { color: #1565c0; text-decoration: none; }
+  .mi-field a:hover { text-decoration: underline; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 10mm 10mm 10mm 10mm; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body { background: #fff; font-size: 9.5pt; line-height: 1.2; }
+
+    /* Hide UI chrome */
+    .top-bar, .modal-overlay, .history-banner,
+    .save-btn, .save-confirm, .machine-lookup-badge,
+    .back-btn, .print-btn, .top-btn { display: none !important; }
+    #start-page { display: none !important; }
+    #protocol-page { display: block !important; }
+
+    .protocol-body { padding: 0; max-width: 100%; }
+
+    /* ── Print header ── */
+    .header-card {
+      border-radius: 0; box-shadow: none; padding: 0 0 6pt 0;
+      border-bottom: 1.5pt solid #1a3a5c; margin-bottom: 6pt;
+    }
+    .header-card h2 { display: none; }
+    .field-grid { grid-template-columns: 1fr 1fr 1fr; gap: 4pt 12pt; }
+    .field-group label { font-size: 7.5pt; color: #555; margin-bottom: 1pt; }
+    .field-group input {
+      border: none; border-bottom: 0.5pt solid #aaa;
+      border-radius: 0; padding: 1pt 0; font-size: 9.5pt;
+      background: transparent;
+    }
+
+    /* Protocol title as print header */
+    #protocol-page::before {
+      content: attr(data-print-title);
+      display: block;
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1a3a5c;
+      margin-bottom: 4pt;
+      letter-spacing: 0.3pt;
+    }
+
+    /* Machine info compact */
+    .machine-info-card {
+      display: block !important;
+      background: #f0f4f8 !important;
+      border: 0.5pt solid #aaa;
+      border-radius: 0;
+      padding: 4pt 6pt;
+      margin: 0 0 6pt 0;
+    }
+    .machine-info-grid { grid-template-columns: repeat(4, 1fr); gap: 3pt 10pt; }
+    .mi-field .mi-label { font-size: 7pt; }
+    .mi-field .mi-val { font-size: 8.5pt; }
+
+    /* ── Sections compact ── */
+    .section-header {
+      font-size: 8pt; padding: 3pt 8pt; margin-top: 6pt;
+      border-radius: 0; break-after: avoid;
+      background: #1a3a5c !important; color: #fff !important;
+    }
+    .subsection-header {
+      font-size: 8pt; padding: 2pt 8pt;
+      background: #e8eef3 !important; color: #1a3a5c !important;
+    }
+    .checklist-card { border-radius: 0; box-shadow: none; }
+
+    /* ── Items: two-column layout ── */
+    .checklist-card { columns: 2; column-gap: 8pt; }
+    .subsection-header { column-span: all; }
+
+    .check-item {
+      break-inside: avoid;
+      padding: 2pt 6pt;
+      border-bottom: 0.4pt solid #e0e0e0;
+    }
+    .check-item.status-ok     { background: #f1f8f2 !important; }
+    .check-item.status-bevaka { background: #fffbf0 !important; }
+    .check-item.status-akut   { background: #fff5f5 !important; }
+
+    .item-top { gap: 4pt; }
+    .item-nr { font-size: 7.5pt; min-width: 26pt; }
+    .item-label { font-size: 8.5pt; }
+
+    /* Radios: show selected status as text badge instead */
+    .radio-group { display: none; }
+    .check-item::after {
+      content: '';
+      display: none;
+    }
+    /* Status indicator via border */
+    .check-item.status-ok     .item-nr::before { content: '✓ '; color: #2e7d32; }
+    .check-item.status-bevaka .item-nr::before { content: '● '; color: #f57f17; }
+    .check-item.status-akut   .item-nr::before { content: '▲ '; color: #c62828; }
+
+    .comment-box, .comment-box.visible { display: none !important; }
+
+    /* ── Summary compact ── */
+    .summary-card {
+      border-radius: 0; box-shadow: none;
+      border-top: 1.5pt solid #1a3a5c;
+      padding: 6pt 0 0 0;
+      margin-top: 6pt;
+    }
+    .summary-card h2 { font-size: 9pt; margin-bottom: 4pt; }
+    .overall-status { font-size: 9pt; padding: 4pt 8pt; margin-bottom: 4pt; }
+    .summary-stats { gap: 6pt; margin-bottom: 4pt; }
+    .stat-box { padding: 4pt 8pt; }
+    .stat-box .num { font-size: 16pt; }
+    .stat-box .lbl { font-size: 7pt; }
+    .summary-notes h3 { font-size: 8pt; }
+    .summary-note-item { padding: 4pt 6pt; font-size: 8pt; margin-bottom: 4pt; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN PAGE ═══════════ -->
+<div id="login-page" style="display:none">
+  <div class="logo-area">
+    <h1>Liljegrens i Tyresö AB</h1>
+    <p>Serviceprotokoll – Komprimatorer</p>
+  </div>
+  <div class="login-card">
+    <h2>Logga in</h2>
+    <div class="login-field">
+      <label>Namn</label>
+      <select id="login-name">
+        <option value="">– Välj namn –</option>
+      </select>
+    </div>
+    <div class="login-field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" placeholder="••••" maxlength="20"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">Logga in</button>
+  </div>
+</div>
+
+<!-- ═══════════ START PAGE ═══════════ -->
+<div id="start-page">
+  <div class="logo-area">
+    <h1>Liljegrens i Tyresö AB</h1>
+    <p>Serviceprotokoll – Komprimatorer</p>
+  </div>
+
+  <div class="user-bar">
+    <span id="user-greeting"></span>
+    <button class="load-btn" onclick="doLogout()">Logga ut</button>
+  </div>
+
+  <div class="register-bar">
+    <span>📋 Maskinregister</span>
+    <span class="reg-status" id="reg-status">Kontrollerar...</span>
+    <button class="load-btn" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
+    <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
+  </div>
+
+  <div class="start-cards">
+    <div class="start-card" onclick="openProtocol('verkstad')">
+      <div class="icon">🔧</div>
+      <h2>Verkstadsprotokoll</h2>
+      <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
+    </div>
+    <div class="start-card" onclick="openProtocol('flygande')">
+      <div class="icon">🚗</div>
+      <h2>Flygande protokoll</h2>
+      <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PROTOCOL PAGE ═══════════ -->
+<div id="protocol-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="goBack()">← Tillbaka</button>
+    <h1 id="protocol-title"></h1>
+    <button class="top-btn" onclick="window.print()">🖨 Skriv ut</button>
+  </div>
+  <div class="protocol-body">
+    <div class="header-card">
+      <h2>Protokolluppgifter</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Objektnummer</label>
+          <input type="text" id="f-maskin" placeholder="t.ex. 500100" oninput="onMaskinInput(this.value)">
+          <div class="machine-lookup-badge" id="machine-badge"></div>
+        </div>
+        <div class="field-group">
+          <label>Datum</label>
+          <input type="date" id="f-datum">
+        </div>
+        <div class="field-group">
+          <label>Tekniker</label>
+          <input type="text" id="f-tekniker" placeholder="Namn">
+        </div>
+        <div class="field-group">
+          <label>Fabrikat / Modell</label>
+          <input type="text" id="f-modell" placeholder="Fylls i automatiskt">
+        </div>
+      </div>
+
+      <!-- Machine info card (visas efter uppslag) -->
+      <div class="machine-info-card" id="machine-info-card">
+        <div class="machine-info-grid" id="machine-info-grid"></div>
+      </div>
+    </div>
+
+    <div class="history-banner" id="history-banner">
+      <h3>Tidigare protokoll för denna maskin</h3>
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+    <div id="checklist-container"></div>
+
+    <div class="summary-card">
+      <h2>Sammanfattning</h2>
+      <div id="overall-status" class="overall-status ok">Fyll i kontrollpunkterna ovan</div>
+      <div class="summary-stats">
+        <div class="stat-box ok"><div class="num" id="cnt-ok">0</div><div class="lbl">OK</div></div>
+        <div class="stat-box bevaka"><div class="num" id="cnt-bevaka">0</div><div class="lbl">Bevaka</div></div>
+        <div class="stat-box akut"><div class="num" id="cnt-akut">0</div><div class="lbl">Akut</div></div>
+      </div>
+      <div class="summary-notes" id="summary-notes"></div>
+      <button class="save-btn" id="save-btn" onclick="saveProtocol()">💾 Spara protokoll</button>
+      <div class="save-confirm" id="save-confirm"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL ═══════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Protokoll</h2>
+      <button class="modal-close" onclick="closeModal(null,true)">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CHECKLIST DATA
+// ═══════════════════════════════════════════════════
+const SHARED_ITEMS = [
+  { section: 'HYDRAULSYSTEM' },
+  { sub: 'Hydraulenhet' },
+  { nr:'1',    label:'Hydraulenhet – tank, pump och ventilblock' },
+  { nr:'2',    label:'Hydraulolja – nivå, färg och kvalitet' },
+  { nr:'3',    label:'Oljefilter – skick, byt vid behov' },
+  { sub: 'Hydraulslangar & cylinder' },
+  { nr:'4',    label:'Hydraulslangar och kopplingar – slitage, sprickor, täthet' },
+  { nr:'5',    label:'Cylinder – läckage, kolvstång och tätningar' },
+  { section: 'EL OCH GIVARE' },
+  { sub: 'El & kablage' },
+  { nr:'7',    label:'Kablage och anslutningar – skador, lösa kontakter' },
+  { nr:'8',    label:'Styrenhet och komponenter – indikeringar och larm' },
+  { sub: 'Motor' },
+  { nr:'9',    label:'Motor – ljud, temperatur och vibrationer vid provstart' },
+  { sub: 'Manöver & säkerhet' },
+  { nr:'10',   label:'Manöverpanel – funktion och display' },
+  { nr:'11',   label:'Nödstopp – funktionstest samtliga' },
+  { nr:'12',   label:'Säkerhetslister och rörelseskydd – funktion' },
+  { section: 'MEKANIK OCH SMÖRJNING' },
+  { sub: 'Pressplatta' },
+  { nr:'13',   label:'Pressplatta – sido-/bottenplåt, glidklossar och cylinder' },
+  { nr:'13.1', label:'↳  Sido- och bottenplåt – slitage och deformation', indent:true },
+  { nr:'13.2', label:'↳  Infästning cylinder – bultar och fästen', indent:true },
+  { nr:'13.3', label:'↳  Glidklossar – slitage, spel och justering', indent:true },
+  { nr:'13.4', label:'↳  Justering pressplatta – rörelsemönster', indent:true },
+  { nr:'14',   label:'Jalusiplåtar och skraplister – skick' },
+  { sub: 'Inkastlock' },
+  { nr:'15',   label:'Inkastlock – gångjärn, öppning och låsning' },
+  { sub: 'Baklucka' },
+  { nr:'17',   label:'Baklucka – vantskruv, tvingar och upphängningskedja' },
+  { nr:'17.1', label:'↳  Vantskruv – skick, gäng och åtdragning', indent:true },
+  { nr:'17.2', label:'↳  Tvingar – funktion, slitage och låsning', indent:true },
+  { nr:'17.3', label:'↳  Upphängningskedja – skick, länkar och fästen', indent:true },
+  { nr:'18',   label:'Baklucka – säkerhetslåsning och krok' },
+  { nr:'19',   label:'Tätlist baklucka – kondition och tätning' },
+  { sub: 'Hjul & lyftkrokar' },
+  { nr:'20',   label:'Hjul – skick, slitage och funktion' },
+  { nr:'21',   label:'Lyftkrokar – skick, slitage och säkerhet' },
+  { sub: 'Smörjning & infästning' },
+  { nr:'22',   label:'Smörjnipplar och smörjpunkter – smörjning vid behov' },
+  { nr:'23',   label:'Bultar och infästningar – åtdragning' },
+  { section: 'YTSKIKT OCH SÄKERHET' },
+  { nr:'24',   label:'Lackering och korrosionsskydd – skador och roststatus' },
+  { nr:'25',   label:'Varnings- och informationsdekaler – på plats och läsliga' },
+  { nr:'26',   label:'Reflexer – placering och skick' },
+  { nr:'27',   label:'Städning och rengöring av utrustningen' },
+  { section: 'FUNKTIONSKONTROLL' },
+  { nr:'28',   label:'Behållare – golv, väggar och täthet invändigt' },
+  { nr:'29',   label:'Låsning för transport – funktion' },
+  { nr:'30',   label:'Driftkontroll – komplett provkörning efter genomgång' },
+];
+const FLYGANDE_EXTRA = [
+  { section: 'DEL B – INSTALLATION & PLACERING' },
+  { sub: 'Placering & infästning' },
+  { nr:'B1', label:'Förankring / bultar i golv eller vägg' },
+  { nr:'B2', label:'Styrskenor – skick och slitage' },
+  { nr:'B3', label:'Styrskenornas infästning och bultar' },
+  { sub: 'Skydd & säkerhet' },
+  { nr:'B4', label:'Skyddsräcke runt maskinen – finns det, skick' },
+  { nr:'B5', label:'Skydd mot obehörig åtkomst (lås, stängsel)' },
+  { nr:'B6', label:'Skyltning – varningsdekaler och instruktioner på plats' },
+  { nr:'B7', label:'Utrymningsvägar ej blockerade' },
+  { sub: 'Miljö & drift' },
+  { nr:'B8', label:'Renhet och städning runt maskinen' },
+  { nr:'B9', label:'Knappdosa, aggregat och elmotor – skyddade mot väder och fukt' },
+];
+
+// ═══════════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════════
+const API = window.location.origin;
+
+async function apiFetch(path, opts={}) {
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+let currentUser = null;
+
+async function initAuth() {
+  try {
+    currentUser = await apiFetch('/api/me');
+  } catch { currentUser = null; }
+
+  if (!currentUser) {
+    await loadUserList();
+    showPage('login');
+  } else {
+    showPage('start');
+    updateUserGreeting();
+    checkRegisterStatus();
+  }
+}
+
+async function loadUserList() {
+  try {
+    const users = await apiFetch('/api/users');
+    const sel = document.getElementById('login-name');
+    sel.innerHTML = '<option value="">– Välj namn –</option>';
+    users.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.name;
+      opt.textContent = u.name;
+      sel.appendChild(opt);
+    });
+  } catch {}
+}
+
+async function doLogin() {
+  const name = document.getElementById('login-name').value;
+  const pin  = document.getElementById('login-pin').value;
+  const err  = document.getElementById('login-error');
+  err.textContent = '';
+  if (!name) { err.textContent = 'Välj ett namn.'; return; }
+  if (!pin)  { err.textContent = 'Ange PIN.'; return; }
+  try {
+    currentUser = await apiFetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, pin })
+    });
+    document.getElementById('login-pin').value = '';
+    showPage('start');
+    updateUserGreeting();
+    checkRegisterStatus();
+  } catch {
+    err.textContent = 'Fel namn eller PIN — försök igen.';
+    document.getElementById('login-pin').value = '';
+  }
+}
+
+async function doLogout() {
+  await apiFetch('/api/logout', { method: 'POST' });
+  currentUser = null;
+  await loadUserList();
+  showPage('login');
+}
+
+function showPage(page) {
+  document.getElementById('login-page').style.display  = page === 'login'  ? 'flex'  : 'none';
+  document.getElementById('start-page').style.display  = page === 'start'  ? 'flex'  : 'none';
+  document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
+}
+
+function updateUserGreeting() {
+  const el = document.getElementById('user-greeting');
+  if (el && currentUser) el.textContent = `👤 ${currentUser.name}`;
+}
+
+// ═══════════════════════════════════════════════════
+// MACHINE REGISTER
+// ═══════════════════════════════════════════════════
+let machineCount = 0;
+let lookupTimer  = null;
+let currentType  = null;
+
+async function checkRegisterStatus() {
+  try {
+    const machines = await apiFetch('/api/machines');
+    machineCount = machines.length;
+    const st = document.getElementById('reg-status');
+    st.textContent = machineCount > 0 ? `${machineCount} maskiner i register` : 'Registret är tomt';
+    st.className = 'reg-status' + (machineCount > 0 ? ' loaded' : '');
+  } catch {
+    document.getElementById('reg-status').textContent = 'Ingen serveranslutning';
+    document.getElementById('reg-status').className = 'reg-status error';
+  }
+}
+initAuth();
+
+async function uploadRegister(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const st = document.getElementById('reg-status');
+  st.textContent = 'Laddar upp...';
+  st.className = 'reg-status';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch(API + '/api/machines/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Fel');
+    machineCount = data.imported;
+    st.textContent = `${machineCount} maskiner inladdade`;
+    st.className = 'reg-status loaded';
+  } catch (e) {
+    st.textContent = 'Fel: ' + e.message;
+    st.className = 'reg-status error';
+  }
+  event.target.value = '';
+}
+
+function onMaskinInput(val) {
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(() => lookupMachine(val), 500);
+}
+
+async function lookupMachine(val) {
+  const badge    = document.getElementById('machine-badge');
+  const infoCard = document.getElementById('machine-info-card');
+  const infoGrid = document.getElementById('machine-info-grid');
+  const key = val.trim();
+  if (!key) {
+    badge.className = 'machine-lookup-badge';
+    infoCard.classList.remove('visible');
+    return;
+  }
+  try {
+    const m = await apiFetch('/api/machines/' + encodeURIComponent(key));
+    if (!m) {
+      badge.textContent = 'Objektnummer ej hittat i register';
+      badge.className = 'machine-lookup-badge error visible';
+      infoCard.classList.remove('visible');
+      return;
+    }
+
+    // Auto-fill form fields
+    const modStr = [m.fabrikat, m.modell].filter(Boolean).join(' ');
+    if (modStr) document.getElementById('f-modell').value = modStr;
+
+    // Build info card
+    const fields = [
+      { label: 'Kund',          val: m.kund },
+      { label: 'Adress',        val: [m.adress, m.stad].filter(Boolean).join(', ') },
+      { label: 'Kontaktperson', val: m.kontakt },
+      { label: 'Telefon',       val: m.telefon, tel: true },
+      { label: 'Märke / Typ',   val: modStr },
+      { label: 'Årsmodell',     val: m.arsmodell },
+      { label: 'Tillv.nr',      val: m.tillvnr },
+      { label: 'Avdelning',     val: m.avdelning },
+    ].filter(f => f.val);
+
+    infoGrid.innerHTML = fields.map(f => `
+      <div class="mi-field">
+        <div class="mi-label">${f.label}</div>
+        <div class="mi-val">${f.tel && f.val
+          ? `<a href="tel:${f.val.replace(/\s/g,'')}">${f.val}</a>`
+          : f.val}</div>
+      </div>`).join('');
+
+    badge.textContent = '✓ ' + m.kund;
+    badge.className = 'machine-lookup-badge visible';
+    infoCard.classList.add('visible');
+    loadHistory(key);
+  } catch {
+    badge.textContent = 'Kunde inte hämta maskindata';
+    badge.className = 'machine-lookup-badge error visible';
+    infoCard.classList.remove('visible');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// PROTOCOL HISTORY
+// ═══════════════════════════════════════════════════
+async function loadHistory(maskinNr) {
+  const banner = document.getElementById('history-banner');
+  const list   = document.getElementById('history-list');
+  try {
+    const hist = await apiFetch('/api/protocols/' + encodeURIComponent(maskinNr));
+    if (!hist.length) { banner.classList.remove('visible'); return; }
+
+    // Pre-fill checklist from most recent protocol's flagged items
+    const latest = hist[0];
+    const prefilled = prefillFromProtocol(latest);
+
+    banner.classList.add('visible');
+    list.innerHTML = '';
+
+    if (prefilled > 0) {
+      const notice = document.createElement('div');
+      notice.style.cssText = 'font-size:12px;color:#1565c0;margin-bottom:8px;font-style:italic;';
+      notice.textContent = `↩ ${prefilled} anmärkning${prefilled > 1 ? 'ar' : ''} från senaste protokollet (${latest.datum || '–'}) förifylld${prefilled > 1 ? 'a' : ''}.`;
+      list.appendChild(notice);
+    }
+
+    hist.forEach(rec => {
+      const s = summarizeStatus(rec.items);
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <span class="hi-date">${rec.datum || '–'}</span>
+        <span class="hi-type">${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'} · ${rec.tekniker || '–'}</span>
+        <span class="hi-badges">
+          <span class="badge ok">${s.ok} OK</span>
+          ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
+          ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>`     : ''}
+        </span>`;
+      div.onclick = () => openHistoryModal(rec);
+      list.appendChild(div);
+    });
+  } catch { banner.classList.remove('visible'); }
+}
+
+function prefillFromProtocol(rec) {
+  const flagged  = (rec.items || []).filter(i => i.status === '2' || i.status === '3');
+  const resolved = rec.resolved || {};
+  let count = 0;
+
+  flagged.forEach(item => {
+    const id  = 'item-' + item.nr.replace(/\./g, '_');
+    const div = document.getElementById(id);
+    if (!div) return;
+
+    const resolvedEntry = resolved[item.nr];
+
+    if (resolvedEntry) {
+      // Åtgärdad — lämna tomt men sätt en notering i kommentarsfältet
+      const cb = document.getElementById(id + '-comment');
+      if (cb) {
+        const resolvedDate = resolvedEntry.date || resolvedEntry;
+        cb.classList.add('visible');
+        const ta = cb.querySelector('textarea');
+        if (ta) ta.value = `Åtgärdad ${resolvedDate} (tidigare ${item.status === '3' ? 'akut' : 'bevaka'})`;
+      }
+    } else {
+      // Ej åtgärdad — förifyll med samma status och kommentar
+      const radio = document.getElementById(id + '-' + item.status);
+      if (!radio) return;
+      radio.checked = true;
+      div.className = 'check-item' + (item.status === '2' ? ' status-bevaka' : ' status-akut');
+      const cb = document.getElementById(id + '-comment');
+      if (cb) {
+        cb.classList.add('visible');
+        const ta = cb.querySelector('textarea');
+        if (ta && item.comment) ta.value = item.comment;
+      }
+      count++;
+    }
+  });
+
+  if (count) updateSummary();
+  return count;
+}
+
+function summarizeStatus(items) {
+  let ok=0, bevaka=0, akut=0;
+  (items||[]).forEach(i => { if(i.status==='1')ok++; else if(i.status==='2')bevaka++; else if(i.status==='3')akut++; });
+  return {ok,bevaka,akut};
+}
+
+let _currentModalRec = null;
+
+function openHistoryModal(rec) {
+  _currentModalRec = rec;
+  document.getElementById('modal-title').textContent =
+    `${rec.maskin_nr} · ${rec.datum||'–'} · ${rec.type==='flygande'?'Flygande':'Verkstad'}`;
+  renderModalBody(rec);
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function renderModalBody(rec) {
+  const resolved = rec.resolved || {};
+  let html = `<div class="modal-section"><h3>Uppgifter</h3><div class="modal-fields">
+    <div class="modal-field"><div class="mf-label">Kund</div><div class="mf-val">${rec.kund||'–'}</div></div>
+    <div class="modal-field"><div class="mf-label">Anläggning</div><div class="mf-val">${rec.anlaggning||'–'}</div></div>
+    <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'–'}</div></div>
+    <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'–'}</div></div>
+  </div></div>`;
+
+  const flagged = (rec.items||[]).filter(i=>i.status==='2'||i.status==='3');
+  if (flagged.length) {
+    html += `<div class="modal-section"><h3>Anmärkningar</h3>`;
+    flagged.forEach(i => {
+      const isResolved = !!resolved[i.nr];
+      const resolvedDate = resolved[i.nr] || '';
+      html += `
+        <div class="hist-item-row ${isResolved ? 'resolved-row' : ''}" id="hrow-${rec.id}-${i.nr.replace(/\./g,'_')}">
+          <span class="hist-item-nr">${i.nr}</span>
+          <span class="hist-item-lbl ${isResolved ? 'resolved-lbl' : ''}">${i.label}</span>
+          <span class="hist-item-status" style="display:flex;align-items:center;gap:6px;">
+            ${isResolved
+              ? `<span class="badge resolved-badge">✓ Åtgärdad ${resolvedDate.date||resolvedDate} · ${resolvedDate.by||''}</span>`
+              : `<span class="badge ${i.status==='3'?'akut':'bevaka'}">${i.status==='3'?'Akut':'Bevaka'}</span>`}
+            ${isResolved
+              ? `<button class="resolve-btn resolve-btn-undo" onclick="toggleResolved(${rec.id}, '${i.nr}')">Ångra</button>`
+              : `<button class="resolve-btn" onclick="toggleResolved(${rec.id}, '${i.nr}')">✓ Åtgärdad</button>`
+            }
+          </span>
+        </div>
+        ${i.comment && !isResolved ? `<div class="hist-item-comment">${i.comment}</div>` : ''}`;
+    });
+    html += '</div>';
+  }
+
+  const ok = (rec.items||[]).filter(i=>i.status==='1');
+  if (ok.length) {
+    html += `<div class="modal-section"><h3>Godkända punkter (${ok.length})</h3>`;
+    ok.forEach(i => {
+      html += `<div class="hist-item-row">
+        <span class="hist-item-nr">${i.nr}</span>
+        <span class="hist-item-lbl">${i.label}</span>
+        <span><span class="badge ok">OK</span></span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('modal-body').innerHTML = html;
+}
+
+async function toggleResolved(protocolId, nr) {
+  const isResolved = !!(_currentModalRec.resolved || {})[nr];
+  try {
+    const res = await apiFetch(`/api/protocols/${protocolId}/resolve`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nr, undo: isResolved })
+    });
+    _currentModalRec.resolved = res.resolved;
+    renderModalBody(_currentModalRec);
+    const maskin = document.getElementById('f-maskin').value.trim();
+    if (maskin) loadHistory(maskin);
+  } catch(e) {
+    alert('Kunde inte spara: ' + e.message);
+  }
+}
+
+function closeModal(event, force) {
+  if (force || !event || event.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════
+// SAVE PROTOCOL
+// ═══════════════════════════════════════════════════
+async function saveProtocol() {
+  const maskin = document.getElementById('f-maskin').value.trim();
+  if (!maskin) { alert('Fyll i maskinnummer innan du sparar.'); return; }
+
+  const items = [];
+  document.querySelectorAll('.check-item').forEach(div => {
+    const checked = div.querySelector('input[type=radio]:checked');
+    if (!checked) return;
+    items.push({
+      nr:      div.querySelector('.item-nr').textContent.trim(),
+      label:   div.querySelector('.item-label').textContent.trim(),
+      status:  checked.value,
+      comment: (div.querySelector('.comment-box textarea')||{}).value || '',
+    });
+  });
+
+  const btn  = document.getElementById('save-btn');
+  const conf = document.getElementById('save-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Sparar...';
+
+  try {
+    const infoFields = {};
+    document.querySelectorAll('#machine-info-grid .mi-field').forEach(f => {
+      const lbl = f.querySelector('.mi-label').textContent;
+      const val = f.querySelector('.mi-val').textContent;
+      if (lbl === 'Kund') infoFields.kund = val;
+      if (lbl === 'Adress') infoFields.anlaggning = val;
+    });
+    await apiFetch('/api/protocols', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        maskin_nr:  maskin,
+        datum:      document.getElementById('f-datum').value,
+        type:       currentType,
+        kund:       infoFields.kund || '',
+        anlaggning: infoFields.anlaggning || '',
+        tekniker:   document.getElementById('f-tekniker').value,
+        modell:     document.getElementById('f-modell').value,
+        items,
+      })
+    });
+    conf.textContent = '✓ Protokollet är sparat!';
+    conf.className = 'save-confirm visible ok-msg';
+    loadHistory(maskin.toUpperCase());
+  } catch (e) {
+    conf.textContent = '✗ Fel vid sparande: ' + e.message;
+    conf.className = 'save-confirm visible err-msg';
+  }
+  btn.disabled = false;
+  btn.textContent = '💾 Spara protokoll';
+  setTimeout(() => conf.classList.remove('visible'), 4000);
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function openProtocol(type) {
+  currentType = type;
+  showPage('protocol');
+  document.getElementById('protocol-title').textContent =
+    type==='flygande' ? 'Typ 2 – Flygande service' : 'Typ 1 – Verkstadsintag';
+
+  buildChecklist(type==='flygande' ? [...SHARED_ITEMS,...FLYGANDE_EXTRA] : [...SHARED_ITEMS]);
+  document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
+  ['f-maskin','f-modell'].forEach(id => document.getElementById(id).value='');
+  // Auto-fill tekniker från inloggad användare
+  document.getElementById('f-tekniker').value = currentUser ? currentUser.name : '';
+  document.getElementById('machine-badge').className = 'machine-lookup-badge';
+  document.getElementById('machine-info-card').classList.remove('visible');
+  document.getElementById('history-banner').classList.remove('visible');
+  document.getElementById('save-confirm').classList.remove('visible');
+  updateSummary();
+}
+
+function goBack() {
+  if (confirm('Gå tillbaka? Osparade ändringar försvinner.')) {
+    showPage('start');
+    document.getElementById('checklist-container').innerHTML = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD CHECKLIST
+// ═══════════════════════════════════════════════════
+function buildChecklist(items) {
+  const container = document.getElementById('checklist-container');
+  container.innerHTML = '';
+  let cardEl = null;
+  items.forEach(item => {
+    if (item.section) {
+      const sh = document.createElement('div');
+      sh.className = 'section-header'; sh.textContent = item.section;
+      container.appendChild(sh);
+      cardEl = document.createElement('div');
+      cardEl.className = 'checklist-card';
+      container.appendChild(cardEl);
+    } else if (item.sub) {
+      const sub = document.createElement('div');
+      sub.className = 'subsection-header'; sub.textContent = item.sub;
+      cardEl.appendChild(sub);
+    } else if (item.nr) {
+      cardEl.appendChild(buildItem(item));
+    }
+  });
+}
+
+function buildItem(item) {
+  const id = 'item-' + item.nr.replace(/\./g,'_');
+  const div = document.createElement('div');
+  div.className = 'check-item'; div.id = id;
+  const top = document.createElement('div'); top.className = 'item-top';
+  const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
+  const lbl = document.createElement('span');
+  lbl.className = 'item-label' + (item.indent?' sub':''); lbl.textContent = item.label;
+  const rg = document.createElement('div'); rg.className = 'radio-group';
+  [['1','OK'],['2','Bev.'],['3','Akut']].forEach(([val,txt]) => {
+    const opt = document.createElement('div'); opt.className = 'radio-opt';
+    const radio = document.createElement('input');
+    radio.type='radio'; radio.name=id; radio.value=val; radio.id=id+'-'+val;
+    radio.addEventListener('change', () => onStatusChange(item.nr, val, div));
+    const label = document.createElement('label');
+    label.htmlFor=id+'-'+val; label.textContent=txt;
+    opt.appendChild(radio); opt.appendChild(label); rg.appendChild(opt);
+  });
+  top.appendChild(nr); top.appendChild(lbl); top.appendChild(rg);
+  div.appendChild(top);
+  const cb = document.createElement('div'); cb.className='comment-box'; cb.id=id+'-comment';
+  const cl = document.createElement('label'); cl.textContent='Kommentar / åtgärd:';
+  const ta = document.createElement('textarea'); ta.placeholder='Beskriv åtgärd eller notering...';
+  ta.addEventListener('input', updateSummary);
+  cb.appendChild(cl); cb.appendChild(ta); div.appendChild(cb);
+  return div;
+}
+
+function onStatusChange(nr, val, div) {
+  div.className = 'check-item'+(val==='1'?' status-ok':val==='2'?' status-bevaka':' status-akut');
+  const cb = document.getElementById('item-'+nr.replace(/\./g,'_')+'-comment');
+  cb.classList.toggle('visible', val==='2'||val==='3');
+  updateSummary();
+}
+
+// ═══════════════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════════════
+function updateSummary() {
+  const radios = document.querySelectorAll('.check-item input[type=radio]:checked');
+  let ok=0,bevaka=0,akut=0; const flagged=[];
+  radios.forEach(r => {
+    if(r.value==='1')ok++;
+    else if(r.value==='2'){bevaka++;flagged.push({radio:r,status:'bevaka'});}
+    else if(r.value==='3'){akut++;flagged.push({radio:r,status:'akut'});}
+  });
+  document.getElementById('cnt-ok').textContent=ok;
+  document.getElementById('cnt-bevaka').textContent=bevaka;
+  document.getElementById('cnt-akut').textContent=akut;
+  const os=document.getElementById('overall-status');
+  if(akut>0){os.className='overall-status akut';os.textContent='⚠ Akuta anmärkningar – åtgärd krävs';}
+  else if(bevaka>0){os.className='overall-status bevaka';os.textContent='● Bevakningspunkter noterade – följ upp';}
+  else if(ok>0){os.className='overall-status ok';os.textContent='✓ Allt kontrollerat och godkänt';}
+  else{os.className='overall-status ok';os.textContent='Fyll i kontrollpunkterna ovan';}
+  const sn=document.getElementById('summary-notes');
+  if(!flagged.length){sn.innerHTML='';return;}
+  let html='<h3>Anmärkningar</h3>';
+  flagged.forEach(f=>{
+    const itemId=f.radio.name;
+    const nr=itemId.replace('item-','').replace(/_/g,'.');
+    const labelEl=document.querySelector(`#${itemId} .item-label`);
+    const ta=document.querySelector(`#${itemId}-comment textarea`);
+    html+=`<div class="summary-note-item ${f.status}">
+      <div class="snr">Nr ${nr} – ${f.status==='akut'?'🔴 Akut':'🟡 Bevaka'}</div>
+      <div class="stext">${labelEl?labelEl.textContent:''}</div>
+      ${ta&&ta.value.trim()?`<div class="scomment">${ta.value.trim()}</div>`:''}
+    </div>`;
+  });
+  sn.innerHTML=html;
+}
+</script>
+</body>
+</html>

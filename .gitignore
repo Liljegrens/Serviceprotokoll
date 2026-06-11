@@ -1,0 +1,24 @@
+# Databas – ska inte versionshanteras
+serviceprotokoll.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Temporära filer
+*.tmp
+*.log
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Engångsskript
+seed_users.py
+migrate_db.py
