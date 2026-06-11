@@ -585,7 +585,7 @@
   <div class="top-bar">
     <button class="back-btn" onclick="goBack()">← Tillbaka</button>
     <h1 id="protocol-title"></h1>
-    <button class="top-btn" onclick="window.print()">🖨 Skriv ut</button>
+    <button class="top-btn" id="print-top-btn" onclick="window.print()">🖨 Skriv ut</button>
   </div>
   <div class="protocol-body">
     <div class="header-card">
@@ -1098,10 +1098,13 @@ function renderModalBody(rec) {
     html += '</div>';
   }
   html += renderWorkflowPanel(rec);
-  html += `<div class="modal-actions">
-    <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
-    <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
-  </div>`;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  if (isAdmin) {
+    html += `<div class="modal-actions">
+      <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
+      <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
+    </div>`;
+  }
   document.getElementById('modal-body').innerHTML = html;
 }
 
@@ -1245,6 +1248,9 @@ function openProtocol(type) {
   showPage('protocol');
   document.getElementById('protocol-title').textContent =
     type==='flygande' ? 'Typ 2 – Flygande service' : 'Typ 1 – Verkstadsintag';
+  // Dölj utskriftsknapp för tekniker
+  const printBtn = document.getElementById('print-top-btn');
+  if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
 
   buildChecklist(type==='flygande' ? [...SHARED_ITEMS,...FLYGANDE_EXTRA] : [...SHARED_ITEMS]);
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
