@@ -802,6 +802,13 @@ async function doLogout() {
 }
 
 async function loadRecentProtocols() {
+  // Tekniker ska inte se senaste protokoll
+  const section = document.querySelector('.recent-section');
+  if (!currentUser || currentUser.role !== 'admin') {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = '';
   const list = document.getElementById('recent-list');
   try {
     const recs = await apiFetch('/api/protocols/recent?limit=15');
