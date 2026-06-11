@@ -339,6 +339,21 @@
     padding: 8px 10px; font-size: 13px; font-family: Arial, sans-serif; resize: vertical; min-height: 60px;
   }
   .comment-box textarea:focus { outline: none; border-color: var(--brand); }
+  .photo-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .photo-btn {
+    display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 6px;
+    font-size: 12px; color: var(--gray); cursor: pointer; font-weight: 600; white-space: nowrap;
+  }
+  .photo-btn:hover { border-color: var(--brand); color: var(--brand); background: #eef3f7; }
+  .photo-btn.uploading { opacity: 0.6; cursor: not-allowed; }
+  .photo-thumb {
+    width: 64px; height: 64px; object-fit: cover; border-radius: 6px;
+    border: 1.5px solid var(--border); cursor: pointer;
+  }
+  .photo-remove {
+    font-size: 11px; color: var(--akut); cursor: pointer; text-decoration: underline;
+  }
 
   /* ─── SUMMARY ─── */
   .summary-card { background: var(--card); border-radius: 10px; padding: 20px; margin-top: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
@@ -1177,7 +1192,8 @@ function renderModalBody(rec) {
             }
           </span>
         </div>
-        ${i.comment && !isResolved ? `<div class="hist-item-comment">${i.comment}</div>` : ''}`;
+        ${i.comment && !isResolved ? `<div class="hist-item-comment">${i.comment}</div>` : ''}
+        ${i.photo ? `<div style="margin:4px 0 8px 32px;"><a href="${API}/uploads/${i.photo}" target="_blank"><img src="${API}/uploads/${i.photo}" style="max-width:120px;max-height:100px;border-radius:6px;border:1.5px solid var(--border);object-fit:cover;" title="Klicka för att förstora"></a></div>` : ''}`;
     });
     html += '</div>';
   }
@@ -1295,6 +1311,7 @@ async function saveProtocol() {
       label:   div.querySelector('.item-label').textContent.trim(),
       status:  checked.value,
       comment: (div.querySelector('.comment-box textarea')||{}).value || '',
+      photo:   div.querySelector('.photo-thumb') ? div.querySelector('.photo-thumb').dataset.filename : '',
     });
   });
 
@@ -1387,7 +1404,8 @@ function sendEmail() {
     const nr      = div.querySelector('.item-nr').textContent.trim();
     const label   = div.querySelector('.item-label').textContent.trim();
     const comment = (div.querySelector('.comment-box textarea') || {}).value || '';
-    items.push({ nr, label, status: checked.value, comment });
+    const photo = div.querySelector('.photo-thumb') ? div.querySelector('.photo-thumb').dataset.filename : '';
+    items.push({ nr, label, status: checked.value, comment, photo });
   });
 
   const ok      = items.filter(i => i.status === '1');
@@ -1721,8 +1739,66 @@ function buildItem(item) {
   const cl = document.createElement('label'); cl.textContent='Kommentar / åtgärd:';
   const ta = document.createElement('textarea'); ta.placeholder='Beskriv åtgärd eller notering...';
   ta.addEventListener('input', updateSummary);
-  cb.appendChild(cl); cb.appendChild(ta); div.appendChild(cb);
+
+  // Foto-rad
+  const photoRow = document.createElement('div'); photoRow.className='photo-row';
+  const photoBtn = document.createElement('button');
+  photoBtn.type='button'; photoBtn.className='photo-btn';
+  photoBtn.innerHTML='📷 Lägg till foto';
+  const fileInput = document.createElement('input');
+  fileInput.type='file'; fileInput.accept='image/*'; fileInput.capture='environment';
+  fileInput.style.display='none';
+  fileInput.addEventListener('change', () => uploadItemPhoto(fileInput, item.nr, photoRow, photoBtn));
+  photoBtn.addEventListener('click', () => fileInput.click());
+  photoRow.appendChild(photoBtn); photoRow.appendChild(fileInput);
+
+  cb.appendChild(cl); cb.appendChild(ta); cb.appendChild(photoRow); div.appendChild(cb);
   return div;
+}
+
+async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  photoBtn.textContent = '⏳ Laddar upp…';
+  photoBtn.classList.add('uploading');
+  photoBtn.disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append('photo', file);
+    const res = await fetch(API + '/api/photos', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Fel');
+
+    // Visa miniatyr
+    const thumb = document.createElement('img');
+    thumb.className = 'photo-thumb';
+    thumb.src = API + '/uploads/' + data.filename;
+    thumb.dataset.filename = data.filename;
+    thumb.title = 'Klicka för att se fullstorlek';
+    thumb.addEventListener('click', () => window.open(thumb.src, '_blank'));
+
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'photo-remove';
+    removeBtn.textContent = 'Ta bort';
+    removeBtn.addEventListener('click', () => {
+      thumb.remove(); removeBtn.remove();
+      photoBtn.textContent = '📷 Lägg till foto';
+      photoBtn.classList.remove('uploading');
+      photoBtn.disabled = false;
+    });
+
+    photoRow.appendChild(thumb);
+    photoRow.appendChild(removeBtn);
+    photoBtn.textContent = '📷 Byt foto';
+    photoBtn.classList.remove('uploading');
+    photoBtn.disabled = false;
+  } catch(e) {
+    alert('Kunde inte ladda upp foto: ' + e.message);
+    photoBtn.textContent = '📷 Lägg till foto';
+    photoBtn.classList.remove('uploading');
+    photoBtn.disabled = false;
+  }
+  fileInput.value = '';
 }
 
 function onStatusChange(nr, val, div) {

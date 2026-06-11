@@ -1,6 +1,9 @@
 # Databas – ska inte versionshanteras
 serviceprotokoll.db
 
+# Uppladdade bilder
+uploads/
+
 # Python
 __pycache__/
 *.pyc

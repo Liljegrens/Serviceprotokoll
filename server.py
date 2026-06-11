@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request, send_from_directory, session
-import sqlite3, json, os, secrets
+import sqlite3, json, os, secrets, uuid
 from datetime import datetime
 import openpyxl
 
-BASE = os.path.dirname(os.path.abspath(__file__))
-DB   = os.path.join(BASE, 'serviceprotokoll.db')
+BASE    = os.path.dirname(os.path.abspath(__file__))
+DB      = os.path.join(BASE, 'serviceprotokoll.db')
+UPLOADS = os.path.join(BASE, 'uploads')
+os.makedirs(UPLOADS, exist_ok=True)
 app  = Flask(__name__, static_folder=BASE)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
@@ -309,6 +311,26 @@ def save_protocol():
         ))
         pid = db.execute('SELECT last_insert_rowid()').fetchone()[0]
     return jsonify({'id': pid}), 201
+
+# ── Photo upload ─────────────────────────────────────────────
+
+ALLOWED_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'}
+
+@app.route('/api/photos', methods=['POST'])
+def upload_photo():
+    if 'photo' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['photo']
+    ext = os.path.splitext(f.filename)[1].lower()
+    if ext not in ALLOWED_EXT:
+        return jsonify({'error': 'Otillåtet filformat'}), 400
+    filename = uuid.uuid4().hex + ext
+    f.save(os.path.join(UPLOADS, filename))
+    return jsonify({'filename': filename}), 201
+
+@app.route('/uploads/<filename>')
+def serve_upload(filename):
+    return send_from_directory(UPLOADS, filename)
 
 if __name__ == '__main__':
     import socket
