@@ -413,6 +413,44 @@
   .mi-field a { color: #1565c0; text-decoration: none; }
   .mi-field a:hover { text-decoration: underline; }
 
+  /* ─── OVERVIEW PAGE ─── */
+  #overview-page .top-bar { background: var(--brand); color:#fff; display:flex; align-items:center; gap:12px; padding:12px 16px; }
+  .ov-filter-bar {
+    display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;
+    background:var(--card); border-radius:10px; padding:16px; margin-bottom:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.08);
+  }
+  .ov-filter-group { display:flex; flex-direction:column; gap:4px; }
+  .ov-filter-group label { font-size:12px; font-weight:600; color:var(--gray); }
+  .ov-filter-group select, .ov-filter-group input {
+    border:1.5px solid var(--border); border-radius:7px; padding:7px 10px;
+    font-size:14px; font-family:Arial,sans-serif; min-width:150px;
+  }
+  .ov-filter-group select:focus, .ov-filter-group input:focus { outline:none; border-color:var(--brand); }
+  .ov-search-btn {
+    padding:8px 20px; background:var(--brand); color:#fff; border:none;
+    border-radius:7px; font-size:14px; font-weight:700; cursor:pointer; align-self:flex-end;
+  }
+  .ov-search-btn:hover { background:var(--brand-light); }
+  .ov-select-bar {
+    display:flex; align-items:center; gap:12px; padding:10px 14px;
+    background:#e8f5e9; border-radius:8px; margin-bottom:10px;
+    font-size:13px; font-weight:600; color:var(--ok);
+  }
+  .ov-clear-btn { font-size:12px; color:var(--gray); background:none; border:none; cursor:pointer; text-decoration:underline; }
+  .ov-row {
+    display:flex; align-items:center; gap:12px; background:var(--card);
+    border-radius:8px; padding:12px 14px; margin-bottom:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); cursor:pointer; transition:box-shadow 0.15s;
+  }
+  .ov-row:hover { box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .ov-row.selected { border:2px solid var(--brand); background:#eef3f7; }
+  .ov-row input[type=checkbox] { width:18px; height:18px; cursor:pointer; accent-color:var(--brand); flex-shrink:0; }
+  .ov-row-info { flex:1; min-width:0; }
+  .ov-row-title { font-weight:700; font-size:14px; }
+  .ov-row-sub { font-size:12px; color:var(--gray); margin-top:2px; }
+  .ov-row-badges { display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; align-items:center; }
+
   @media print {
     @page { size: A4 portrait; margin: 10mm 10mm 10mm 10mm; }
 
@@ -591,8 +629,43 @@
     <div class="recent-list" id="recent-list">
       <div class="recent-empty">Laddar...</div>
     </div>
+    <div id="recent-admin-link"></div>
   </div>
 
+</div>
+
+<!-- ═══════════ OVERVIEW PAGE ═══════════ -->
+<div id="overview-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <h1>Protokollöversikt</h1>
+    <button class="top-btn" id="pdf-batch-btn" onclick="batchPDF()" style="display:none;">🖨 Skapa samlad PDF</button>
+  </div>
+  <div style="padding:16px;max-width:900px;margin:0 auto;">
+    <!-- Filter -->
+    <div class="ov-filter-bar">
+      <div class="ov-filter-group">
+        <label>Kund</label>
+        <select id="ov-filter-kund"><option value="">Alla kunder</option></select>
+      </div>
+      <div class="ov-filter-group">
+        <label>Från</label>
+        <input type="date" id="ov-filter-from">
+      </div>
+      <div class="ov-filter-group">
+        <label>Till</label>
+        <input type="date" id="ov-filter-to">
+      </div>
+      <button class="ov-search-btn" onclick="loadOverview()">Sök</button>
+    </div>
+    <!-- Val-info -->
+    <div class="ov-select-bar" id="ov-select-bar" style="display:none;">
+      <span id="ov-select-count">0 markerade</span>
+      <button class="ov-clear-btn" onclick="clearSelection()">Avmarkera alla</button>
+    </div>
+    <!-- Lista -->
+    <div id="ov-list"><div class="recent-empty" style="color:#888;text-align:center;padding:32px;">Välj filter och klicka Sök</div></div>
+  </div>
 </div>
 
 <!-- ═══════════ PROTOCOL PAGE ═══════════ -->
@@ -877,12 +950,257 @@ async function loadRecentProtocols() {
   } catch {
     list.innerHTML = '<div class="recent-empty">Kunde inte ladda protokoll.</div>';
   }
+  // Visa "Visa alla"-länk för admin
+  const adminLink = document.getElementById('recent-admin-link');
+  if (adminLink && currentUser && currentUser.role === 'admin') {
+    adminLink.innerHTML = `<button onclick="openOverview()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-top:8px;text-decoration:underline;">Visa alla protokoll →</button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// OVERVIEW PAGE
+// ═══════════════════════════════════════════════════
+let _ovSelected = new Set();   // set av protocol id:n
+let _ovProtocols = [];         // alla protokoll från senaste sökning
+
+async function openOverview() {
+  showPage('overview');
+  _ovSelected.clear();
+  updateSelectBar();
+  // Sätt standarddatum: innevarande månad
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('ov-filter-from').value = `${y}-${m}-01`;
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('ov-filter-to').value   = `${y}-${m}-${last}`;
+  await loadOverviewKunder();
+  await loadOverview();
+}
+
+async function loadOverviewKunder() {
+  try {
+    const protocols = await apiFetch('/api/protocols/search?limit=500');
+    const kunder = [...new Set(protocols.map(p => p.kund).filter(Boolean))].sort();
+    const sel = document.getElementById('ov-filter-kund');
+    sel.innerHTML = '<option value="">Alla kunder</option>' +
+      kunder.map(k => `<option value="${k}">${k}</option>`).join('');
+  } catch {}
+}
+
+async function loadOverview() {
+  const kund  = document.getElementById('ov-filter-kund').value;
+  const from  = document.getElementById('ov-filter-from').value;
+  const to    = document.getElementById('ov-filter-to').value;
+  const list  = document.getElementById('ov-list');
+  list.innerHTML = '<div style="color:#888;text-align:center;padding:24px;">Hämtar...</div>';
+  try {
+    let url = '/api/protocols/search?limit=500';
+    if (kund) url += '&kund=' + encodeURIComponent(kund);
+    if (from) url += '&from=' + from;
+    if (to)   url += '&to='   + to;
+    _ovProtocols = await apiFetch(url);
+    if (!_ovProtocols.length) {
+      list.innerHTML = '<div style="color:#888;text-align:center;padding:32px;">Inga protokoll hittades.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    _ovProtocols.forEach(rec => {
+      const items  = rec.items || [];
+      const akut   = items.filter(i => i.status==='3').length;
+      const bevaka = items.filter(i => i.status==='2').length;
+      const typLabel = rec.type === 'flygande' ? 'Flygande' : 'Verkstad';
+      const row = document.createElement('div');
+      row.className = 'ov-row' + (_ovSelected.has(rec.id) ? ' selected' : '');
+      row.innerHTML = `
+        <input type="checkbox" ${_ovSelected.has(rec.id)?'checked':''} onclick="toggleOvSelect(event,${rec.id})">
+        <div class="ov-row-info">
+          <div class="ov-row-title">${rec.maskin_nr} · ${rec.kund||'–'}</div>
+          <div class="ov-row-sub">${rec.datum||'–'} · ${typLabel} · ${rec.tekniker||'–'} · ${rec.anlaggning||''}</div>
+        </div>
+        <div class="ov-row-badges">
+          ${akut   ? `<span class="badge akut">▲ ${akut} Akut</span>` : ''}
+          ${bevaka ? `<span class="badge bevaka">● ${bevaka} Bev.</span>` : ''}
+          ${!akut && !bevaka ? `<span class="badge ok">✓ OK</span>` : ''}
+          <span class="wf-badge wf-${rec.workflow_status||'inkommen'}">${wfLabel(rec.workflow_status)}</span>
+        </div>`;
+      row.querySelector('div.ov-row-info').addEventListener('click', () => openHistoryModal(rec));
+      list.appendChild(row);
+    });
+    updateSelectBar();
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--akut);text-align:center;padding:24px;">Fel: ${e.message}</div>`;
+  }
+}
+
+function toggleOvSelect(event, id) {
+  event.stopPropagation();
+  if (_ovSelected.has(id)) _ovSelected.delete(id);
+  else _ovSelected.add(id);
+  // Uppdatera rad-utseende
+  document.querySelectorAll('.ov-row').forEach(row => {
+    const cb = row.querySelector('input[type=checkbox]');
+    if (!cb) return;
+    const rowId = parseInt(cb.getAttribute('onclick').match(/\d+/)[0]);
+    row.classList.toggle('selected', _ovSelected.has(rowId));
+  });
+  updateSelectBar();
+}
+
+function clearSelection() {
+  _ovSelected.clear();
+  document.querySelectorAll('.ov-row').forEach(r => {
+    r.classList.remove('selected');
+    const cb = r.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = false;
+  });
+  updateSelectBar();
+}
+
+function updateSelectBar() {
+  const bar = document.getElementById('ov-select-bar');
+  const btn = document.getElementById('pdf-batch-btn');
+  const n   = _ovSelected.size;
+  if (n > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('ov-select-count').textContent = `${n} protokoll markerade`;
+    if (btn) btn.style.display = '';
+  } else {
+    bar.style.display = 'none';
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+function batchPDF() {
+  const selected = _ovProtocols.filter(p => _ovSelected.has(p.id));
+  if (!selected.length) return;
+  const w = window.open('', '_blank');
+  w.document.write(buildBatchHTML(selected));
+  w.document.close();
+}
+
+function buildBatchHTML(protocols) {
+  const printDate = new Date().toLocaleDateString('sv-SE');
+  let body = '';
+  protocols.forEach((rec, idx) => {
+    const items    = rec.items || [];
+    const ok       = items.filter(i => i.status==='1');
+    const bevaka   = items.filter(i => i.status==='2');
+    const akut     = items.filter(i => i.status==='3');
+    const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+    const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
+    const statusText  = akut.length ? `⚠ ${akut.length} akuta anmärkningar`
+                      : bevaka.length ? `● ${bevaka.length} bevakningspunkter`
+                      : '✓ Allt godkänt';
+
+    // Bygg checklistsektioner
+    const recMachineType = rec.machine_type || detectMachineType(rec.beskrivning||'');
+    const ALL = recMachineType === 'kaly'
+      ? [...(window.KALY_ITEMS||[])]
+      : [...(window.SHARED_ITEMS||[]), ...(rec.type==='flygande' ? (window.FLYGANDE_EXTRA||[]) : [])];
+    let itemsHtml = '';
+    let curSection = '', curSub = '';
+    items.forEach(item => {
+      const def = ALL.find(d => d.nr === item.nr);
+      if (def) {
+        const idx2 = ALL.indexOf(def);
+        for (let i = idx2-1; i >= 0; i--) {
+          if (ALL[i].section && ALL[i].section !== curSection) {
+            curSection = ALL[i].section; curSub = '';
+            itemsHtml += `<div class="ps">${curSection}</div>`; break;
+          }
+          if (ALL[i].sub && ALL[i].sub !== curSub) {
+            curSub = ALL[i].sub;
+            itemsHtml += `<div class="psub">${curSub}</div>`; break;
+          }
+        }
+      }
+      const sc = item.status==='1'?'ok':item.status==='2'?'bev':'akut';
+      const sym = item.status==='1'?'✓':item.status==='2'?'●':'▲';
+      itemsHtml += `<div class="pi ${sc}">
+        <span class="pnr">${sym} ${item.nr}</span>
+        <span class="plbl">${item.label}</span>
+        ${item.comment?`<span class="pcom">→ ${item.comment}</span>`:''}
+        ${item.photo?`<div class="pphoto"><img src="${API}/uploads/${item.photo}"></div>`:''}
+      </div>`;
+    });
+
+    body += `<div class="protocol${idx > 0 ? ' page-break' : ''}">
+      <div class="header">
+        <h1>Serviceprotokoll – ${rec.maskin_nr}</h1>
+        <h2>${typLabel} · ${rec.kund||''} · ${rec.anlaggning||''}</h2>
+      </div>
+      <div class="meta">
+        <div class="mf"><label>Datum</label><span>${rec.datum||'–'}</span></div>
+        <div class="mf"><label>Tekniker</label><span>${rec.tekniker||'–'}</span></div>
+        <div class="mf"><label>Maskin</label><span>${rec.modell||'–'}</span></div>
+        <div class="mf"><label>Kund</label><span>${rec.kund||'–'}</span></div>
+        <div class="mf"><label>Adress</label><span>${rec.anlaggning||'–'}</span></div>
+        <div class="mf"><label>Objektnummer</label><span>${rec.maskin_nr}</span></div>
+      </div>
+      <div class="status-bar" style="color:${statusColor};background:${statusColor}18;">${statusText}</div>
+      <div class="counts">
+        <span class="cnt ok">✓ ${ok.length} OK</span>
+        ${bevaka.length?`<span class="cnt bev">● ${bevaka.length} Bevaka</span>`:''}
+        ${akut.length?`<span class="cnt akut">▲ ${akut.length} Akut</span>`:''}
+      </div>
+      ${akut.length||bevaka.length?`<div class="section"><h3>Anmärkningar</h3>
+        ${akut.map(i=>`<div class="anm akut"><span class="nr">▲ Nr ${i.nr} – ${i.label}</span>${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
+        ${bevaka.map(i=>`<div class="anm bev"><span class="nr">● Nr ${i.nr} – ${i.label}</span>${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
+      </div>`:''}
+      <div class="items">${itemsHtml}</div>
+      <div class="footer">
+        <span>Liljegrens i Tyresö AB · Serviceprotokoll</span>
+        <span>${idx+1} / ${protocols.length} · Utskrivet ${printDate}</span>
+      </div>
+    </div>`;
+  });
+
+  return `<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8">
+  <title>Serviceprotokoll – samlad PDF</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Arial,sans-serif; font-size:9pt; color:#222; }
+    .page-break { page-break-before: always; }
+    .header { border-bottom:2pt solid #1a3a5c; padding-bottom:8pt; margin-bottom:8pt; }
+    .header h1 { font-size:14pt; color:#1a3a5c; }
+    .header h2 { font-size:10pt; color:#546e7a; font-weight:normal; margin-top:2pt; }
+    .meta { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4pt 12pt; margin-bottom:8pt; padding:6pt; background:#f0f4f8; border-radius:4pt; }
+    .mf label { font-size:7pt; color:#1565c0; font-weight:700; text-transform:uppercase; display:block; }
+    .mf span  { font-size:9pt; }
+    .status-bar { padding:5pt 8pt; border-radius:4pt; font-weight:700; font-size:10pt; margin-bottom:8pt; }
+    .counts { display:flex; gap:12pt; margin-bottom:8pt; }
+    .cnt { padding:4pt 10pt; border-radius:4pt; font-size:9pt; font-weight:700; }
+    .cnt.ok { background:#e8f5e9; color:#2e7d32; }
+    .cnt.bev { background:#fff8e1; color:#f57f17; }
+    .cnt.akut { background:#ffebee; color:#c62828; }
+    .items { columns:2; column-gap:8pt; margin-bottom:8pt; }
+    .ps { column-span:all; background:#1a3a5c; color:#fff; padding:3pt 6pt; font-size:8pt; font-weight:700; text-transform:uppercase; margin-top:6pt; break-after:avoid; }
+    .psub { background:#e8eef3; color:#1a3a5c; padding:2pt 6pt; font-size:8pt; font-weight:700; border-left:2pt solid #2a5080; break-after:avoid; }
+    .pi { padding:2pt 6pt; border-bottom:0.4pt solid #eee; break-inside:avoid; display:flex; flex-wrap:wrap; gap:0 6pt; align-items:baseline; }
+    .pi.ok { background:#f1f8f2; } .pi.bev { background:#fffbf0; } .pi.akut { background:#fff5f5; }
+    .pnr { font-size:8pt; font-weight:700; color:#546e7a; min-width:32pt; }
+    .pi.ok .pnr { color:#2e7d32; } .pi.bev .pnr { color:#f57f17; } .pi.akut .pnr { color:#c62828; }
+    .plbl { font-size:8.5pt; flex:1; } .pcom { font-size:8pt; font-style:italic; color:#555; width:100%; padding-left:38pt; }
+    .pphoto img { max-height:60pt; max-width:100%; margin-top:2pt; border-radius:3pt; }
+    .section { margin-bottom:8pt; }
+    .section h3 { font-size:9pt; font-weight:700; color:#1a3a5c; border-bottom:0.5pt solid #ccc; padding-bottom:3pt; margin-bottom:5pt; }
+    .anm { padding:4pt 6pt; border-radius:3pt; margin-bottom:4pt; font-size:8.5pt; }
+    .anm.bev { background:#fff8e1; border-left:2pt solid #f57f17; }
+    .anm.akut { background:#ffebee; border-left:2pt solid #c62828; }
+    .anm .nr { font-weight:700; } .anm .cm { font-style:italic; color:#555; margin-top:2pt; }
+    .footer { margin-top:8pt; border-top:0.5pt solid #ccc; padding-top:4pt; font-size:7.5pt; color:#888; display:flex; justify-content:space-between; }
+  </style></head><body>
+  ${body}
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
 }
 
 function showPage(page) {
-  document.getElementById('login-page').style.display  = page === 'login'  ? 'flex'  : 'none';
-  document.getElementById('start-page').style.display  = page === 'start'  ? 'flex'  : 'none';
+  document.getElementById('login-page').style.display    = page === 'login'    ? 'flex'  : 'none';
+  document.getElementById('start-page').style.display    = page === 'start'    ? 'flex'  : 'none';
   document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
+  document.getElementById('overview-page').style.display = page === 'overview' ? 'block' : 'none';
 }
 
 function updateUserGreeting() {

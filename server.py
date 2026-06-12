@@ -260,6 +260,40 @@ def get_machine(nr):
 
 # ── Protocols ────────────────────────────────────────────────
 
+@app.route('/api/protocols/search')
+def search_protocols():
+    limit  = min(int(request.args.get('limit', 100)), 500)
+    kund   = request.args.get('kund', '').strip()
+    from_d = request.args.get('from', '').strip()
+    to_d   = request.args.get('to', '').strip()
+
+    query  = 'SELECT * FROM protocols WHERE 1=1'
+    params = []
+    if kund:
+        query += ' AND LOWER(kund) = LOWER(?)'
+        params.append(kund)
+    if from_d:
+        query += ' AND datum >= ?'
+        params.append(from_d)
+    if to_d:
+        query += ' AND datum <= ?'
+        params.append(to_d)
+    query += ' ORDER BY datum DESC, saved_at DESC LIMIT ?'
+    params.append(limit)
+
+    with get_db() as db:
+        rows = db.execute(query, params).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d['items']          = json.loads(d['items_json'] or '[]')
+        d['resolved']       = json.loads(d.get('resolved_json') or '{}')
+        d['workflow_log']   = json.loads(d.get('workflow_log') or '[]')
+        if not d.get('workflow_status'): d['workflow_status'] = 'inkommen'
+        del d['items_json'], d['resolved_json']
+        result.append(d)
+    return jsonify(result)
+
 @app.route('/api/protocols/recent')
 def recent_protocols():
     limit = min(int(request.args.get('limit', 15)), 50)
