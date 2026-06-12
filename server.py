@@ -177,7 +177,7 @@ def upload_machines():
         cMod  = col('typ')
         cTill = col('tillverkningsnummer')
         cArs  = col('årsmodell')
-        cBesk = 9   # Kolumn J (index 9)
+        cBesk = col('beskrivning')  # Kolumn "Beskrivning"
         cAgar = col('företag')  # Kolumn A – ägare/fakturakund
 
         machines = []
@@ -198,7 +198,7 @@ def upload_machines():
                 'telefon':     cell(row, cTel),
                 'tillvnr':     cell(row, cTill),
                 'arsmodell':   cell(row, cArs),
-                'beskrivning': cell(row, cBesk) if cBesk < len(row) else '',
+                'beskrivning': cell(row, cBesk),
                 'agare':       cell(row, cAgar),
                 'inkopar':     '',
                 'notering':    '',
