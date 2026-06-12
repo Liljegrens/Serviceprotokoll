@@ -612,6 +612,10 @@
           <div class="machine-lookup-badge" id="machine-badge"></div>
         </div>
         <div class="field-group">
+          <label>Kund</label>
+          <input type="text" id="f-kund" placeholder="Fylls i automatiskt" readonly style="background:#f5f7f9;color:#546e7a;">
+        </div>
+        <div class="field-group">
           <label>Datum</label>
           <input type="date" id="f-datum">
         </div>
@@ -962,6 +966,7 @@ async function lookupMachine(val) {
     // Auto-fill form fields
     const modStr = [m.fabrikat, m.modell].filter(Boolean).join(' ');
     if (modStr) document.getElementById('f-modell').value = modStr;
+    document.getElementById('f-kund').value = m.kund || '';
 
     // Build info card
     const fields = [
@@ -1336,7 +1341,7 @@ async function saveProtocol() {
         datum:        document.getElementById('f-datum').value,
         type:         currentType,
         machine_type: currentMachineType || '',
-        kund:       infoFields.kund || '',
+        kund:       document.getElementById('f-kund').value.trim() || infoFields['Kund'] || '',
         anlaggning: infoFields.anlaggning || '',
         tekniker:   document.getElementById('f-tekniker').value,
         modell:     document.getElementById('f-modell').value,
@@ -1370,7 +1375,7 @@ function openProtocol(type) {
   currentMachineType = null;
   buildChecklist(getChecklistItems());
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
-  ['f-maskin','f-modell'].forEach(id => document.getElementById(id).value='');
+  ['f-maskin','f-modell','f-kund'].forEach(id => document.getElementById(id).value='');
   // Auto-fill tekniker från inloggad användare
   document.getElementById('f-tekniker').value = currentUser ? currentUser.name : '';
   document.getElementById('machine-badge').className = 'machine-lookup-badge';
