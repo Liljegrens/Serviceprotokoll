@@ -966,7 +966,7 @@ async function lookupMachine(val) {
     // Auto-fill form fields
     const modStr = [m.fabrikat, m.modell].filter(Boolean).join(' ');
     if (modStr) document.getElementById('f-modell').value = modStr;
-    document.getElementById('f-kund').value = m.kund || '';
+    document.getElementById('f-kund').value = m.agare || m.kund || '';
 
     // Build info card
     const fields = [

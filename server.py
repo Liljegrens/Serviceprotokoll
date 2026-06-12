@@ -34,7 +34,8 @@ def init_db():
             telefon    TEXT DEFAULT '',
             tillvnr    TEXT DEFAULT '',
             arsmodell  TEXT DEFAULT '',
-            beskrivning TEXT DEFAULT ''
+            beskrivning TEXT DEFAULT '',
+            agare      TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS protocols (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -176,7 +177,8 @@ def upload_machines():
         cMod  = col('typ')
         cTill = col('tillverkningsnummer')
         cArs  = col('årsmodell')
-        cBesk = 9  # Kolumn J (index 9)
+        cBesk = 9   # Kolumn J (index 9)
+        cAgar = col('företag')  # Kolumn A – ägare/fakturakund
 
         machines = []
         for row in rows[header_row + 1:]:
@@ -197,6 +199,7 @@ def upload_machines():
                 'tillvnr':     cell(row, cTill),
                 'arsmodell':   cell(row, cArs),
                 'beskrivning': cell(row, cBesk) if cBesk < len(row) else '',
+                'agare':       cell(row, cAgar),
                 'inkopar':     '',
                 'notering':    '',
             })
@@ -223,17 +226,17 @@ def upload_machines():
                 'inkopar':     cell(row, cInk),
                 'notering':    cell(row, cNot),
                 'beskrivning': cell(row, cBesk),
-                'adress': '', 'stad': '', 'kontakt': '', 'telefon': '', 'tillvnr': '', 'arsmodell': '',
+                'adress': '', 'stad': '', 'kontakt': '', 'telefon': '', 'tillvnr': '', 'arsmodell': '', 'agare': '',
             })
 
     with get_db() as db:
         db.executemany("""
             INSERT INTO machines
                 (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning,
-                 adress, stad, kontakt, telefon, tillvnr, arsmodell)
+                 adress, stad, kontakt, telefon, tillvnr, arsmodell, agare)
             VALUES
                 (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning,
-                 :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell)
+                 :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell, :agare)
             ON CONFLICT(nr) DO UPDATE SET
                 kund=excluded.kund, anlaggning=excluded.anlaggning,
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
@@ -241,7 +244,8 @@ def upload_machines():
                 beskrivning=excluded.beskrivning,
                 adress=excluded.adress, stad=excluded.stad,
                 kontakt=excluded.kontakt, telefon=excluded.telefon,
-                tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell
+                tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
+                agare=excluded.agare
         """, machines)
 
     return jsonify({'imported': len(machines)})

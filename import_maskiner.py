@@ -13,7 +13,7 @@ conn.execute('''CREATE TABLE IF NOT EXISTS machines (
     inkopar TEXT DEFAULT '', notering TEXT DEFAULT '')''')
 
 for col, typ in [('adress','TEXT'),('stad','TEXT'),('kontakt','TEXT'),
-                 ('telefon','TEXT'),('tillvnr','TEXT'),('arsmodell','TEXT'),('beskrivning','TEXT')]:
+                 ('telefon','TEXT'),('tillvnr','TEXT'),('arsmodell','TEXT'),('beskrivning','TEXT'),('agare','TEXT')]:
     try:
         conn.execute(f'ALTER TABLE machines ADD COLUMN {col} {typ} DEFAULT ""')
     except Exception:
