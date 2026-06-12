@@ -135,53 +135,113 @@ def upload_machines():
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
 
-    # Find header row
+    # Find header row – stöder både Servicelista ("intern ref") och generiskt format ("maskinnummer")
     header_row = None
+    servicelista_format = False
     for i, row in enumerate(rows):
         cells = [str(c or '').strip().lower() for c in row]
+        if any('intern ref' in c for c in cells):
+            header_row = i
+            servicelista_format = True
+            break
         if any('maskinnummer' in c for c in cells):
             header_row = i
             break
     if header_row is None:
-        return jsonify({'error': 'Kolumn "Maskinnummer" saknas'}), 400
+        return jsonify({'error': 'Kolumn för maskinnummer saknas. Filen ska ha "Intern ref." eller "Maskinnummer".'}), 400
 
-    hdrs = [str(c or '').strip().lower() for c in rows[header_row]]
+    hdrs_raw = [str(c or '').strip() for c in rows[header_row]]
+    hdrs     = [h.lower() for h in hdrs_raw]
     def col(name): return next((i for i,h in enumerate(hdrs) if name in h), None)
 
-    cMask = col('maskinnummer')
-    cKund = col('kund')
-    cAnl  = col('anläggning') or col('anlaggning')
-    cFab  = col('fabrikat')
-    cMod  = col('modell')
-    cInk  = col('inköp') or col('inkop')
-    cNot  = col('anteckn')
-    cBesk = col('beskrivning')
+    def cell(row, idx):
+        if idx is None or idx >= len(row): return ''
+        v = row[idx]
+        if v is None: return ''
+        s = str(v).strip()
+        # Rensa float-format på siffror (t.ex. "106590.0" → "106590")
+        if s.endswith('.0'):
+            try: s = str(int(float(s)))
+            except: pass
+        return s
 
-    machines = []
-    for row in rows[header_row + 1:]:
-        nr = str(row[cMask] or '').strip() if cMask is not None else ''
-        if not nr:
-            continue
-        machines.append({
-            'nr':          nr,
-            'kund':        str(row[cKund] or '').strip() if cKund is not None else '',
-            'anlaggning':  str(row[cAnl]  or '').strip() if cAnl  is not None else '',
-            'fabrikat':    str(row[cFab]  or '').strip() if cFab  is not None else '',
-            'modell':      str(row[cMod]  or '').strip() if cMod  is not None else '',
-            'inkopar':     str(row[cInk]  or '').strip() if cInk  is not None else '',
-            'notering':    str(row[cNot]  or '').strip() if cNot  is not None else '',
-            'beskrivning': str(row[cBesk] or '').strip() if cBesk is not None else '',
-        })
+    if servicelista_format:
+        cMask = col('intern ref')
+        cKund = col('kundnamn')
+        cAdr  = col('hämtadress rad 1')
+        cSta  = col('hämtadress rad 2')
+        cKont = col('kontaktperson vid problem')
+        cTel  = col('telefonnummer')
+        cFab  = col('märke')
+        cMod  = col('typ')
+        cTill = col('tillverkningsnummer')
+        cArs  = col('årsmodell')
+        cBesk = 9  # Kolumn J (index 9)
+
+        machines = []
+        for row in rows[header_row + 1:]:
+            nr = cell(row, cMask)
+            if not nr or nr.lower() == 'nan': continue
+            adress = cell(row, cAdr)
+            stad   = cell(row, cSta)
+            machines.append({
+                'nr':          nr,
+                'kund':        cell(row, cKund),
+                'anlaggning':  f"{adress}, {stad}".strip(', ') if stad else adress,
+                'fabrikat':    cell(row, cFab),
+                'modell':      cell(row, cMod),
+                'adress':      adress,
+                'stad':        stad,
+                'kontakt':     cell(row, cKont),
+                'telefon':     cell(row, cTel),
+                'tillvnr':     cell(row, cTill),
+                'arsmodell':   cell(row, cArs),
+                'beskrivning': cell(row, cBesk) if cBesk < len(row) else '',
+                'inkopar':     '',
+                'notering':    '',
+            })
+    else:
+        cMask = col('maskinnummer')
+        cKund = col('kund')
+        cAnl  = col('anläggning') or col('anlaggning')
+        cFab  = col('fabrikat')
+        cMod  = col('modell')
+        cInk  = col('inköp') or col('inkop')
+        cNot  = col('anteckn')
+        cBesk = col('beskrivning')
+
+        machines = []
+        for row in rows[header_row + 1:]:
+            nr = cell(row, cMask)
+            if not nr: continue
+            machines.append({
+                'nr':          nr,
+                'kund':        cell(row, cKund),
+                'anlaggning':  cell(row, cAnl),
+                'fabrikat':    cell(row, cFab),
+                'modell':      cell(row, cMod),
+                'inkopar':     cell(row, cInk),
+                'notering':    cell(row, cNot),
+                'beskrivning': cell(row, cBesk),
+                'adress': '', 'stad': '', 'kontakt': '', 'telefon': '', 'tillvnr': '', 'arsmodell': '',
+            })
 
     with get_db() as db:
         db.executemany("""
-            INSERT INTO machines (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning)
-            VALUES (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning)
+            INSERT INTO machines
+                (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning,
+                 adress, stad, kontakt, telefon, tillvnr, arsmodell)
+            VALUES
+                (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning,
+                 :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell)
             ON CONFLICT(nr) DO UPDATE SET
                 kund=excluded.kund, anlaggning=excluded.anlaggning,
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
                 inkopar=excluded.inkopar, notering=excluded.notering,
-                beskrivning=excluded.beskrivning
+                beskrivning=excluded.beskrivning,
+                adress=excluded.adress, stad=excluded.stad,
+                kontakt=excluded.kontakt, telefon=excluded.telefon,
+                tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell
         """, machines)
 
     return jsonify({'imported': len(machines)})
