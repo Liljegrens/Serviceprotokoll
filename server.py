@@ -8,7 +8,14 @@ DB      = os.path.join(BASE, 'serviceprotokoll.db')
 UPLOADS = os.path.join(BASE, 'uploads')
 os.makedirs(UPLOADS, exist_ok=True)
 app  = Flask(__name__, static_folder=BASE)
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+_key_file = os.path.join(BASE, '.secret_key')
+if os.environ.get('SECRET_KEY'):
+    app.secret_key = os.environ['SECRET_KEY']
+elif os.path.exists(_key_file):
+    app.secret_key = open(_key_file).read().strip()
+else:
+    app.secret_key = secrets.token_hex(32)
+    open(_key_file, 'w').write(app.secret_key)
 
 # ── Database ────────────────────────────────────────────────
 

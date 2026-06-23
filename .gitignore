@@ -1,6 +1,9 @@
 # Databas – ska inte versionshanteras
 serviceprotokoll.db
 
+# Sessionnyckel
+.secret_key
+
 # Uppladdade bilder
 uploads/
 
