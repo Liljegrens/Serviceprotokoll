@@ -93,6 +93,14 @@ seed_users()
 def index():
     return send_from_directory(BASE, 'serviceprotokoll.html')
 
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory(BASE, 'manifest.json')
+
+@app.route('/logo.png')
+def logo():
+    return send_from_directory(BASE, 'logo.png')
+
 # ── Users & auth ─────────────────────────────────────────────
 
 @app.route('/api/users', methods=['GET'])

@@ -1,0 +1,16 @@
+{
+  "name": "Liljegrens Serviceprotokoll",
+  "short_name": "Liljegrens",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a3a5c",
+  "theme_color": "#1a3a5c",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
