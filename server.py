@@ -71,6 +71,22 @@ def init_db():
 
 init_db()
 
+def seed_users():
+    default_users = os.environ.get('DEFAULT_USERS', '')
+    if not default_users:
+        return
+    with get_db() as db:
+        count = db.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+        if count > 0:
+            return
+        for entry in default_users.split(','):
+            parts = entry.strip().split(':')
+            if len(parts) == 3:
+                name, pin, role = parts
+                db.execute('INSERT INTO users (name, pin, role) VALUES (?,?,?)', (name.strip(), pin.strip(), role.strip()))
+
+seed_users()
+
 # ── Serve frontend ───────────────────────────────────────────
 
 @app.route('/')
