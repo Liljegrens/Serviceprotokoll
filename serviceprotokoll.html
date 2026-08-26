@@ -1164,13 +1164,32 @@ async function loadOverview() {
     if (kund) url += '&kund=' + encodeURIComponent(kund);
     if (from) url += '&from=' + from;
     if (to)   url += '&to='   + to;
-    _ovProtocols = await apiFetch(url);
-    if (!_ovProtocols.length) {
+
+    // Hämta serviceprotokoll och leveransprotokoll parallellt
+    const [serviceProts, leveransRecs] = await Promise.all([
+      apiFetch(url),
+      apiFetch('/api/leverans')
+    ]);
+
+    // Filtrera leverans på kund och datum
+    const leveransFilt = leveransRecs.filter(r => {
+      const d = r.data || {};
+      if (kund && d.kund !== kund) return false;
+      if (from && (d.datum||'') < from) return false;
+      if (to   && (d.datum||'') > to)   return false;
+      return true;
+    });
+
+    _ovProtocols = serviceProts;
+
+    if (!serviceProts.length && !leveransFilt.length) {
       list.innerHTML = '<div style="color:#888;text-align:center;padding:32px;">Inga protokoll hittades.</div>';
       return;
     }
     list.innerHTML = '';
-    _ovProtocols.forEach(rec => {
+
+    // Serviceprotokoll
+    serviceProts.forEach(rec => {
       const items  = rec.items || [];
       const akut   = items.filter(i => i.status==='3').length;
       const bevaka = items.filter(i => i.status==='2').length;
@@ -1192,10 +1211,56 @@ async function loadOverview() {
       row.querySelector('div.ov-row-info').addEventListener('click', () => openHistoryModal(rec));
       list.appendChild(row);
     });
+
+    // Leveransprotokoll
+    leveransFilt.forEach(rec => {
+      const d = rec.data || {};
+      const row = document.createElement('div');
+      row.className = 'ov-row';
+      row.innerHTML = `
+        <input type="checkbox" disabled style="opacity:0.3;">
+        <div class="ov-row-info" style="cursor:pointer;">
+          <div class="ov-row-title">📦 ${d.maskin_nr||'–'} · ${d.kund||'–'}</div>
+          <div class="ov-row-sub">${d.datum||'–'} · Leveransgodkännande · ${d.tekniker||'–'}</div>
+        </div>
+        <div class="ov-row-badges">
+          <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
+        </div>`;
+      row.querySelector('div.ov-row-info').addEventListener('click', () => openLeveransModal(rec));
+      list.appendChild(row);
+    });
+
     updateSelectBar();
   } catch(e) {
     list.innerHTML = `<div style="color:var(--akut);text-align:center;padding:24px;">Fel: ${e.message}</div>`;
   }
+}
+
+function openLeveransModal(rec) {
+  const d = rec.data || {};
+  const items = (d.items || []).map(it => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">
+      <span>${it.label}</span>
+      <span style="color:${it.ok?'#2e7d32':'#999'};font-weight:600;">${it.ok?'✓ OK':'–'}</span>
+    </div>`).join('');
+  const sigRow = (d.sig_kund && d.sig_kund.length > 100)
+    ? `<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+        <div style="flex:1;"><b>Kund:</b> ${d.namn_kund||''}<br><img src="${d.sig_kund}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
+        <div style="flex:1;"><b>Tekniker:</b> ${d.namn_tek||''}<br><img src="${d.sig_tekniker||''}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
+       </div>` : `<p style="color:#888;font-size:13px;">Signaturer ej sparade i denna version.</p>`;
+  document.getElementById('modal-title').textContent = `Leveransgodkännande · ${d.maskin_nr||'–'}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="font-size:13px;color:#555;margin-bottom:12px;">${d.datum||''} · ${d.kund||''} · ${d.tekniker||''}</div>
+    <div style="margin-bottom:8px;"><b>Modell:</b> ${d.modell||''} &nbsp; <b>Adress:</b> ${d.adress||''}</div>
+    <div style="margin-bottom:8px;"><b>Kontakt:</b> ${d.kontakt||''} &nbsp; <b>Telnr:</b> ${d.telnr||''}</div>
+    ${d.kommentar ? `<div style="margin-bottom:8px;"><b>Kommentarer:</b> ${d.kommentar}</div>` : ''}
+    <div style="margin:12px 0 4px;font-weight:700;">Kontrollpunkter</div>
+    ${items}
+    ${sigRow}
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">🖨 Skriv ut</button>
+    </div>`;
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 function toggleOvSelect(event, id) {
@@ -2535,8 +2600,16 @@ function sendLeveransEmail() {
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
+function printLeveransFromData(d) {
+  _printLeverans(d);
+}
+
 function printLeverans() {
   const d = getLeveransData();
+  _printLeverans(d);
+}
+
+function _printLeverans(d) {
   const rows = d.items.map(it => `<tr><td>${it.label}</td><td style="text-align:center;font-size:16px;">${it.ok ? '☑' : '☐'}</td></tr>`).join('');
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>Leveransgodkännande</title>
