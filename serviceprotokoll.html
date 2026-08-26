@@ -563,13 +563,12 @@
     .summary-notes h3 { font-size: 8pt; }
     .summary-note-item { padding: 4pt 6pt; font-size: 8pt; margin-bottom: 4pt; }
   }
-  .lev-input { background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-size:14px; }
-  .lev-clear-btn { margin-top:8px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:4px 12px;cursor:pointer; }
-  .lev-check-row { display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.07); }
+  .lev-input { background:#fff;color:#333;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:14px; }
+  .lev-clear-btn { margin-top:8px;font-size:11px;background:none;border:1px solid #ccc;color:#666;border-radius:4px;padding:4px 12px;cursor:pointer; }
+  .lev-check-row { display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f0f0f0; }
   .lev-check-row:last-child { border-bottom:none; }
-  .lev-check-label { flex:1;font-size:14px;color:#fff; }
-  .lev-check-ok { display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.7);font-size:13px;white-space:nowrap; }
-  .lev-check-ok input { width:18px;height:18px;accent-color:#4caf50; }
+  .lev-check-row.status-ok { background: var(--ok-bg); }
+  .lev-check-label { flex:1;font-size:14px;color:#333;line-height:1.4; }
 </style>
 </head>
 <body>
@@ -726,10 +725,10 @@
     <!-- Signaturer -->
     <div class="header-card">
       <h2>Underskrifter</h2>
-      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin:0 0 16px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
+      <p style="font-size:13px;color:#555;margin:0 0 16px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
       <div style="display:flex;gap:24px;flex-wrap:wrap;">
         <div style="flex:1;min-width:240px;">
-          <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:8px;">Kund</div>
+          <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">Kund</div>
           <canvas id="sig-kund" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
           <div style="display:flex;gap:8px;margin-top:8px;">
             <input type="text" id="lev-datum-kund" placeholder="Datum" class="lev-input" style="flex:1;">
@@ -739,7 +738,7 @@
           <button onclick="clearSig('kund')" class="lev-clear-btn">Rensa signatur</button>
         </div>
         <div style="flex:1;min-width:240px;">
-          <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:8px;">Liljegrens (tekniker)</div>
+          <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">Liljegrens (tekniker)</div>
           <canvas id="sig-tekniker" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
           <div style="display:flex;gap:8px;margin-top:8px;">
             <input type="text" id="lev-datum-tek" placeholder="Datum" class="lev-input" style="flex:1;">
@@ -2381,11 +2380,15 @@ function openLeverans() {
   });
   document.getElementById('lev-machine-badge').className = 'machine-lookup-badge';
   document.getElementById('lev-machine-info-card').classList.remove('visible');
-  // Bygg checklista
+  // Bygg checklista med samma radioknappar som serviceprotokollet
   document.getElementById('lev-checklist').innerHTML = LEV_ITEMS.map((item, i) => `
-    <div class="lev-check-row">
-      <span class="lev-check-label">${item}</span>
-      <label class="lev-check-ok"><input type="checkbox" id="lev-item-${i}"> OK</label>
+    <div class="lev-check-row check-item" id="lev-row-${i}">
+      <span class="lev-check-label item-label">${item}</span>
+      <div class="radio-group">
+        <div class="radio-opt"><input type="radio" name="lev-${i}" id="lev-ok-${i}" value="1" onchange="levRowChange(${i})"><label for="lev-ok-${i}">OK</label></div>
+        <div class="radio-opt"><input type="radio" name="lev-${i}" id="lev-bev-${i}" value="2" onchange="levRowChange(${i})"><label for="lev-bev-${i}">Bev.</label></div>
+        <div class="radio-opt"><input type="radio" name="lev-${i}" id="lev-akut-${i}" value="3" onchange="levRowChange(${i})"><label for="lev-akut-${i}">Akut</label></div>
+      </div>
     </div>`).join('');
   // Signaturer
   ['kund','tekniker'].forEach(id => initSig(id));
@@ -2463,6 +2466,12 @@ function clearSig(id) {
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function levRowChange(i) {
+  const row = document.getElementById(`lev-row-${i}`);
+  const val = document.querySelector(`input[name="lev-${i}"]:checked`)?.value;
+  row.className = 'lev-check-row check-item' + (val === '1' ? ' status-ok' : val === '2' ? ' status-bevaka' : val === '3' ? ' status-akut' : '');
+}
+
 function getLeveransData() {
   return {
     maskin_nr:  document.getElementById('lev-maskin').value,
@@ -2483,7 +2492,10 @@ function getLeveransData() {
     namn_tek:   document.getElementById('lev-namn-tek').value,
     sig_kund:      document.getElementById('sig-kund').toDataURL(),
     sig_tekniker:  document.getElementById('sig-tekniker').toDataURL(),
-    items: LEV_ITEMS.map((label, i) => ({ label, ok: document.getElementById(`lev-item-${i}`).checked })),
+    items: LEV_ITEMS.map((label, i) => {
+      const val = document.querySelector(`input[name="lev-${i}"]:checked`)?.value || '0';
+      return { label, status: val, ok: val === '1' };
+    }),
     tekniker: document.getElementById('lev-tekniker').value
   };
 }
