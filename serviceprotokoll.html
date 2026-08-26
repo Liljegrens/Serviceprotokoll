@@ -1083,40 +1083,74 @@ async function loadRecentProtocols() {
   if (section) section.style.display = '';
   const list = document.getElementById('recent-list');
   try {
-    const recs = await apiFetch('/api/protocols/recent?limit=15');
-    if (!recs.length) {
+    const [serviceRecs, leveransRecs] = await Promise.all([
+      apiFetch('/api/protocols/recent?limit=15'),
+      apiFetch('/api/leverans')
+    ]);
+
+    // Normalisera leveransprotokoll till samma format
+    const levNorm = leveransRecs.map(r => ({
+      _type: 'leverans',
+      _raw: r,
+      saved_at: r.saved_at,
+      maskin_nr: r.data?.maskin_nr || '–',
+      kund: r.data?.kund || '',
+      datum: r.data?.datum || '',
+      tekniker: r.data?.tekniker || '–'
+    }));
+
+    // Slå ihop och sortera på saved_at, visa 5 senaste
+    const all = [
+      ...serviceRecs.map(r => ({ _type: 'service', _raw: r, saved_at: r.saved_at, ...r })),
+      ...levNorm
+    ].sort((a, b) => (b.saved_at || '').localeCompare(a.saved_at || '')).slice(0, 5);
+
+    if (!all.length) {
       list.innerHTML = '<div class="recent-empty">Inga sparade protokoll än.</div>';
       return;
     }
     list.innerHTML = '';
-    recs.forEach(rec => {
-      const s = summarizeStatus(rec.items);
-      const resolvedCount = Object.keys(rec.resolved || {}).length;
-      const openIssues = (s.bevaka + s.akut) - resolvedCount;
-      const icon = rec.type === 'flygande' ? '🚗' : '🔧';
+    all.forEach(rec => {
       const div = document.createElement('div');
       div.className = 'recent-item';
-      div.innerHTML = `
-        <span class="recent-icon">${icon}</span>
-        <div class="recent-main">
-          <div class="recent-top">
-            <span class="recent-maskin">${rec.maskin_nr}</span>
-            <span class="recent-kund">${rec.kund || ''}</span>
+      if (rec._type === 'leverans') {
+        div.innerHTML = `
+          <span class="recent-icon">📦</span>
+          <div class="recent-main">
+            <div class="recent-top">
+              <span class="recent-maskin">${rec.maskin_nr}</span>
+              <span class="recent-kund">${rec.kund}</span>
+            </div>
+            <div class="recent-sub">${rec.datum} · ${rec.tekniker} · Leveransgodkännande</div>
           </div>
-          <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
-        </div>
-        <div class="recent-badges">
-          ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
-          ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
-          <span class="wf-badge wf-${rec.workflow_status||'inkommen'}">${wfLabel(rec.workflow_status)}</span>
-        </div>`;
-      div.onclick = () => openHistoryModal(rec);
+          <div class="recent-badges">
+            <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
+          </div>`;
+        div.onclick = () => openLeveransModal(rec._raw);
+      } else {
+        const s = summarizeStatus(rec.items);
+        const icon = rec.type === 'flygande' ? '🚗' : '🔧';
+        div.innerHTML = `
+          <span class="recent-icon">${icon}</span>
+          <div class="recent-main">
+            <div class="recent-top">
+              <span class="recent-maskin">${rec.maskin_nr}</span>
+              <span class="recent-kund">${rec.kund || ''}</span>
+            </div>
+            <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
+          </div>
+          <div class="recent-badges">
+            ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
+            ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
+            <span class="wf-badge wf-${rec.workflow_status||'inkommen'}">${wfLabel(rec.workflow_status)}</span>
+          </div>`;
+        div.onclick = () => openHistoryModal(rec);
+      }
       list.appendChild(div);
     });
   } catch {
     list.innerHTML = '<div class="recent-empty">Kunde inte ladda protokoll.</div>';
   }
-  // Visa "Visa alla"-länk för admin
   const adminLink = document.getElementById('recent-admin-link');
   if (adminLink && currentUser && currentUser.role === 'admin') {
     adminLink.innerHTML = `<button onclick="openOverview()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-top:8px;text-decoration:underline;">Visa alla protokoll →</button>`;
