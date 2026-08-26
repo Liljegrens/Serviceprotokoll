@@ -641,7 +641,7 @@
   </div>
 
   <!-- Senaste protokoll -->
-  <div class="recent-section">
+  <div class="recent-section" id="recent-section">
     <h3>Senaste protokoll</h3>
     <div class="recent-list" id="recent-list">
       <div class="recent-empty">Laddar...</div>
@@ -1075,7 +1075,7 @@ async function doLogout() {
 
 async function loadRecentProtocols() {
   // Tekniker ska inte se senaste protokoll
-  const section = document.querySelector('.recent-section');
+  const section = document.getElementById('recent-section');
   if (!currentUser || currentUser.role !== 'admin') {
     if (section) section.style.display = 'none';
     return;
