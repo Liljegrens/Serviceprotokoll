@@ -623,6 +623,12 @@
     </div>
   </div>
 
+  <!-- Användarhantering (admin) -->
+  <div class="recent-section admin-only" id="users-section" style="display:none;">
+    <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
+    <div id="users-list"></div>
+  </div>
+
   <!-- Senaste protokoll -->
   <div class="recent-section">
     <h3>Senaste protokoll</h3>
@@ -859,7 +865,47 @@ async function initAuth() {
     updateUserGreeting();
     checkRegisterStatus();
     loadRecentProtocols();
+    if (currentUser.role === 'admin') {
+      document.getElementById('users-section').style.display = '';
+      loadUsersAdmin();
+    }
   }
+}
+
+async function loadUsersAdmin() {
+  const list = document.getElementById('users-list');
+  try {
+    const users = await apiFetch('/api/users');
+    list.innerHTML = users.map(u => `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+        <span style="flex:1;color:#fff;">${u.name}</span>
+        <span style="color:rgba(255,255,255,0.5);font-size:12px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</span>
+        ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:rgba(255,80,80,0.3);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : ''}
+      </div>`).join('');
+  } catch { list.textContent = 'Kunde inte ladda användare.'; }
+}
+
+function openAddUser() {
+  const name = prompt('Namn:');
+  if (!name) return;
+  const pin = prompt('PIN-kod:');
+  if (!pin) return;
+  const role = confirm('Admin? (Avbryt = Tekniker)') ? 'admin' : 'tekniker';
+  apiFetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name.trim(), pin, role })
+  }).then(() => { loadUsersAdmin(); loadUserList(); })
+    .catch(() => alert('Kunde inte lägga till användare.'));
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Ta bort ${name}?`)) return;
+  try {
+    await apiFetch(`/api/users/${id}`, { method: 'DELETE' });
+    loadUsersAdmin();
+    loadUserList();
+  } catch { alert('Kunde inte ta bort användare.'); }
 }
 
 async function loadUserList() {
