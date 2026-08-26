@@ -1667,6 +1667,12 @@ async function loadHistory(maskinNr) {
     const latest = hist[0];
     const prefilled = prefillFromProtocol(latest);
 
+    // Tekniker ser inte historiklistan — bara admin
+    if (!currentUser || currentUser.role !== 'admin') {
+      banner.classList.remove('visible');
+      return;
+    }
+
     banner.classList.add('visible');
     list.innerHTML = '';
 
