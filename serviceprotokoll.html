@@ -1298,6 +1298,7 @@ function openLeveransModal(rec) {
     ${sigRow}
     <div style="margin-top:16px;display:flex;gap:8px;">
       <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">🖨 Skriv ut</button>
+      <button class="save-btn" style="flex:1;background:#fdecea;color:#c62828;border:1px solid #ef9a9a;" onclick="deleteLeverans(${rec.id})">🗑 Radera</button>
     </div>`;
   document.getElementById('modal-overlay').classList.add('visible');
 }
@@ -1816,9 +1817,49 @@ function renderModalBody(rec) {
     html += `<div class="modal-actions">
       <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
       <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
+      <button class="modal-action-btn" style="background:#fdecea;color:#c62828;border-color:#ef9a9a;" onclick="deleteProtocol(${rec.id})">🗑 Radera protokoll</button>
     </div>`;
   }
   document.getElementById('modal-body').innerHTML = html;
+}
+
+function confirmDelete(message, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:28px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+      <h3 style="margin:0 0 8px;color:#c62828;font-size:16px;">Är du säker?</h3>
+      <p style="color:#555;font-size:13px;margin:0 0 20px;">${message}</p>
+      <div style="display:flex;gap:10px;">
+        <button id="del-no" style="flex:1;padding:10px;border:2px solid #ccc;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">Avbryt</button>
+        <button id="del-yes" style="flex:1;padding:10px;border:none;background:#c62828;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Ja, radera</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#del-no').onclick  = () => document.body.removeChild(overlay);
+  overlay.querySelector('#del-yes').onclick = () => { document.body.removeChild(overlay); onConfirm(); };
+}
+
+async function deleteProtocol(id) {
+  confirmDelete('Protokollet raderas permanent och kan inte återställas.', async () => {
+    try {
+      await apiFetch(`/api/protocols/${id}`, { method: 'DELETE' });
+      document.getElementById('modal-overlay').classList.remove('visible');
+      loadRecentProtocols();
+      loadOverview();
+    } catch(e) { alert('Kunde inte radera: ' + e.message); }
+  });
+}
+
+async function deleteLeverans(id) {
+  confirmDelete('Leveransprotokollet raderas permanent och kan inte återställas.', async () => {
+    try {
+      await apiFetch(`/api/leverans/${id}`, { method: 'DELETE' });
+      document.getElementById('modal-overlay').classList.remove('visible');
+      loadRecentProtocols();
+    } catch(e) { alert('Kunde inte radera: ' + e.message); }
+  });
 }
 
 async function toggleResolved(protocolId, nr) {

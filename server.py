@@ -390,6 +390,18 @@ def get_protocols(maskin_nr):
         result.append(d)
     return jsonify(result)
 
+@app.route('/api/protocols/<int:protocol_id>', methods=['DELETE'])
+def delete_protocol(protocol_id):
+    with get_db() as db:
+        db.execute('DELETE FROM protocols WHERE id=?', (protocol_id,))
+    return jsonify({'ok': True})
+
+@app.route('/api/leverans/<int:leverans_id>', methods=['DELETE'])
+def delete_leverans(leverans_id):
+    with get_db() as db:
+        db.execute('DELETE FROM leverans WHERE id=?', (leverans_id,))
+    return jsonify({'ok': True})
+
 @app.route('/api/protocols/<int:protocol_id>/resolve', methods=['PATCH'])
 def resolve_item(protocol_id):
     data = request.get_json()
