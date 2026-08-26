@@ -621,6 +621,11 @@
       <h2>Flygande protokoll</h2>
       <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
     </div>
+    <div class="start-card" onclick="openLeverans()">
+      <div class="icon">📦</div>
+      <h2>Leveransgodkännande</h2>
+      <p>Typ 3 · Överlämning av utrustning till kund</p>
+    </div>
   </div>
 
   <!-- Användarhantering (admin) -->
@@ -638,6 +643,88 @@
     <div id="recent-admin-link"></div>
   </div>
 
+</div>
+
+<!-- ═══════════ LEVERANS PAGE ═══════════ -->
+<div id="leverans-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <h1>Leveransgodkännande</h1>
+    <button class="top-btn" onclick="printLeverans()">🖨 Skriv ut</button>
+  </div>
+  <div style="padding:16px;max-width:700px;margin:0 auto;">
+
+    <div class="form-section">
+      <h3>Maskin &amp; kund</h3>
+      <div class="form-row">
+        <label>Maskintyp/modell</label>
+        <input type="text" id="lev-modell" placeholder="Modell">
+      </div>
+      <div class="form-row">
+        <label>Kund</label>
+        <input type="text" id="lev-kund" placeholder="Kundnamn">
+        <label style="margin-left:12px;">Telnr</label>
+        <input type="text" id="lev-telnr" placeholder="Telefon">
+      </div>
+      <div class="form-row">
+        <label>Kontaktperson</label>
+        <input type="text" id="lev-kontakt" placeholder="Namn">
+        <label style="margin-left:12px;">Mobilnr</label>
+        <input type="text" id="lev-mobil" placeholder="Mobil">
+      </div>
+      <div class="form-row">
+        <label>Installationsadress</label>
+        <input type="text" id="lev-adress" placeholder="Adress">
+      </div>
+      <div class="form-row">
+        <label>Utrustning/tillbehör</label>
+        <input type="text" id="lev-utrustning" placeholder="">
+        <label style="margin-left:12px;">Anv. område/materialslag</label>
+        <input type="text" id="lev-material" placeholder="">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Kontroll av maskinens detaljer</h3>
+      <div id="lev-checklist"></div>
+    </div>
+
+    <div class="form-section">
+      <h3>Kommentarer</h3>
+      <textarea id="lev-kommentar" rows="3" style="width:100%;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px;font-size:14px;"></textarea>
+    </div>
+
+    <div class="form-section">
+      <h3>Underskrifter</h3>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <div style="margin-bottom:6px;font-size:13px;color:rgba(255,255,255,0.7);">Kund</div>
+          <canvas id="sig-kund" width="280" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;"></canvas>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input type="text" id="lev-datum-kund" placeholder="Datum" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+            <input type="text" id="lev-ort-kund" placeholder="Ort" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+          </div>
+          <input type="text" id="lev-namn-kund" placeholder="Namnförtydligande" style="width:100%;margin-top:6px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;box-sizing:border-box;">
+          <button onclick="clearSig('kund')" style="margin-top:6px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:3px 10px;cursor:pointer;">Rensa</button>
+        </div>
+        <div style="flex:1;min-width:220px;">
+          <div style="margin-bottom:6px;font-size:13px;color:rgba(255,255,255,0.7);">Liljegrens (tekniker)</div>
+          <canvas id="sig-tekniker" width="280" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;"></canvas>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input type="text" id="lev-datum-tek" placeholder="Datum" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+            <input type="text" id="lev-ort-tek" placeholder="Ort" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+          </div>
+          <input type="text" id="lev-namn-tek" placeholder="Namnförtydligande" style="width:100%;margin-top:6px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;box-sizing:border-box;">
+          <button onclick="clearSig('tekniker')" style="margin-top:6px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:3px 10px;cursor:pointer;">Rensa</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0;">
+      <button class="save-btn" onclick="saveLeverans()">💾 Spara</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ OVERVIEW PAGE ═══════════ -->
@@ -1248,6 +1335,7 @@ function showPage(page) {
   document.getElementById('start-page').style.display    = page === 'start'    ? 'flex'  : 'none';
   document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
   document.getElementById('overview-page').style.display = page === 'overview' ? 'block' : 'none';
+  document.getElementById('leverans-page').style.display = page === 'leverans' ? 'block' : 'none';
 }
 
 function updateUserGreeting() {
@@ -2212,6 +2300,149 @@ function updateSummary() {
     </div>`;
   });
   sn.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════
+// LEVERANSGODKÄNNANDE
+// ═══════════════════════════════════════════════════
+const LEV_ITEMS = [
+  'Kontroll av bultband infästningar Balpress',
+  'Funktionskontroll av hydraulsystem',
+  'Kontroll av inkast höjd min 1100 mm',
+  'Kontroll av varning/upplysnings dekaler',
+  'Kontroll av R-S dekaler',
+  'Funktionskontroll av nyckelstart, nödstoppsfunktioner',
+  'Funktionskontroll av pressplatta stannar i främre läge',
+  'Funktionskontroll av dörr, luckbrytare',
+  'Kontroll av elanslutningar och elkablar',
+  'Kontroll av inkastlucka, låsanordningar',
+  'Kontroll av behållare, säkerhetslås, spännare, tvingar',
+  'Kontroll av transportskador',
+  'Styrskenor monterade',
+  'Maskinen enligt beställningen',
+  'Överlämnande av Instruktionsbok'
+];
+
+const _sigState = {};
+
+function openLeverans() {
+  showPage('leverans');
+  // Fyll datum
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('lev-datum-kund').value = today;
+  document.getElementById('lev-datum-tek').value  = today;
+  // Fyll tekniker namn
+  if (currentUser) document.getElementById('lev-namn-tek').value = currentUser.name;
+  // Bygg checklista
+  const cl = document.getElementById('lev-checklist');
+  cl.innerHTML = LEV_ITEMS.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <span style="flex:1;font-size:14px;color:#fff;">${item}</span>
+      <label style="display:flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);font-size:13px;">
+        <input type="checkbox" id="lev-item-${i}" style="width:18px;height:18px;"> OK
+      </label>
+    </div>`).join('');
+  // Initiera signaturer
+  ['kund','tekniker'].forEach(id => initSig(id));
+}
+
+function initSig(id) {
+  const canvas = document.getElementById(`sig-${id}`);
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  _sigState[id] = { drawing: false, ctx };
+
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * (canvas.width / r.width),
+             y: (src.clientY - r.top)  * (canvas.height / r.height) };
+  }
+  function start(e) { e.preventDefault(); const p = pos(e); _sigState[id].drawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function move(e)  { e.preventDefault(); if (!_sigState[id].drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+  function end()    { _sigState[id].drawing = false; }
+
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
+}
+
+function clearSig(id) {
+  const canvas = document.getElementById(`sig-${id}`);
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function saveLeverans() {
+  const items = LEV_ITEMS.map((label, i) => ({
+    label, ok: document.getElementById(`lev-item-${i}`).checked
+  }));
+  const data = {
+    modell:     document.getElementById('lev-modell').value,
+    kund:       document.getElementById('lev-kund').value,
+    telnr:      document.getElementById('lev-telnr').value,
+    kontakt:    document.getElementById('lev-kontakt').value,
+    mobil:      document.getElementById('lev-mobil').value,
+    adress:     document.getElementById('lev-adress').value,
+    utrustning: document.getElementById('lev-utrustning').value,
+    material:   document.getElementById('lev-material').value,
+    kommentar:  document.getElementById('lev-kommentar').value,
+    datum_kund: document.getElementById('lev-datum-kund').value,
+    ort_kund:   document.getElementById('lev-ort-kund').value,
+    namn_kund:  document.getElementById('lev-namn-kund').value,
+    datum_tek:  document.getElementById('lev-datum-tek').value,
+    ort_tek:    document.getElementById('lev-ort-tek').value,
+    namn_tek:   document.getElementById('lev-namn-tek').value,
+    sig_kund:      document.getElementById('sig-kund').toDataURL(),
+    sig_tekniker:  document.getElementById('sig-tekniker').toDataURL(),
+    items,
+    tekniker: currentUser ? currentUser.name : ''
+  };
+  try {
+    await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    alert('Sparat!');
+  } catch { alert('Kunde inte spara.'); }
+}
+
+function printLeverans() {
+  const items = LEV_ITEMS.map((label, i) => {
+    const ok = document.getElementById(`lev-item-${i}`).checked;
+    return `<tr><td>${label}</td><td style="text-align:center;">${ok ? '☑' : '☐'}</td></tr>`;
+  }).join('');
+  const sigKund = document.getElementById('sig-kund').toDataURL();
+  const sigTek  = document.getElementById('sig-tekniker').toDataURL();
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>Leveransgodkännande</title>
+  <style>body{font-family:Arial,sans-serif;font-size:12px;margin:20mm;}h1{font-size:18px;}h2{font-size:13px;border-bottom:1px solid #000;margin-top:16px;}
+  table{width:100%;border-collapse:collapse;}td{padding:5px 8px;border:1px solid #ccc;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .field{border:1px solid #ccc;padding:4px 8px;font-size:11px;}
+  .sig-box{border:1px solid #000;padding:8px;}.sig-box img{width:100%;max-height:80px;object-fit:contain;}
+  .sigs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;}
+  </style></head><body>
+  <h1>Leveransgodkännande</h1>
+  <p>Blanketten ifylls av ansvarig/utsedd person från Liljegrens i Tyresö AB</p>
+  <h2>Maskin &amp; kund</h2>
+  <div class="grid">
+    <div class="field"><b>Maskintyp/modell:</b> ${document.getElementById('lev-modell').value}</div>
+    <div class="field"><b>Kund:</b> ${document.getElementById('lev-kund').value} &nbsp; <b>Telnr:</b> ${document.getElementById('lev-telnr').value}</div>
+    <div class="field"><b>Kontaktperson:</b> ${document.getElementById('lev-kontakt').value} &nbsp; <b>Mobil:</b> ${document.getElementById('lev-mobil').value}</div>
+    <div class="field"><b>Adress:</b> ${document.getElementById('lev-adress').value}</div>
+    <div class="field"><b>Utrustning:</b> ${document.getElementById('lev-utrustning').value}</div>
+    <div class="field"><b>Material/område:</b> ${document.getElementById('lev-material').value}</div>
+  </div>
+  <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
+  <table><tbody>${items}</tbody></table>
+  <h2>Kommentarer</h2>
+  <div style="border:1px solid #ccc;min-height:40px;padding:6px;">${document.getElementById('lev-kommentar').value}</div>
+  <p style="margin-top:16px;font-size:11px;"><b>Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</b></p>
+  <div class="sigs">
+    <div><b>Kund</b><br>Datum: ${document.getElementById('lev-datum-kund').value} &nbsp; Ort: ${document.getElementById('lev-ort-kund').value}<div class="sig-box"><img src="${sigKund}"></div>Namnförtydligande: ${document.getElementById('lev-namn-kund').value}</div>
+    <div><b>Liljegrens (tekniker)</b><br>Datum: ${document.getElementById('lev-datum-tek').value} &nbsp; Ort: ${document.getElementById('lev-ort-tek').value}<div class="sig-box"><img src="${sigTek}"></div>Namnförtydligande: ${document.getElementById('lev-namn-tek').value}</div>
+  </div>
+  </body></html>`);
+  w.document.close();
+  w.print();
 }
 </script>
 </body>

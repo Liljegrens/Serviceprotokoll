@@ -281,6 +281,33 @@ def get_machine(nr):
         return jsonify(None), 404
     return jsonify(dict(row))
 
+# ── Leveransgodkännande ──────────────────────────────────────
+
+def init_leverans_db():
+    with get_db() as db:
+        db.execute('''CREATE TABLE IF NOT EXISTS leverans (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_at  TEXT,
+            tekniker  TEXT,
+            data_json TEXT
+        )''')
+
+init_leverans_db()
+
+@app.route('/api/leverans', methods=['POST'])
+def save_leverans():
+    data = request.get_json()
+    with get_db() as db:
+        db.execute('INSERT INTO leverans (saved_at, tekniker, data_json) VALUES (?,?,?)',
+                   (datetime.now().isoformat(), data.get('tekniker',''), json.dumps(data, ensure_ascii=False)))
+    return jsonify({'ok': True})
+
+@app.route('/api/leverans', methods=['GET'])
+def list_leverans():
+    with get_db() as db:
+        rows = db.execute('SELECT id, saved_at, tekniker, data_json FROM leverans ORDER BY saved_at DESC').fetchall()
+    return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
+
 # ── Protocols ────────────────────────────────────────────────
 
 @app.route('/api/protocols/search')
