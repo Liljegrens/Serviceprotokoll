@@ -750,13 +750,11 @@
       </div>
     </div>
 
-    <div class="summary-card">
-      <div class="action-btns">
-        <button class="save-btn" onclick="saveLeverans()">💾 Spara protokoll</button>
-        <button class="email-btn" onclick="sendLeveransEmail()">📧 Skicka via e-post</button>
-      </div>
-      <div class="save-confirm" id="lev-save-confirm"></div>
+    <div style="display:flex;gap:12px;margin:24px 0;flex-wrap:wrap;">
+      <button style="flex:1;padding:14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="saveLeverans()">💾 Spara protokoll</button>
+      <button style="flex:1;padding:14px;background:#fff;color:#1a3a5c;border:2px solid #1a3a5c;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="sendLeveransEmail()">📧 Skicka via e-post</button>
     </div>
+    <div id="lev-save-confirm" style="text-align:center;font-size:14px;margin-bottom:16px;"></div>
 
   </div>
 </div>
