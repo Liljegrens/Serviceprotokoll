@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serviceprotokoll – Liljegrens</title>
+<title>Serviceprotokoll â€“ Liljegrens</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -23,7 +23,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: var(--bg); color: #212121; font-size: 15px; }
 
-  /* ─── LOGIN PAGE ─── */
+  /* â”€â”€â”€ LOGIN PAGE â”€â”€â”€ */
   #login-page {
     min-height: 100vh; display: flex; flex-direction: column;
     align-items: center; justify-content: center; padding: 32px 16px;
@@ -50,7 +50,7 @@
   }
   .login-btn:hover { background: var(--brand-light); }
 
-  /* ─── START PAGE ─── */
+  /* â”€â”€â”€ START PAGE â”€â”€â”€ */
   #start-page {
     min-height: 100vh; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -69,7 +69,7 @@
   }
   .user-bar span { color: #fff; font-size: 13px; font-weight: 600; }
 
-  /* ─── RECENT PROTOCOLS ─── */
+  /* â”€â”€â”€ RECENT PROTOCOLS â”€â”€â”€ */
   .recent-section {
     width: 100%; max-width: 640px; margin-top: 28px;
   }
@@ -122,7 +122,7 @@
   .wf-toggle-btn.undo:hover { background: #e0e0e0; }
   .wf-handled-by { font-size: 12px; color: var(--gray); }
 
-  /* DEAD CSS kept for reference — no longer used */
+  /* DEAD CSS kept for reference â€” no longer used */
   .workflow-steps {
     display: flex; gap: 0; margin-bottom: 14px; border-radius: 8px; overflow: hidden;
     border: 1px solid var(--border);
@@ -197,7 +197,7 @@
   .start-card h2 { font-size: 18px; color: var(--brand); font-weight: 700; }
   .start-card p { font-size: 13px; color: var(--gray); margin-top: 8px; line-height: 1.5; }
 
-  /* ─── PROTOCOL PAGE ─── */
+  /* â”€â”€â”€ PROTOCOL PAGE â”€â”€â”€ */
   #protocol-page { display: none; }
   .top-bar {
     background: var(--brand); color: #fff; padding: 14px 16px;
@@ -214,7 +214,7 @@
 
   .protocol-body { max-width: 820px; margin: 0 auto; padding: 16px; }
 
-  /* ─── HEADER FIELDS ─── */
+  /* â”€â”€â”€ HEADER FIELDS â”€â”€â”€ */
   .header-card {
     background: var(--card); border-radius: 10px; padding: 20px;
     margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
@@ -232,7 +232,7 @@
   .machine-lookup-badge.visible { display: block; }
   .machine-lookup-badge.error { color: var(--akut); }
 
-  /* ─── HISTORY BANNER ─── */
+  /* â”€â”€â”€ HISTORY BANNER â”€â”€â”€ */
   .history-banner {
     background: #e3f2fd; border: 1px solid #90caf9; border-radius: 10px;
     padding: 14px 18px; margin-bottom: 16px; display: none;
@@ -254,7 +254,7 @@
   .badge.bevaka { background: var(--bevaka-bg); color: var(--bevaka); }
   .badge.akut { background: var(--akut-bg); color: var(--akut); }
 
-  /* ─── MODAL ─── */
+  /* â”€â”€â”€ MODAL â”€â”€â”€ */
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
     z-index: 200; align-items: flex-start; justify-content: center;
@@ -298,7 +298,7 @@
   }
   .resolve-name-input:focus { outline: none; border-color: var(--ok); }
 
-  /* ─── SECTIONS & CHECKLIST ─── */
+  /* â”€â”€â”€ SECTIONS & CHECKLIST â”€â”€â”€ */
   .section-header {
     background: var(--brand); color: #fff; padding: 10px 16px;
     border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700;
@@ -355,7 +355,7 @@
     font-size: 11px; color: var(--akut); cursor: pointer; text-decoration: underline;
   }
 
-  /* ─── SUMMARY ─── */
+  /* â”€â”€â”€ SUMMARY â”€â”€â”€ */
   .summary-card { background: var(--card); border-radius: 10px; padding: 20px; margin-top: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
   .summary-card h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--brand); }
   .summary-stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -397,7 +397,7 @@
   .save-confirm.ok-msg { color: var(--ok); }
   .save-confirm.err-msg { color: var(--akut); }
 
-  /* ─── MACHINE INFO CARD ─── */
+  /* â”€â”€â”€ MACHINE INFO CARD â”€â”€â”€ */
   .machine-info-card {
     background: #e8f4fd;
     border: 1px solid #90caf9;
@@ -413,7 +413,7 @@
   .mi-field a { color: #1565c0; text-decoration: none; }
   .mi-field a:hover { text-decoration: underline; }
 
-  /* ─── OVERVIEW PAGE ─── */
+  /* â”€â”€â”€ OVERVIEW PAGE â”€â”€â”€ */
   #overview-page .top-bar { background: var(--brand); color:#fff; display:flex; align-items:center; gap:12px; padding:12px 16px; }
   .ov-filter-bar {
     display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;
@@ -467,7 +467,7 @@
 
     .protocol-body { padding: 0; max-width: 100%; }
 
-    /* ── Print header ── */
+    /* â”€â”€ Print header â”€â”€ */
     .header-card {
       border-radius: 0; box-shadow: none; padding: 0 0 6pt 0;
       border-bottom: 1.5pt solid #1a3a5c; margin-bottom: 6pt;
@@ -505,7 +505,7 @@
     .mi-field .mi-label { font-size: 7pt; }
     .mi-field .mi-val { font-size: 8.5pt; }
 
-    /* ── Sections compact ── */
+    /* â”€â”€ Sections compact â”€â”€ */
     .section-header {
       font-size: 8pt; padding: 3pt 8pt; margin-top: 6pt;
       border-radius: 0; break-after: avoid;
@@ -517,7 +517,7 @@
     }
     .checklist-card { border-radius: 0; box-shadow: none; }
 
-    /* ── Items: two-column layout ── */
+    /* â”€â”€ Items: two-column layout â”€â”€ */
     .checklist-card { columns: 2; column-gap: 8pt; }
     .subsection-header { column-span: all; }
 
@@ -541,13 +541,13 @@
       display: none;
     }
     /* Status indicator via border */
-    .check-item.status-ok     .item-nr::before { content: '✓ '; color: #2e7d32; }
-    .check-item.status-bevaka .item-nr::before { content: '● '; color: #f57f17; }
-    .check-item.status-akut   .item-nr::before { content: '▲ '; color: #c62828; }
+    .check-item.status-ok     .item-nr::before { content: 'âœ“ '; color: #2e7d32; }
+    .check-item.status-bevaka .item-nr::before { content: 'â— '; color: #f57f17; }
+    .check-item.status-akut   .item-nr::before { content: 'â–² '; color: #c62828; }
 
     .comment-box, .comment-box.visible { display: none !important; }
 
-    /* ── Summary compact ── */
+    /* â”€â”€ Summary compact â”€â”€ */
     .summary-card {
       border-radius: 0; box-shadow: none;
       border-top: 1.5pt solid #1a3a5c;
@@ -573,23 +573,23 @@
 </head>
 <body>
 
-<!-- ═══════════ LOGIN PAGE ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• LOGIN PAGE â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="login-page" style="display:none">
   <div class="logo-area">
-    <h1>Liljegrens i Tyresö AB</h1>
-    <p>Serviceprotokoll – Komprimatorer</p>
+    <h1>Liljegrens i TyresÃ¶ AB</h1>
+    <p>Serviceprotokoll â€“ Komprimatorer</p>
   </div>
   <div class="login-card">
     <h2>Logga in</h2>
     <div class="login-field">
       <label>Namn</label>
       <select id="login-name">
-        <option value="">– Välj namn –</option>
+        <option value="">â€“ VÃ¤lj namn â€“</option>
       </select>
     </div>
     <div class="login-field">
       <label>PIN</label>
-      <input type="password" id="login-pin" placeholder="••••" maxlength="20"
+      <input type="password" id="login-pin" placeholder="â€¢â€¢â€¢â€¢" maxlength="20"
         onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div class="login-error" id="login-error"></div>
@@ -597,11 +597,11 @@
   </div>
 </div>
 
-<!-- ═══════════ START PAGE ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• START PAGE â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="start-page">
   <div class="logo-area">
-    <h1>Liljegrens i Tyresö AB</h1>
-    <p>Serviceprotokoll – Komprimatorer</p>
+    <h1>Liljegrens i TyresÃ¶ AB</h1>
+    <p>Serviceprotokoll â€“ Komprimatorer</p>
   </div>
 
   <div class="user-bar">
@@ -610,33 +610,33 @@
   </div>
 
   <div class="register-bar">
-    <span>📋 Maskinregister</span>
+    <span>ðŸ“‹ Maskinregister</span>
     <span class="reg-status" id="reg-status">Kontrollerar...</span>
-    <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
+    <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera frÃ¥n Excel</button>
     <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
   </div>
 
   <div class="start-cards">
     <div class="start-card" onclick="openProtocol('verkstad')">
-      <div class="icon">🔧</div>
+      <div class="icon">ðŸ”§</div>
       <h2>Verkstadsprotokoll</h2>
-      <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
+      <p>Typ 1 Â· Maskin inlÃ¤mnad fÃ¶r genomgÃ¥ng och/eller reparation</p>
     </div>
     <div class="start-card" onclick="openProtocol('flygande')">
-      <div class="icon">🚗</div>
+      <div class="icon">ðŸš—</div>
       <h2>Flygande protokoll</h2>
-      <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
+      <p>Typ 2 Â· Kontroll utfÃ¶rd hos kund / pÃ¥ plats</p>
     </div>
     <div class="start-card" onclick="openLeverans()">
-      <div class="icon">📦</div>
-      <h2>Leveransgodkännande</h2>
-      <p>Typ 3 · Överlämning av utrustning till kund</p>
+      <div class="icon">ðŸ“¦</div>
+      <h2>LeveransgodkÃ¤nnande</h2>
+      <p>Typ 3 Â· Ã–verlÃ¤mning av utrustning till kund</p>
     </div>
   </div>
 
-  <!-- Användarhantering (admin) -->
+  <!-- AnvÃ¤ndarhantering (admin) -->
   <div class="recent-section admin-only" id="users-section" style="display:none;">
-    <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
+    <h3>AnvÃ¤ndare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ LÃ¤gg till</button></h3>
     <div id="users-list"></div>
   </div>
 
@@ -651,12 +651,12 @@
 
 </div>
 
-<!-- ═══════════ LEVERANS PAGE ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• LEVERANS PAGE â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="leverans-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
-    <h1>Leveransgodkännande</h1>
-    <button class="top-btn" onclick="printLeverans()">🖨 Skriv ut</button>
+    <button class="back-btn" onclick="showPage('start')">â† Tillbaka</button>
+    <h1>LeveransgodkÃ¤nnande</h1>
+    <button class="top-btn" onclick="printLeverans()">ðŸ–¨ Skriv ut</button>
   </div>
   <div class="protocol-body">
 
@@ -669,7 +669,7 @@
           <div class="machine-lookup-badge" id="lev-machine-badge"></div>
         </div>
         <div class="field-group">
-          <label>Kund (ägare)</label>
+          <label>Kund (Ã¤gare)</label>
           <input type="text" id="lev-kund" placeholder="Fylls i automatiskt" readonly style="background:#f5f7f9;color:#546e7a;">
         </div>
         <div class="field-group">
@@ -685,11 +685,11 @@
           <input type="text" id="lev-modell" placeholder="Fylls i automatiskt">
         </div>
         <div class="field-group">
-          <label>Utrustning/tillbehör</label>
+          <label>Utrustning/tillbehÃ¶r</label>
           <input type="text" id="lev-utrustning" placeholder="">
         </div>
         <div class="field-group">
-          <label>Anv. område/materialslag</label>
+          <label>Anv. omrÃ¥de/materialslag</label>
           <input type="text" id="lev-material" placeholder="">
         </div>
         <div class="field-group">
@@ -712,7 +712,7 @@
 
     <!-- Checklista -->
     <div class="header-card">
-      <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
+      <h2>Kontroll av maskinens detaljer betrÃ¤ffande sÃ¤kerhet och funktion</h2>
       <div id="lev-checklist"></div>
     </div>
 
@@ -725,7 +725,7 @@
     <!-- Signaturer -->
     <div class="header-card">
       <h2>Underskrifter</h2>
-      <p style="font-size:13px;color:#555;margin:0 0 16px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
+      <p style="font-size:13px;color:#555;margin:0 0 16px;">HÃ¤rmed bekrÃ¤ftas att rubricerad maskin har kontrollerats enligt ovan och att genomgÃ¥ng av handhavande och sÃ¤kerhetsfÃ¶reskrifter genomfÃ¶rts.</p>
       <div style="display:flex;gap:24px;flex-wrap:wrap;">
         <div style="flex:1;min-width:240px;">
           <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">Kund</div>
@@ -734,7 +734,7 @@
             <input type="text" id="lev-datum-kund" placeholder="Datum" class="lev-input" style="flex:1;">
             <input type="text" id="lev-ort-kund" placeholder="Ort" class="lev-input" style="flex:1;">
           </div>
-          <input type="text" id="lev-namn-kund" placeholder="Namnförtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
+          <input type="text" id="lev-namn-kund" placeholder="NamnfÃ¶rtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
           <button onclick="clearSig('kund')" class="lev-clear-btn">Rensa signatur</button>
         </div>
         <div style="flex:1;min-width:240px;">
@@ -744,27 +744,27 @@
             <input type="text" id="lev-datum-tek" placeholder="Datum" class="lev-input" style="flex:1;">
             <input type="text" id="lev-ort-tek" placeholder="Ort" class="lev-input" style="flex:1;">
           </div>
-          <input type="text" id="lev-namn-tek" placeholder="Namnförtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
+          <input type="text" id="lev-namn-tek" placeholder="NamnfÃ¶rtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
           <button onclick="clearSig('tekniker')" class="lev-clear-btn">Rensa signatur</button>
         </div>
       </div>
     </div>
 
     <div style="display:flex;gap:12px;margin:24px 0;flex-wrap:wrap;">
-      <button style="flex:1;padding:14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="saveLeverans()">💾 Spara protokoll</button>
-      <button style="flex:1;padding:14px;background:#fff;color:#1a3a5c;border:2px solid #1a3a5c;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="sendLeveransEmail()">📧 Skicka via e-post</button>
+      <button style="flex:1;padding:14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="saveLeverans()">ðŸ’¾ Spara protokoll</button>
+      <button style="flex:1;padding:14px;background:#fff;color:#1a3a5c;border:2px solid #1a3a5c;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="sendLeveransEmail()">ðŸ“§ Skicka via e-post</button>
     </div>
     <div id="lev-save-confirm" style="text-align:center;font-size:14px;margin-bottom:16px;"></div>
 
   </div>
 </div>
 
-<!-- ═══════════ OVERVIEW PAGE ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• OVERVIEW PAGE â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="overview-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
-    <h1>Protokollöversikt</h1>
-    <button class="top-btn" id="pdf-batch-btn" onclick="batchPDF()" style="display:none;">🖨 Skapa samlad PDF</button>
+    <button class="back-btn" onclick="showPage('start')">â† Tillbaka</button>
+    <h1>ProtokollÃ¶versikt</h1>
+    <button class="top-btn" id="pdf-batch-btn" onclick="batchPDF()" style="display:none;">ðŸ–¨ Skapa samlad PDF</button>
   </div>
   <div style="padding:16px;max-width:900px;margin:0 auto;">
     <!-- Filter -->
@@ -774,14 +774,14 @@
         <select id="ov-filter-kund"><option value="">Alla kunder</option></select>
       </div>
       <div class="ov-filter-group">
-        <label>Från</label>
+        <label>FrÃ¥n</label>
         <input type="date" id="ov-filter-from">
       </div>
       <div class="ov-filter-group">
         <label>Till</label>
         <input type="date" id="ov-filter-to">
       </div>
-      <button class="ov-search-btn" onclick="loadOverview()">Sök</button>
+      <button class="ov-search-btn" onclick="loadOverview()">SÃ¶k</button>
     </div>
     <!-- Val-info -->
     <div class="ov-select-bar" id="ov-select-bar" style="display:none;">
@@ -789,16 +789,16 @@
       <button class="ov-clear-btn" onclick="clearSelection()">Avmarkera alla</button>
     </div>
     <!-- Lista -->
-    <div id="ov-list"><div class="recent-empty" style="color:#888;text-align:center;padding:32px;">Välj filter och klicka Sök</div></div>
+    <div id="ov-list"><div class="recent-empty" style="color:#888;text-align:center;padding:32px;">VÃ¤lj filter och klicka SÃ¶k</div></div>
   </div>
 </div>
 
-<!-- ═══════════ PROTOCOL PAGE ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• PROTOCOL PAGE â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="protocol-page">
   <div class="top-bar">
-    <button class="back-btn" onclick="goBack()">← Tillbaka</button>
+    <button class="back-btn" onclick="goBack()">â† Tillbaka</button>
     <h1 id="protocol-title"></h1>
-    <button class="top-btn" id="print-top-btn" onclick="window.print()">🖨 Skriv ut</button>
+    <button class="top-btn" id="print-top-btn" onclick="window.print()">ðŸ–¨ Skriv ut</button>
   </div>
   <div class="protocol-body">
     <div class="header-card">
@@ -834,7 +834,7 @@
     </div>
 
     <div class="history-banner" id="history-banner">
-      <h3>Tidigare protokoll för denna maskin</h3>
+      <h3>Tidigare protokoll fÃ¶r denna maskin</h3>
       <div class="history-list" id="history-list"></div>
     </div>
 
@@ -850,114 +850,114 @@
       </div>
       <div class="summary-notes" id="summary-notes"></div>
       <div class="action-btns">
-        <button class="save-btn" id="save-btn" onclick="saveProtocol()">💾 Spara protokoll</button>
-        <button class="email-btn" id="email-btn" onclick="sendEmail()">📧 Skicka via e-post</button>
+        <button class="save-btn" id="save-btn" onclick="saveProtocol()">ðŸ’¾ Spara protokoll</button>
+        <button class="email-btn" id="email-btn" onclick="sendEmail()">ðŸ“§ Skicka via e-post</button>
       </div>
       <div class="save-confirm" id="save-confirm"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════ MODAL ═══════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â• MODAL â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal">
     <div class="modal-header">
       <h2 id="modal-title">Protokoll</h2>
-      <button class="modal-close" onclick="closeModal(null,true)">×</button>
+      <button class="modal-close" onclick="closeModal(null,true)">Ã—</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CHECKLIST DATA
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const SHARED_ITEMS = [
   { section: 'HYDRAULSYSTEM' },
   { sub: 'Hydraulenhet' },
-  { nr:'1',    label:'Hydraulenhet – tank, pump och ventilblock' },
-  { nr:'2',    label:'Hydraulolja – nivå, färg och kvalitet' },
-  { nr:'3',    label:'Oljefilter – skick, byt vid behov' },
+  { nr:'1',    label:'Hydraulenhet â€“ tank, pump och ventilblock' },
+  { nr:'2',    label:'Hydraulolja â€“ nivÃ¥, fÃ¤rg och kvalitet' },
+  { nr:'3',    label:'Oljefilter â€“ skick, byt vid behov' },
   { sub: 'Hydraulslangar & cylinder' },
-  { nr:'4',    label:'Hydraulslangar och kopplingar – slitage, sprickor, täthet' },
-  { nr:'5',    label:'Cylinder – läckage, kolvstång och tätningar' },
+  { nr:'4',    label:'Hydraulslangar och kopplingar â€“ slitage, sprickor, tÃ¤thet' },
+  { nr:'5',    label:'Cylinder â€“ lÃ¤ckage, kolvstÃ¥ng och tÃ¤tningar' },
   { section: 'EL OCH GIVARE' },
   { sub: 'El & kablage' },
-  { nr:'7',    label:'Kablage och anslutningar – skador, lösa kontakter' },
-  { nr:'8',    label:'Styrenhet och komponenter – indikeringar och larm' },
+  { nr:'7',    label:'Kablage och anslutningar â€“ skador, lÃ¶sa kontakter' },
+  { nr:'8',    label:'Styrenhet och komponenter â€“ indikeringar och larm' },
   { sub: 'Motor' },
-  { nr:'9',    label:'Motor – ljud, temperatur och vibrationer vid provstart' },
-  { sub: 'Manöver & säkerhet' },
-  { nr:'10',   label:'Manöverpanel – funktion och display' },
-  { nr:'11',   label:'Nödstopp – funktionstest samtliga' },
-  { nr:'12',   label:'Säkerhetslister och rörelseskydd – funktion' },
-  { section: 'MEKANIK OCH SMÖRJNING' },
+  { nr:'9',    label:'Motor â€“ ljud, temperatur och vibrationer vid provstart' },
+  { sub: 'ManÃ¶ver & sÃ¤kerhet' },
+  { nr:'10',   label:'ManÃ¶verpanel â€“ funktion och display' },
+  { nr:'11',   label:'NÃ¶dstopp â€“ funktionstest samtliga' },
+  { nr:'12',   label:'SÃ¤kerhetslister och rÃ¶relseskydd â€“ funktion' },
+  { section: 'MEKANIK OCH SMÃ–RJNING' },
   { sub: 'Pressplatta' },
-  { nr:'13',   label:'Pressplatta – sido-/bottenplåt, glidklossar och cylinder' },
-  { nr:'13.1', label:'↳  Sido- och bottenplåt – slitage och deformation', indent:true },
-  { nr:'13.2', label:'↳  Infästning cylinder – bultar och fästen', indent:true },
-  { nr:'13.3', label:'↳  Glidklossar – slitage, spel och justering', indent:true },
-  { nr:'13.4', label:'↳  Justering pressplatta – rörelsemönster', indent:true },
-  { nr:'14',   label:'Jalusiplåtar och skraplister – skick' },
+  { nr:'13',   label:'Pressplatta â€“ sido-/bottenplÃ¥t, glidklossar och cylinder' },
+  { nr:'13.1', label:'â†³  Sido- och bottenplÃ¥t â€“ slitage och deformation', indent:true },
+  { nr:'13.2', label:'â†³  InfÃ¤stning cylinder â€“ bultar och fÃ¤sten', indent:true },
+  { nr:'13.3', label:'â†³  Glidklossar â€“ slitage, spel och justering', indent:true },
+  { nr:'13.4', label:'â†³  Justering pressplatta â€“ rÃ¶relsemÃ¶nster', indent:true },
+  { nr:'14',   label:'JalusiplÃ¥tar och skraplister â€“ skick' },
   { sub: 'Inkastlock' },
-  { nr:'15',   label:'Inkastlock – gångjärn, öppning och låsning' },
+  { nr:'15',   label:'Inkastlock â€“ gÃ¥ngjÃ¤rn, Ã¶ppning och lÃ¥sning' },
   { sub: 'Baklucka' },
-  { nr:'17',   label:'Baklucka – vantskruv, tvingar och upphängningskedja' },
-  { nr:'17.1', label:'↳  Vantskruv – skick, gäng och åtdragning', indent:true },
-  { nr:'17.2', label:'↳  Tvingar – funktion, slitage och låsning', indent:true },
-  { nr:'17.3', label:'↳  Upphängningskedja – skick, länkar och fästen', indent:true },
-  { nr:'18',   label:'Baklucka – säkerhetslåsning och krok' },
-  { nr:'19',   label:'Tätlist baklucka – kondition och tätning' },
+  { nr:'17',   label:'Baklucka â€“ vantskruv, tvingar och upphÃ¤ngningskedja' },
+  { nr:'17.1', label:'â†³  Vantskruv â€“ skick, gÃ¤ng och Ã¥tdragning', indent:true },
+  { nr:'17.2', label:'â†³  Tvingar â€“ funktion, slitage och lÃ¥sning', indent:true },
+  { nr:'17.3', label:'â†³  UpphÃ¤ngningskedja â€“ skick, lÃ¤nkar och fÃ¤sten', indent:true },
+  { nr:'18',   label:'Baklucka â€“ sÃ¤kerhetslÃ¥sning och krok' },
+  { nr:'19',   label:'TÃ¤tlist baklucka â€“ kondition och tÃ¤tning' },
   { sub: 'Hjul & lyftkrokar' },
-  { nr:'20',   label:'Hjul – skick, slitage och funktion' },
-  { nr:'21',   label:'Lyftkrokar – skick, slitage och säkerhet' },
-  { sub: 'Smörjning & infästning' },
-  { nr:'22',   label:'Smörjnipplar och smörjpunkter – smörjning vid behov' },
-  { nr:'23',   label:'Bultar och infästningar – åtdragning' },
-  { section: 'YTSKIKT OCH SÄKERHET' },
-  { nr:'24',   label:'Lackering och korrosionsskydd – skador och roststatus' },
-  { nr:'25',   label:'Varnings- och informationsdekaler – på plats och läsliga' },
-  { nr:'26',   label:'Reflexer – placering och skick' },
-  { nr:'27',   label:'Städning och rengöring av utrustningen' },
+  { nr:'20',   label:'Hjul â€“ skick, slitage och funktion' },
+  { nr:'21',   label:'Lyftkrokar â€“ skick, slitage och sÃ¤kerhet' },
+  { sub: 'SmÃ¶rjning & infÃ¤stning' },
+  { nr:'22',   label:'SmÃ¶rjnipplar och smÃ¶rjpunkter â€“ smÃ¶rjning vid behov' },
+  { nr:'23',   label:'Bultar och infÃ¤stningar â€“ Ã¥tdragning' },
+  { section: 'YTSKIKT OCH SÃ„KERHET' },
+  { nr:'24',   label:'Lackering och korrosionsskydd â€“ skador och roststatus' },
+  { nr:'25',   label:'Varnings- och informationsdekaler â€“ pÃ¥ plats och lÃ¤sliga' },
+  { nr:'26',   label:'Reflexer â€“ placering och skick' },
+  { nr:'27',   label:'StÃ¤dning och rengÃ¶ring av utrustningen' },
   { section: 'FUNKTIONSKONTROLL' },
-  { nr:'28',   label:'Behållare – golv, väggar och täthet invändigt' },
-  { nr:'29',   label:'Låsning för transport – funktion' },
-  { nr:'30',   label:'Driftkontroll – komplett provkörning efter genomgång' },
+  { nr:'28',   label:'BehÃ¥llare â€“ golv, vÃ¤ggar och tÃ¤thet invÃ¤ndigt' },
+  { nr:'29',   label:'LÃ¥sning fÃ¶r transport â€“ funktion' },
+  { nr:'30',   label:'Driftkontroll â€“ komplett provkÃ¶rning efter genomgÃ¥ng' },
 ];
 const FLYGANDE_EXTRA = [
-  { section: 'DEL B – INSTALLATION & PLACERING' },
-  { sub: 'Placering & infästning' },
-  { nr:'B1', label:'Förankring / bultar i golv eller vägg' },
-  { nr:'B2', label:'Styrskenor – skick och slitage' },
-  { nr:'B3', label:'Styrskenornas infästning och bultar' },
-  { sub: 'Skydd & säkerhet' },
-  { nr:'B4', label:'Skyddsräcke runt maskinen – finns det, skick' },
-  { nr:'B5', label:'Skydd mot obehörig åtkomst (lås, stängsel)' },
-  { nr:'B6', label:'Skyltning – varningsdekaler och instruktioner på plats' },
-  { nr:'B7', label:'Utrymningsvägar ej blockerade' },
-  { sub: 'Miljö & drift' },
-  { nr:'B8', label:'Renhet och städning runt maskinen' },
-  { nr:'B9', label:'Knappdosa, aggregat och elmotor – skyddade mot väder och fukt' },
+  { section: 'DEL B â€“ INSTALLATION & PLACERING' },
+  { sub: 'Placering & infÃ¤stning' },
+  { nr:'B1', label:'FÃ¶rankring / bultar i golv eller vÃ¤gg' },
+  { nr:'B2', label:'Styrskenor â€“ skick och slitage' },
+  { nr:'B3', label:'Styrskenornas infÃ¤stning och bultar' },
+  { sub: 'Skydd & sÃ¤kerhet' },
+  { nr:'B4', label:'SkyddsrÃ¤cke runt maskinen â€“ finns det, skick' },
+  { nr:'B5', label:'Skydd mot obehÃ¶rig Ã¥tkomst (lÃ¥s, stÃ¤ngsel)' },
+  { nr:'B6', label:'Skyltning â€“ varningsdekaler och instruktioner pÃ¥ plats' },
+  { nr:'B7', label:'UtrymningsvÃ¤gar ej blockerade' },
+  { sub: 'MiljÃ¶ & drift' },
+  { nr:'B8', label:'Renhet och stÃ¤dning runt maskinen' },
+  { nr:'B9', label:'Knappdosa, aggregat och elmotor â€“ skyddade mot vÃ¤der och fukt' },
 ];
 
 const KALY_ITEMS = [
   { section: 'HYDRAULIK' },
-  { nr:'K1', label:'Hydraulslang – slitage, sprickor och täthet' },
-  { nr:'K2', label:'Hydraulolja – nivå, färg och kvalitet' },
+  { nr:'K1', label:'Hydraulslang â€“ slitage, sprickor och tÃ¤thet' },
+  { nr:'K2', label:'Hydraulolja â€“ nivÃ¥, fÃ¤rg och kvalitet' },
   { section: 'MEKANIK' },
-  { nr:'K3', label:'Y-lagerenhet – skick och spel' },
-  { nr:'K4', label:'Hjul – skick, slitage och funktion' },
+  { nr:'K3', label:'Y-lagerenhet â€“ skick och spel' },
+  { nr:'K4', label:'Hjul â€“ skick, slitage och funktion' },
   { section: 'YTSKIKT OCH SKYDD' },
-  { nr:'K5', label:'Lackering och korrosionsskydd – skador och roststatus' },
-  { nr:'K6', label:'Aggregat – väderskyddat, skick på kåpa och tätningar' },
+  { nr:'K5', label:'Lackering och korrosionsskydd â€“ skador och roststatus' },
+  { nr:'K6', label:'Aggregat â€“ vÃ¤derskyddat, skick pÃ¥ kÃ¥pa och tÃ¤tningar' },
   { section: 'FUNKTION' },
-  { nr:'K7', label:'Manöver – funktion, knappar och display' },
+  { nr:'K7', label:'ManÃ¶ver â€“ funktion, knappar och display' },
 ];
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // API HELPERS
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const API = window.location.origin;
 
 async function apiFetch(path, opts={}) {
@@ -966,9 +966,9 @@ async function apiFetch(path, opts={}) {
   return r.json();
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AUTH
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 let currentUser = null;
 
 async function initAuth() {
@@ -1002,7 +1002,7 @@ async function loadUsersAdmin() {
         <span style="color:rgba(255,255,255,0.5);font-size:12px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</span>
         ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:rgba(255,80,80,0.3);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : ''}
       </div>`).join('');
-  } catch { list.textContent = 'Kunde inte ladda användare.'; }
+  } catch { list.textContent = 'Kunde inte ladda anvÃ¤ndare.'; }
 }
 
 function openAddUser() {
@@ -1016,7 +1016,7 @@ function openAddUser() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: name.trim(), pin, role })
   }).then(() => { loadUsersAdmin(); loadUserList(); })
-    .catch(() => alert('Kunde inte lägga till användare.'));
+    .catch(() => alert('Kunde inte lÃ¤gga till anvÃ¤ndare.'));
 }
 
 async function deleteUser(id, name) {
@@ -1025,14 +1025,14 @@ async function deleteUser(id, name) {
     await apiFetch(`/api/users/${id}`, { method: 'DELETE' });
     loadUsersAdmin();
     loadUserList();
-  } catch { alert('Kunde inte ta bort användare.'); }
+  } catch { alert('Kunde inte ta bort anvÃ¤ndare.'); }
 }
 
 async function loadUserList() {
   try {
     const users = await apiFetch('/api/users');
     const sel = document.getElementById('login-name');
-    sel.innerHTML = '<option value="">– Välj namn –</option>';
+    sel.innerHTML = '<option value="">â€“ VÃ¤lj namn â€“</option>';
     users.forEach(u => {
       const opt = document.createElement('option');
       opt.value = u.name;
@@ -1047,7 +1047,7 @@ async function doLogin() {
   const pin  = document.getElementById('login-pin').value;
   const err  = document.getElementById('login-error');
   err.textContent = '';
-  if (!name) { err.textContent = 'Välj ett namn.'; return; }
+  if (!name) { err.textContent = 'VÃ¤lj ett namn.'; return; }
   if (!pin)  { err.textContent = 'Ange PIN.'; return; }
   try {
     currentUser = await apiFetch('/api/login', {
@@ -1061,7 +1061,7 @@ async function doLogin() {
     checkRegisterStatus();
     loadRecentProtocols();
   } catch {
-    err.textContent = 'Fel namn eller PIN — försök igen.';
+    err.textContent = 'Fel namn eller PIN â€” fÃ¶rsÃ¶k igen.';
     document.getElementById('login-pin').value = '';
   }
 }
@@ -1093,20 +1093,20 @@ async function loadRecentProtocols() {
       _type: 'leverans',
       _raw: r,
       saved_at: r.saved_at,
-      maskin_nr: r.data?.maskin_nr || '–',
+      maskin_nr: r.data?.maskin_nr || 'â€“',
       kund: r.data?.kund || '',
       datum: r.data?.datum || '',
-      tekniker: r.data?.tekniker || '–'
+      tekniker: r.data?.tekniker || 'â€“'
     }));
 
-    // Slå ihop och sortera på saved_at, visa 5 senaste
+    // SlÃ¥ ihop och sortera pÃ¥ saved_at, visa 5 senaste
     const all = [
       ...serviceRecs.map(r => ({ _type: 'service', _raw: r, saved_at: r.saved_at, ...r })),
       ...levNorm
     ].sort((a, b) => (b.saved_at || '').localeCompare(a.saved_at || '')).slice(0, 5);
 
     if (!all.length) {
-      list.innerHTML = '<div class="recent-empty">Inga sparade protokoll än.</div>';
+      list.innerHTML = '<div class="recent-empty">Inga sparade protokoll Ã¤n.</div>';
       return;
     }
     list.innerHTML = '';
@@ -1115,13 +1115,13 @@ async function loadRecentProtocols() {
       div.className = 'recent-item';
       if (rec._type === 'leverans') {
         div.innerHTML = `
-          <span class="recent-icon">📦</span>
+          <span class="recent-icon">ðŸ“¦</span>
           <div class="recent-main">
             <div class="recent-top">
               <span class="recent-maskin">${rec.maskin_nr}</span>
               <span class="recent-kund">${rec.kund}</span>
             </div>
-            <div class="recent-sub">${rec.datum} · ${rec.tekniker} · Leveransgodkännande</div>
+            <div class="recent-sub">${rec.datum} Â· ${rec.tekniker} Â· LeveransgodkÃ¤nnande</div>
           </div>
           <div class="recent-badges">
             <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
@@ -1129,7 +1129,7 @@ async function loadRecentProtocols() {
         div.onclick = () => openLeveransModal(rec._raw);
       } else {
         const s = summarizeStatus(rec.items);
-        const icon = rec.type === 'flygande' ? '🚗' : '🔧';
+        const icon = rec.type === 'flygande' ? 'ðŸš—' : 'ðŸ”§';
         div.innerHTML = `
           <span class="recent-icon">${icon}</span>
           <div class="recent-main">
@@ -1137,7 +1137,7 @@ async function loadRecentProtocols() {
               <span class="recent-maskin">${rec.maskin_nr}</span>
               <span class="recent-kund">${rec.kund || ''}</span>
             </div>
-            <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
+            <div class="recent-sub">${rec.datum || ''} Â· ${rec.tekniker || 'â€“'} Â· ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
           </div>
           <div class="recent-badges">
             ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
@@ -1153,21 +1153,21 @@ async function loadRecentProtocols() {
   }
   const adminLink = document.getElementById('recent-admin-link');
   if (adminLink && currentUser && currentUser.role === 'admin') {
-    adminLink.innerHTML = `<button onclick="openOverview()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-top:8px;text-decoration:underline;">Visa alla protokoll →</button>`;
+    adminLink.innerHTML = `<button onclick="openOverview()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;margin-top:8px;text-decoration:underline;">Visa alla protokoll â†’</button>`;
   }
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // OVERVIEW PAGE
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 let _ovSelected = new Set();   // set av protocol id:n
-let _ovProtocols = [];         // alla protokoll från senaste sökning
+let _ovProtocols = [];         // alla protokoll frÃ¥n senaste sÃ¶kning
 
 async function openOverview() {
   showPage('overview');
   _ovSelected.clear();
   updateSelectBar();
-  // Sätt standarddatum: innevarande månad
+  // SÃ¤tt standarddatum: innevarande mÃ¥nad
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
   document.getElementById('ov-filter-from').value = `${y}-${m}-01`;
@@ -1192,20 +1192,20 @@ async function loadOverview() {
   const from  = document.getElementById('ov-filter-from').value;
   const to    = document.getElementById('ov-filter-to').value;
   const list  = document.getElementById('ov-list');
-  list.innerHTML = '<div style="color:#888;text-align:center;padding:24px;">Hämtar...</div>';
+  list.innerHTML = '<div style="color:#888;text-align:center;padding:24px;">HÃ¤mtar...</div>';
   try {
     let url = '/api/protocols/search?limit=500';
     if (kund) url += '&kund=' + encodeURIComponent(kund);
     if (from) url += '&from=' + from;
     if (to)   url += '&to='   + to;
 
-    // Hämta serviceprotokoll och leveransprotokoll parallellt
+    // HÃ¤mta serviceprotokoll och leveransprotokoll parallellt
     const [serviceProts, leveransRecs] = await Promise.all([
       apiFetch(url),
       apiFetch('/api/leverans')
     ]);
 
-    // Filtrera leverans på kund och datum
+    // Filtrera leverans pÃ¥ kund och datum
     const leveransFilt = leveransRecs.filter(r => {
       const d = r.data || {};
       if (kund && d.kund !== kund) return false;
@@ -1233,13 +1233,13 @@ async function loadOverview() {
       row.innerHTML = `
         <input type="checkbox" ${_ovSelected.has(rec.id)?'checked':''} onclick="toggleOvSelect(event,${rec.id})">
         <div class="ov-row-info">
-          <div class="ov-row-title">${rec.maskin_nr} · ${rec.kund||'–'}</div>
-          <div class="ov-row-sub">${rec.datum||'–'} · ${typLabel} · ${rec.tekniker||'–'} · ${rec.anlaggning||''}</div>
+          <div class="ov-row-title">${rec.maskin_nr} Â· ${rec.kund||'â€“'}</div>
+          <div class="ov-row-sub">${rec.datum||'â€“'} Â· ${typLabel} Â· ${rec.tekniker||'â€“'} Â· ${rec.anlaggning||''}</div>
         </div>
         <div class="ov-row-badges">
-          ${akut   ? `<span class="badge akut">▲ ${akut} Akut</span>` : ''}
-          ${bevaka ? `<span class="badge bevaka">● ${bevaka} Bev.</span>` : ''}
-          ${!akut && !bevaka ? `<span class="badge ok">✓ OK</span>` : ''}
+          ${akut   ? `<span class="badge akut">â–² ${akut} Akut</span>` : ''}
+          ${bevaka ? `<span class="badge bevaka">â— ${bevaka} Bev.</span>` : ''}
+          ${!akut && !bevaka ? `<span class="badge ok">âœ“ OK</span>` : ''}
           <span class="wf-badge wf-${rec.workflow_status||'inkommen'}">${wfLabel(rec.workflow_status)}</span>
         </div>`;
       row.querySelector('div.ov-row-info').addEventListener('click', () => openHistoryModal(rec));
@@ -1254,8 +1254,8 @@ async function loadOverview() {
       row.innerHTML = `
         <input type="checkbox" disabled style="opacity:0.3;">
         <div class="ov-row-info" style="cursor:pointer;">
-          <div class="ov-row-title">📦 ${d.maskin_nr||'–'} · ${d.kund||'–'}</div>
-          <div class="ov-row-sub">${d.datum||'–'} · Leveransgodkännande · ${d.tekniker||'–'}</div>
+          <div class="ov-row-title">ðŸ“¦ ${d.maskin_nr||'â€“'} Â· ${d.kund||'â€“'}</div>
+          <div class="ov-row-sub">${d.datum||'â€“'} Â· LeveransgodkÃ¤nnande Â· ${d.tekniker||'â€“'}</div>
         </div>
         <div class="ov-row-badges">
           <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
@@ -1275,16 +1275,16 @@ function openLeveransModal(rec) {
   const items = (d.items || []).map(it => `
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">
       <span>${it.label}</span>
-      <span style="color:${it.ok?'#2e7d32':'#999'};font-weight:600;">${it.ok?'✓ OK':'–'}</span>
+      <span style="color:${it.ok?'#2e7d32':'#999'};font-weight:600;">${it.ok?'âœ“ OK':'â€“'}</span>
     </div>`).join('');
   const sigRow = (d.sig_kund && d.sig_kund.length > 100)
     ? `<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
         <div style="flex:1;"><b>Kund:</b> ${d.namn_kund||''}<br><img src="${d.sig_kund}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
         <div style="flex:1;"><b>Tekniker:</b> ${d.namn_tek||''}<br><img src="${d.sig_tekniker||''}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
        </div>` : `<p style="color:#888;font-size:13px;">Signaturer ej sparade i denna version.</p>`;
-  document.getElementById('modal-title').textContent = `Leveransgodkännande · ${d.maskin_nr||'–'}`;
+  document.getElementById('modal-title').textContent = `LeveransgodkÃ¤nnande Â· ${d.maskin_nr||'â€“'}`;
   document.getElementById('modal-body').innerHTML = `
-    <div style="font-size:13px;color:#555;margin-bottom:12px;">${d.datum||''} · ${d.kund||''} · ${d.tekniker||''}</div>
+    <div style="font-size:13px;color:#555;margin-bottom:12px;">${d.datum||''} Â· ${d.kund||''} Â· ${d.tekniker||''}</div>
     <div style="margin-bottom:8px;"><b>Modell:</b> ${d.modell||''} &nbsp; <b>Adress:</b> ${d.adress||''}</div>
     <div style="margin-bottom:8px;"><b>Kontakt:</b> ${d.kontakt||''} &nbsp; <b>Telnr:</b> ${d.telnr||''}</div>
     ${d.kommentar ? `<div style="margin-bottom:8px;"><b>Kommentarer:</b> ${d.kommentar}</div>` : ''}
@@ -1292,7 +1292,7 @@ function openLeveransModal(rec) {
     ${items}
     ${sigRow}
     <div style="margin-top:16px;display:flex;gap:8px;">
-      <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">🖨 Skriv ut</button>
+      <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">ðŸ–¨ Skriv ut</button>
     </div>`;
   document.getElementById('modal-overlay').classList.add('visible');
 }
@@ -1353,9 +1353,9 @@ function buildBatchHTML(protocols) {
     const akut     = items.filter(i => i.status==='3');
     const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
     const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
-    const statusText  = akut.length ? `⚠ ${akut.length} akuta anmärkningar`
-                      : bevaka.length ? `● ${bevaka.length} bevakningspunkter`
-                      : '✓ Allt godkänt';
+    const statusText  = akut.length ? `âš  ${akut.length} akuta anmÃ¤rkningar`
+                      : bevaka.length ? `â— ${bevaka.length} bevakningspunkter`
+                      : 'âœ“ Allt godkÃ¤nt';
 
     // Bygg checklistsektioner
     const recMachineType = rec.machine_type || detectMachineType(rec.beskrivning||'');
@@ -1380,48 +1380,48 @@ function buildBatchHTML(protocols) {
         }
       }
       const sc = item.status==='1'?'ok':item.status==='2'?'bev':'akut';
-      const sym = item.status==='1'?'✓':item.status==='2'?'●':'▲';
+      const sym = item.status==='1'?'âœ“':item.status==='2'?'â—':'â–²';
       itemsHtml += `<div class="pi ${sc}">
         <span class="pnr">${sym} ${item.nr}</span>
         <span class="plbl">${item.label}</span>
-        ${item.comment?`<span class="pcom">→ ${item.comment}</span>`:''}
+        ${item.comment?`<span class="pcom">â†’ ${item.comment}</span>`:''}
         ${item.photo?`<div class="pphoto"><img src="${API}/uploads/${item.photo}"></div>`:''}
       </div>`;
     });
 
     body += `<div class="protocol${idx > 0 ? ' page-break' : ''}">
       <div class="header">
-        <h1>Serviceprotokoll – ${rec.maskin_nr}</h1>
-        <h2>${typLabel} · ${rec.kund||''} · ${rec.anlaggning||''}</h2>
+        <h1>Serviceprotokoll â€“ ${rec.maskin_nr}</h1>
+        <h2>${typLabel} Â· ${rec.kund||''} Â· ${rec.anlaggning||''}</h2>
       </div>
       <div class="meta">
-        <div class="mf"><label>Datum</label><span>${rec.datum||'–'}</span></div>
-        <div class="mf"><label>Tekniker</label><span>${rec.tekniker||'–'}</span></div>
-        <div class="mf"><label>Maskin</label><span>${rec.modell||'–'}</span></div>
-        <div class="mf"><label>Kund</label><span>${rec.kund||'–'}</span></div>
-        <div class="mf"><label>Adress</label><span>${rec.anlaggning||'–'}</span></div>
+        <div class="mf"><label>Datum</label><span>${rec.datum||'â€“'}</span></div>
+        <div class="mf"><label>Tekniker</label><span>${rec.tekniker||'â€“'}</span></div>
+        <div class="mf"><label>Maskin</label><span>${rec.modell||'â€“'}</span></div>
+        <div class="mf"><label>Kund</label><span>${rec.kund||'â€“'}</span></div>
+        <div class="mf"><label>Adress</label><span>${rec.anlaggning||'â€“'}</span></div>
         <div class="mf"><label>Objektnummer</label><span>${rec.maskin_nr}</span></div>
       </div>
       <div class="status-bar" style="color:${statusColor};background:${statusColor}18;">${statusText}</div>
       <div class="counts">
-        <span class="cnt ok">✓ ${ok.length} OK</span>
-        ${bevaka.length?`<span class="cnt bev">● ${bevaka.length} Bevaka</span>`:''}
-        ${akut.length?`<span class="cnt akut">▲ ${akut.length} Akut</span>`:''}
+        <span class="cnt ok">âœ“ ${ok.length} OK</span>
+        ${bevaka.length?`<span class="cnt bev">â— ${bevaka.length} Bevaka</span>`:''}
+        ${akut.length?`<span class="cnt akut">â–² ${akut.length} Akut</span>`:''}
       </div>
-      ${akut.length||bevaka.length?`<div class="section"><h3>Anmärkningar</h3>
-        ${akut.map(i=>`<div class="anm akut"><span class="nr">▲ Nr ${i.nr} – ${i.label}</span>${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
-        ${bevaka.map(i=>`<div class="anm bev"><span class="nr">● Nr ${i.nr} – ${i.label}</span>${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
+      ${akut.length||bevaka.length?`<div class="section"><h3>AnmÃ¤rkningar</h3>
+        ${akut.map(i=>`<div class="anm akut"><span class="nr">â–² Nr ${i.nr} â€“ ${i.label}</span>${i.comment?`<div class="cm">â†’ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
+        ${bevaka.map(i=>`<div class="anm bev"><span class="nr">â— Nr ${i.nr} â€“ ${i.label}</span>${i.comment?`<div class="cm">â†’ ${i.comment}</div>`:''}${i.photo?`<div><img src="${API}/uploads/${i.photo}" style="max-height:80px;margin-top:4px;border-radius:4px;"></div>`:''}</div>`).join('')}
       </div>`:''}
       <div class="items">${itemsHtml}</div>
       <div class="footer">
-        <span>Liljegrens i Tyresö AB · Serviceprotokoll</span>
-        <span>${idx+1} / ${protocols.length} · Utskrivet ${printDate}</span>
+        <span>Liljegrens i TyresÃ¶ AB Â· Serviceprotokoll</span>
+        <span>${idx+1} / ${protocols.length} Â· Utskrivet ${printDate}</span>
       </div>
     </div>`;
   });
 
   return `<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8">
-  <title>Serviceprotokoll – samlad PDF</title>
+  <title>Serviceprotokoll â€“ samlad PDF</title>
   <style>
     @page { size: A4; margin: 12mm; }
     * { box-sizing:border-box; margin:0; padding:0; }
@@ -1471,16 +1471,16 @@ function showPage(page) {
 
 function updateUserGreeting() {
   const el = document.getElementById('user-greeting');
-  if (el && currentUser) el.textContent = `👤 ${currentUser.name}`;
+  if (el && currentUser) el.textContent = `ðŸ‘¤ ${currentUser.name}`;
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MACHINE REGISTER
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 let machineCount        = 0;
 let lookupTimer         = null;
 let currentType         = null;   // 'verkstad' | 'flygande'
-let currentMachineType  = null;   // 'kaly' | null | …
+let currentMachineType  = null;   // 'kaly' | null | â€¦
 
 function getChecklistItems() {
   if (currentMachineType === 'kaly') return [...KALY_ITEMS];
@@ -1492,7 +1492,7 @@ async function checkRegisterStatus() {
     const machines = await apiFetch('/api/machines');
     machineCount = machines.length;
     const st = document.getElementById('reg-status');
-    st.textContent = machineCount > 0 ? `${machineCount} maskiner i register` : 'Registret är tomt';
+    st.textContent = machineCount > 0 ? `${machineCount} maskiner i register` : 'Registret Ã¤r tomt';
     st.className = 'reg-status' + (machineCount > 0 ? ' loaded' : '');
   } catch {
     document.getElementById('reg-status').textContent = 'Ingen serveranslutning';
@@ -1558,8 +1558,8 @@ async function lookupMachine(val) {
       { label: 'Adress',        val: [m.adress, m.stad].filter(Boolean).join(', ') },
       { label: 'Kontaktperson', val: m.kontakt },
       { label: 'Telefon',       val: m.telefon, tel: true },
-      { label: 'Märke / Typ',   val: modStr },
-      { label: 'Årsmodell',    val: m.arsmodell },
+      { label: 'MÃ¤rke / Typ',   val: modStr },
+      { label: 'Ã…rsmodell',    val: m.arsmodell },
       { label: 'Tillv.nr',     val: m.tillvnr },
       { label: 'Beskrivning',  val: m.beskrivning },
     ].filter(f => f.val);
@@ -1572,7 +1572,7 @@ async function lookupMachine(val) {
           : f.val}</div>
       </div>`).join('');
 
-    // Auto-detektera maskintyp från beskrivning och byt checklista
+    // Auto-detektera maskintyp frÃ¥n beskrivning och byt checklista
     const detectedType = detectMachineType(m.beskrivning || '');
     if (detectedType && detectedType !== currentMachineType) {
       currentMachineType = detectedType;
@@ -1584,29 +1584,29 @@ async function lookupMachine(val) {
       hideMachineTypeNotice();
     }
 
-    badge.textContent = '✓ ' + m.kund;
+    badge.textContent = 'âœ“ ' + m.kund;
     badge.className = 'machine-lookup-badge visible';
     infoCard.classList.add('visible');
     loadHistory(key);
   } catch {
-    badge.textContent = 'Kunde inte hämta maskindata';
+    badge.textContent = 'Kunde inte hÃ¤mta maskindata';
     badge.className = 'machine-lookup-badge error visible';
     infoCard.classList.remove('visible');
   }
 }
 
-// ─── Maskintyp-detektering ───────────────────────────────────
-// Lägg till fler koder här när nya protokollmallar skapas
+// â”€â”€â”€ Maskintyp-detektering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// LÃ¤gg till fler koder hÃ¤r nÃ¤r nya protokollmallar skapas
 const MASKINTYP_MAP = {
-  'KÄLY':          { type: 'kaly',    label: 'Kärlvändare' },
+  'KÃ„LY':          { type: 'kaly',    label: 'KÃ¤rlvÃ¤ndare' },
   'VLOCK':         { type: 'vlock',   label: 'V-lock komprimator' },
-  'LVXK':          { type: 'lvxk',   label: 'Lastväxlarkomprimator' },
+  'LVXK':          { type: 'lvxk',   label: 'LastvÃ¤xlarkomprimator' },
   'BALP':          { type: 'balp',   label: 'Balpressar' },
   'VACUUM':        { type: 'vacuum', label: 'Vakuummaskin' },
   'LDK':           { type: 'ldk',    label: 'LDK' },
   'PALP':          { type: 'palp',   label: 'Pallpress' },
   'LUKTREDUCERING':{ type: 'lukt',   label: 'Luktreducering' },
-  'TRÄ':           { type: 'trakross', label: 'Trä​kross' },
+  'TRÃ„':           { type: 'trakross', label: 'TrÃ¤â€‹kross' },
   'BRICKETPRESS':  { type: 'bricket', label: 'Bricketpress' },
   'DRAGD':         { type: 'dragd',  label: 'Dragdragare' },
 };
@@ -1616,7 +1616,7 @@ function detectMachineType(beskrivning) {
   for (const [kod, info] of Object.entries(MASKINTYP_MAP)) {
     if (b.includes(kod)) return info.type;
   }
-  return null; // okänd → ingen notis
+  return null; // okÃ¤nd â†’ ingen notis
 }
 
 function getMachineTypeLabel(beskrivning) {
@@ -1644,8 +1644,8 @@ function showMachineTypeNotice(detectedType, beskrivning) {
   const TYPES_WITH_TEMPLATE = ['verkstad', 'flygande', 'kaly'];
   const hasTemplate = TYPES_WITH_TEMPLATE.includes(detectedType);
   notice.innerHTML = hasTemplate
-    ? `<span>ℹ️ Kärlvändarprotokoll laddat för <strong>${label}</strong></span>`
-    : `<span>⚠ Maskintyp <strong>${label}</strong> saknar eget protokoll — komprimatorprotokollet används.</span>`;
+    ? `<span>â„¹ï¸ KÃ¤rlvÃ¤ndarprotokoll laddat fÃ¶r <strong>${label}</strong></span>`
+    : `<span>âš  Maskintyp <strong>${label}</strong> saknar eget protokoll â€” komprimatorprotokollet anvÃ¤nds.</span>`;
 }
 
 function hideMachineTypeNotice() {
@@ -1653,9 +1653,9 @@ function hideMachineTypeNotice() {
   if (n) n.remove();
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PROTOCOL HISTORY
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function loadHistory(maskinNr) {
   const banner = document.getElementById('history-banner');
   const list   = document.getElementById('history-list');
@@ -1667,7 +1667,7 @@ async function loadHistory(maskinNr) {
     const latest = hist[0];
     const prefilled = prefillFromProtocol(latest);
 
-    // Tekniker ser inte historiklistan — bara admin
+    // Tekniker ser inte historiklistan â€” bara admin
     if (!currentUser || currentUser.role !== 'admin') {
       banner.classList.remove('visible');
       return;
@@ -1679,7 +1679,7 @@ async function loadHistory(maskinNr) {
     if (prefilled > 0) {
       const notice = document.createElement('div');
       notice.style.cssText = 'font-size:12px;color:#1565c0;margin-bottom:8px;font-style:italic;';
-      notice.textContent = `↩ ${prefilled} anmärkning${prefilled > 1 ? 'ar' : ''} från senaste protokollet (${latest.datum || '–'}) förifylld${prefilled > 1 ? 'a' : ''}.`;
+      notice.textContent = `â†© ${prefilled} anmÃ¤rkning${prefilled > 1 ? 'ar' : ''} frÃ¥n senaste protokollet (${latest.datum || 'â€“'}) fÃ¶rifylld${prefilled > 1 ? 'a' : ''}.`;
       list.appendChild(notice);
     }
 
@@ -1688,8 +1688,8 @@ async function loadHistory(maskinNr) {
       const div = document.createElement('div');
       div.className = 'history-item';
       div.innerHTML = `
-        <span class="hi-date">${rec.datum || '–'}</span>
-        <span class="hi-type">${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'} · ${rec.tekniker || '–'}</span>
+        <span class="hi-date">${rec.datum || 'â€“'}</span>
+        <span class="hi-type">${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'} Â· ${rec.tekniker || 'â€“'}</span>
         <span class="hi-badges">
           <span class="badge ok">${s.ok} OK</span>
           ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
@@ -1714,16 +1714,16 @@ function prefillFromProtocol(rec) {
     const resolvedEntry = resolved[item.nr];
 
     if (resolvedEntry) {
-      // Åtgärdad — lämna tomt men sätt en notering i kommentarsfältet
+      // Ã…tgÃ¤rdad â€” lÃ¤mna tomt men sÃ¤tt en notering i kommentarsfÃ¤ltet
       const cb = document.getElementById(id + '-comment');
       if (cb) {
         const resolvedDate = resolvedEntry.date || resolvedEntry;
         cb.classList.add('visible');
         const ta = cb.querySelector('textarea');
-        if (ta) ta.value = `Åtgärdad ${resolvedDate} (tidigare ${item.status === '3' ? 'akut' : 'bevaka'})`;
+        if (ta) ta.value = `Ã…tgÃ¤rdad ${resolvedDate} (tidigare ${item.status === '3' ? 'akut' : 'bevaka'})`;
       }
     } else {
-      // Ej åtgärdad — förifyll med samma status och kommentar
+      // Ej Ã¥tgÃ¤rdad â€” fÃ¶rifyll med samma status och kommentar
       const radio = document.getElementById(id + '-' + item.status);
       if (!radio) return;
       radio.checked = true;
@@ -1753,7 +1753,7 @@ let _currentModalRec = null;
 function openHistoryModal(rec) {
   _currentModalRec = rec;
   document.getElementById('modal-title').textContent =
-    `${rec.maskin_nr} · ${rec.datum||'–'} · ${rec.type==='flygande'?'Flygande':'Verkstad'}`;
+    `${rec.maskin_nr} Â· ${rec.datum||'â€“'} Â· ${rec.type==='flygande'?'Flygande':'Verkstad'}`;
   renderModalBody(rec);
   document.getElementById('modal-overlay').classList.add('visible');
 }
@@ -1761,15 +1761,15 @@ function openHistoryModal(rec) {
 function renderModalBody(rec) {
   const resolved = rec.resolved || {};
   let html = `<div class="modal-section"><h3>Uppgifter</h3><div class="modal-fields">
-    <div class="modal-field"><div class="mf-label">Kund</div><div class="mf-val">${rec.kund||'–'}</div></div>
-    <div class="modal-field"><div class="mf-label">Anläggning</div><div class="mf-val">${rec.anlaggning||'–'}</div></div>
-    <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'–'}</div></div>
-    <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'–'}</div></div>
+    <div class="modal-field"><div class="mf-label">Kund</div><div class="mf-val">${rec.kund||'â€“'}</div></div>
+    <div class="modal-field"><div class="mf-label">AnlÃ¤ggning</div><div class="mf-val">${rec.anlaggning||'â€“'}</div></div>
+    <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'â€“'}</div></div>
+    <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'â€“'}</div></div>
   </div></div>`;
 
   const flagged = (rec.items||[]).filter(i=>i.status==='2'||i.status==='3');
   if (flagged.length) {
-    html += `<div class="modal-section"><h3>Anmärkningar</h3>`;
+    html += `<div class="modal-section"><h3>AnmÃ¤rkningar</h3>`;
     flagged.forEach(i => {
       const isResolved = !!resolved[i.nr];
       const resolvedDate = resolved[i.nr] || '';
@@ -1779,23 +1779,23 @@ function renderModalBody(rec) {
           <span class="hist-item-lbl ${isResolved ? 'resolved-lbl' : ''}">${i.label}</span>
           <span class="hist-item-status" style="display:flex;align-items:center;gap:6px;">
             ${isResolved
-              ? `<span class="badge resolved-badge">✓ Åtgärdad ${resolvedDate.date||resolvedDate} · ${resolvedDate.by||''}</span>`
+              ? `<span class="badge resolved-badge">âœ“ Ã…tgÃ¤rdad ${resolvedDate.date||resolvedDate} Â· ${resolvedDate.by||''}</span>`
               : `<span class="badge ${i.status==='3'?'akut':'bevaka'}">${i.status==='3'?'Akut':'Bevaka'}</span>`}
             ${isResolved
-              ? `<button class="resolve-btn resolve-btn-undo" onclick="toggleResolved(${rec.id}, '${i.nr}')">Ångra</button>`
-              : `<button class="resolve-btn" onclick="toggleResolved(${rec.id}, '${i.nr}')">✓ Åtgärdad</button>`
+              ? `<button class="resolve-btn resolve-btn-undo" onclick="toggleResolved(${rec.id}, '${i.nr}')">Ã…ngra</button>`
+              : `<button class="resolve-btn" onclick="toggleResolved(${rec.id}, '${i.nr}')">âœ“ Ã…tgÃ¤rdad</button>`
             }
           </span>
         </div>
         ${i.comment && !isResolved ? `<div class="hist-item-comment">${i.comment}</div>` : ''}
-        ${i.photo ? `<div style="margin:4px 0 8px 32px;"><a href="${API}/uploads/${i.photo}" target="_blank"><img src="${API}/uploads/${i.photo}" style="max-width:120px;max-height:100px;border-radius:6px;border:1.5px solid var(--border);object-fit:cover;" title="Klicka för att förstora"></a></div>` : ''}`;
+        ${i.photo ? `<div style="margin:4px 0 8px 32px;"><a href="${API}/uploads/${i.photo}" target="_blank"><img src="${API}/uploads/${i.photo}" style="max-width:120px;max-height:100px;border-radius:6px;border:1.5px solid var(--border);object-fit:cover;" title="Klicka fÃ¶r att fÃ¶rstora"></a></div>` : ''}`;
     });
     html += '</div>';
   }
 
   const ok = (rec.items||[]).filter(i=>i.status==='1');
   if (ok.length) {
-    html += `<div class="modal-section"><h3>Godkända punkter (${ok.length})</h3>`;
+    html += `<div class="modal-section"><h3>GodkÃ¤nda punkter (${ok.length})</h3>`;
     ok.forEach(i => {
       html += `<div class="hist-item-row">
         <span class="hist-item-nr">${i.nr}</span>
@@ -1809,8 +1809,8 @@ function renderModalBody(rec) {
   const isAdmin = currentUser && currentUser.role === 'admin';
   if (isAdmin) {
     html += `<div class="modal-actions">
-      <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
-      <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
+      <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">ðŸ“§ Skicka via e-post</button>
+      <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">ðŸ–¨ Skriv ut / PDF</button>
     </div>`;
   }
   document.getElementById('modal-body').innerHTML = html;
@@ -1833,9 +1833,9 @@ async function toggleResolved(protocolId, nr) {
   }
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // WORKFLOW
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function wfLabel(s) { return s === 'hanterad' ? 'Hanterad' : 'Inkommen'; }
 
 function renderWorkflowPanel(rec) {
@@ -1843,7 +1843,7 @@ function renderWorkflowPanel(rec) {
   const isAdmin = currentUser && currentUser.role === 'admin';
   const handled = status === 'hanterad';
 
-  // Hämta info om vem/när från logg
+  // HÃ¤mta info om vem/nÃ¤r frÃ¥n logg
   const log = Array.isArray(rec.workflow_log) ? rec.workflow_log
               : (typeof rec.workflow_log === 'string' ? JSON.parse(rec.workflow_log || '[]') : []);
   const lastEntry = log.length ? log[log.length - 1] : null;
@@ -1851,12 +1851,12 @@ function renderWorkflowPanel(rec) {
   let html = `<div class="workflow-panel">`;
 
   if (handled) {
-    html += `<span class="wf-status-badge hanterad">✓ Hanterad</span>`;
+    html += `<span class="wf-status-badge hanterad">âœ“ Hanterad</span>`;
     if (lastEntry) {
-      html += `<span class="wf-handled-by">${lastEntry.by} · ${lastEntry.at}</span>`;
+      html += `<span class="wf-handled-by">${lastEntry.by} Â· ${lastEntry.at}</span>`;
     }
     if (isAdmin) {
-      html += `<button class="wf-toggle-btn undo" onclick="setWorkflow(${rec.id},'inkommen')">Ångra</button>`;
+      html += `<button class="wf-toggle-btn undo" onclick="setWorkflow(${rec.id},'inkommen')">Ã…ngra</button>`;
     }
   } else {
     html += `<span class="wf-status-badge inkommen">Inkommen</span>`;
@@ -1890,9 +1890,9 @@ function closeModal(event, force) {
     document.getElementById('modal-overlay').classList.remove('visible');
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SAVE PROTOCOL
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function saveProtocol() {
   const maskin = document.getElementById('f-maskin').value.trim();
   if (!maskin) { alert('Fyll i maskinnummer innan du sparar.'); return; }
@@ -1938,27 +1938,27 @@ async function saveProtocol() {
         items,
       })
     });
-    conf.textContent = '✓ Protokollet är sparat!';
+    conf.textContent = 'âœ“ Protokollet Ã¤r sparat!';
     conf.className = 'save-confirm visible ok-msg';
     loadHistory(maskin.toUpperCase());
   } catch (e) {
-    conf.textContent = '✗ Fel vid sparande: ' + e.message;
+    conf.textContent = 'âœ— Fel vid sparande: ' + e.message;
     conf.className = 'save-confirm visible err-msg';
   }
   btn.disabled = false;
-  btn.textContent = '💾 Spara protokoll';
+  btn.textContent = 'ðŸ’¾ Spara protokoll';
   setTimeout(() => conf.classList.remove('visible'), 4000);
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // NAVIGATION
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
   document.getElementById('protocol-title').textContent =
-    type==='flygande' ? 'Typ 2 – Flygande service' : 'Typ 1 – Verkstadsintag';
-  // Dölj utskriftsknapp för tekniker
+    type==='flygande' ? 'Typ 2 â€“ Flygande service' : 'Typ 1 â€“ Verkstadsintag';
+  // DÃ¶lj utskriftsknapp fÃ¶r tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
 
@@ -1966,7 +1966,7 @@ function openProtocol(type) {
   buildChecklist(getChecklistItems());
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   ['f-maskin','f-modell','f-kund'].forEach(id => document.getElementById(id).value='');
-  // Auto-fill tekniker från inloggad användare
+  // Auto-fill tekniker frÃ¥n inloggad anvÃ¤ndare
   document.getElementById('f-tekniker').value = currentUser ? currentUser.name : '';
   document.getElementById('machine-badge').className = 'machine-lookup-badge';
   document.getElementById('machine-info-card').classList.remove('visible');
@@ -1982,7 +1982,7 @@ function sendEmail() {
   const modell    = document.getElementById('f-modell').value.trim();
   const typLabel  = currentType === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
 
-  // Maskininfo från infokortet
+  // Maskininfo frÃ¥n infokortet
   const infoFields = {};
   document.querySelectorAll('#machine-info-grid .mi-field').forEach(f => {
     infoFields[f.querySelector('.mi-label').textContent] = f.querySelector('.mi-val').textContent;
@@ -2014,8 +2014,8 @@ function sendEmail() {
 
   const line = (t='') => body += encodeURIComponent(t) + nl;
 
-  line('SERVICEPROTOKOLL – LILJEGRENS I TYRESÖ AB');
-  line('═'.repeat(48));
+  line('SERVICEPROTOKOLL â€“ LILJEGRENS I TYRESÃ– AB');
+  line('â•'.repeat(48));
   line();
   line(`Typ:          ${typLabel}`);
   line(`Objektnummer: ${maskin}`);
@@ -2027,44 +2027,44 @@ function sendEmail() {
   line(`Tekniker:     ${tekniker}`);
   line();
 
-  // Övergripande status
-  if (akut.length)        line(`⚠ STATUS: AKUTA ANMÄRKNINGAR (${akut.length} st) – åtgärd krävs`);
-  else if (bevaka.length) line(`● STATUS: Bevakningspunkter (${bevaka.length} st) – följ upp`);
-  else if (ok.length)     line(`✓ STATUS: Allt kontrollerat och godkänt`);
+  // Ã–vergripande status
+  if (akut.length)        line(`âš  STATUS: AKUTA ANMÃ„RKNINGAR (${akut.length} st) â€“ Ã¥tgÃ¤rd krÃ¤vs`);
+  else if (bevaka.length) line(`â— STATUS: Bevakningspunkter (${bevaka.length} st) â€“ fÃ¶lj upp`);
+  else if (ok.length)     line(`âœ“ STATUS: Allt kontrollerat och godkÃ¤nt`);
   line();
   line(`Resultat: ${ok.length} OK  |  ${bevaka.length} Bevaka  |  ${akut.length} Akut  (av ${total} kontrollerade)`);
   line();
 
   if (akut.length) {
-    line('─'.repeat(48));
-    line('AKUTA ÅTGÄRDER');
-    line('─'.repeat(48));
+    line('â”€'.repeat(48));
+    line('AKUTA Ã…TGÃ„RDER');
+    line('â”€'.repeat(48));
     akut.forEach(i => {
       line(`  Nr ${i.nr}: ${i.label}`);
-      if (i.comment) line(`         → ${i.comment}`);
+      if (i.comment) line(`         â†’ ${i.comment}`);
     });
     line();
   }
 
   if (bevaka.length) {
-    line('─'.repeat(48));
+    line('â”€'.repeat(48));
     line('BEVAKNINGSPUNKTER');
-    line('─'.repeat(48));
+    line('â”€'.repeat(48));
     bevaka.forEach(i => {
       line(`  Nr ${i.nr}: ${i.label}`);
-      if (i.comment) line(`         → ${i.comment}`);
+      if (i.comment) line(`         â†’ ${i.comment}`);
     });
     line();
   }
 
-  line('─'.repeat(48));
-  line(`Godkända punkter: ${ok.length} av ${total}`);
+  line('â”€'.repeat(48));
+  line(`GodkÃ¤nda punkter: ${ok.length} av ${total}`);
   line();
-  line('Med vänliga hälsningar,');
+  line('Med vÃ¤nliga hÃ¤lsningar,');
   line(`${tekniker}`);
-  line('Liljegrens i Tyresö AB');
+  line('Liljegrens i TyresÃ¶ AB');
 
-  const subject = encodeURIComponent(`Serviceprotokoll – ${maskin} – ${datum}`);
+  const subject = encodeURIComponent(`Serviceprotokoll â€“ ${maskin} â€“ ${datum}`);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
@@ -2078,48 +2078,48 @@ function buildEmailBody(rec) {
   let body = '';
   const line = (t='') => body += encodeURIComponent(t) + nl;
 
-  line('SERVICEPROTOKOLL – LILJEGRENS I TYRESÖ AB');
-  line('═'.repeat(48));
+  line('SERVICEPROTOKOLL â€“ LILJEGRENS I TYRESÃ– AB');
+  line('â•'.repeat(48));
   line();
   line(`Typ:          ${typLabel}`);
   line(`Objektnummer: ${rec.maskin_nr}`);
-  line(`Kund:         ${rec.kund || '–'}`);
-  line(`Adress:       ${rec.anlaggning || '–'}`);
-  line(`Maskin:       ${rec.modell || '–'}`);
-  line(`Datum:        ${rec.datum || '–'}`);
-  line(`Tekniker:     ${rec.tekniker || '–'}`);
+  line(`Kund:         ${rec.kund || 'â€“'}`);
+  line(`Adress:       ${rec.anlaggning || 'â€“'}`);
+  line(`Maskin:       ${rec.modell || 'â€“'}`);
+  line(`Datum:        ${rec.datum || 'â€“'}`);
+  line(`Tekniker:     ${rec.tekniker || 'â€“'}`);
   line();
-  if (akut.length)        line(`⚠ STATUS: AKUTA ANMÄRKNINGAR (${akut.length} st) – åtgärd krävs`);
-  else if (bevaka.length) line(`● STATUS: Bevakningspunkter (${bevaka.length} st) – följ upp`);
-  else if (ok.length)     line(`✓ STATUS: Allt kontrollerat och godkänt`);
+  if (akut.length)        line(`âš  STATUS: AKUTA ANMÃ„RKNINGAR (${akut.length} st) â€“ Ã¥tgÃ¤rd krÃ¤vs`);
+  else if (bevaka.length) line(`â— STATUS: Bevakningspunkter (${bevaka.length} st) â€“ fÃ¶lj upp`);
+  else if (ok.length)     line(`âœ“ STATUS: Allt kontrollerat och godkÃ¤nt`);
   line();
   line(`Resultat: ${ok.length} OK  |  ${bevaka.length} Bevaka  |  ${akut.length} Akut  (av ${items.length} kontrollerade)`);
   line();
   if (akut.length) {
-    line('─'.repeat(48));
-    line('AKUTA ÅTGÄRDER');
-    line('─'.repeat(48));
-    akut.forEach(i => { line(`  Nr ${i.nr}: ${i.label}`); if (i.comment) line(`         → ${i.comment}`); });
+    line('â”€'.repeat(48));
+    line('AKUTA Ã…TGÃ„RDER');
+    line('â”€'.repeat(48));
+    akut.forEach(i => { line(`  Nr ${i.nr}: ${i.label}`); if (i.comment) line(`         â†’ ${i.comment}`); });
     line();
   }
   if (bevaka.length) {
-    line('─'.repeat(48));
+    line('â”€'.repeat(48));
     line('BEVAKNINGSPUNKTER');
-    line('─'.repeat(48));
-    bevaka.forEach(i => { line(`  Nr ${i.nr}: ${i.label}`); if (i.comment) line(`         → ${i.comment}`); });
+    line('â”€'.repeat(48));
+    bevaka.forEach(i => { line(`  Nr ${i.nr}: ${i.label}`); if (i.comment) line(`         â†’ ${i.comment}`); });
     line();
   }
-  line('─'.repeat(48));
-  line(`Godkända punkter: ${ok.length} av ${items.length}`);
+  line('â”€'.repeat(48));
+  line(`GodkÃ¤nda punkter: ${ok.length} av ${items.length}`);
   line();
-  line('Med vänliga hälsningar,');
+  line('Med vÃ¤nliga hÃ¤lsningar,');
   line(`${rec.tekniker || ''}`);
-  line('Liljegrens i Tyresö AB');
+  line('Liljegrens i TyresÃ¶ AB');
   return body;
 }
 
 function emailFromRecord(rec) {
-  const subject = encodeURIComponent(`Serviceprotokoll – ${rec.maskin_nr} – ${rec.datum || ''}`);
+  const subject = encodeURIComponent(`Serviceprotokoll â€“ ${rec.maskin_nr} â€“ ${rec.datum || ''}`);
   window.location.href = `mailto:?subject=${subject}&body=${buildEmailBody(rec)}`;
 }
 
@@ -2131,9 +2131,9 @@ function printRecord(rec) {
   const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
 
   const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
-  const statusText  = akut.length ? `⚠ ${akut.length} akuta anmärkningar`
-                    : bevaka.length ? `● ${bevaka.length} bevakningspunkter`
-                    : '✓ Allt godkänt';
+  const statusText  = akut.length ? `âš  ${akut.length} akuta anmÃ¤rkningar`
+                    : bevaka.length ? `â— ${bevaka.length} bevakningspunkter`
+                    : 'âœ“ Allt godkÃ¤nt';
 
   // Group items by section
   const recMachineType = rec.machine_type || detectMachineType(rec.beskrivning || '');
@@ -2173,11 +2173,11 @@ function printRecord(rec) {
       }
     }
     const sc = item.status==='1'?'ok':item.status==='2'?'bev':'akut';
-    const sym = item.status==='1'?'✓':item.status==='2'?'●':'▲';
+    const sym = item.status==='1'?'âœ“':item.status==='2'?'â—':'â–²';
     itemsHtml += `<div class="pi ${sc}">
       <span class="pnr">${sym} ${item.nr}</span>
       <span class="plbl">${item.label}</span>
-      ${item.comment ? `<span class="pcom">→ ${item.comment}</span>` : ''}
+      ${item.comment ? `<span class="pcom">â†’ ${item.comment}</span>` : ''}
     </div>`;
   });
 
@@ -2239,35 +2239,35 @@ function printRecord(rec) {
               font-size: 7.5pt; color: #888; display: flex; justify-content: space-between; }
   </style></head><body>
   <div class="header">
-    <h1>Serviceprotokoll – ${rec.maskin_nr}</h1>
-    <h2>${typLabel} · ${rec.kund || ''} · ${rec.anlaggning || ''}</h2>
+    <h1>Serviceprotokoll â€“ ${rec.maskin_nr}</h1>
+    <h2>${typLabel} Â· ${rec.kund || ''} Â· ${rec.anlaggning || ''}</h2>
   </div>
   <div class="meta">
-    <div class="mf"><label>Datum</label><br><span>${rec.datum||'–'}</span></div>
-    <div class="mf"><label>Tekniker</label><br><span>${rec.tekniker||'–'}</span></div>
-    <div class="mf"><label>Maskin</label><br><span>${rec.modell||'–'}</span></div>
-    <div class="mf"><label>Kund</label><br><span>${rec.kund||'–'}</span></div>
-    <div class="mf"><label>Adress</label><br><span>${rec.anlaggning||'–'}</span></div>
+    <div class="mf"><label>Datum</label><br><span>${rec.datum||'â€“'}</span></div>
+    <div class="mf"><label>Tekniker</label><br><span>${rec.tekniker||'â€“'}</span></div>
+    <div class="mf"><label>Maskin</label><br><span>${rec.modell||'â€“'}</span></div>
+    <div class="mf"><label>Kund</label><br><span>${rec.kund||'â€“'}</span></div>
+    <div class="mf"><label>Adress</label><br><span>${rec.anlaggning||'â€“'}</span></div>
     <div class="mf"><label>Objektnummer</label><br><span>${rec.maskin_nr}</span></div>
   </div>
   <div class="status-bar">${statusText}</div>
   <div class="counts">
-    <span class="cnt ok">✓ ${ok.length} OK</span>
-    ${bevaka.length ? `<span class="cnt bev">● ${bevaka.length} Bevaka</span>` : ''}
-    ${akut.length   ? `<span class="cnt akut">▲ ${akut.length} Akut</span>` : ''}
+    <span class="cnt ok">âœ“ ${ok.length} OK</span>
+    ${bevaka.length ? `<span class="cnt bev">â— ${bevaka.length} Bevaka</span>` : ''}
+    ${akut.length   ? `<span class="cnt akut">â–² ${akut.length} Akut</span>` : ''}
   </div>
 
-  ${akut.length || bevaka.length ? `<div class="section"><h3>Anmärkningar</h3>
-    ${akut.map(i=>`<div class="anm akut"><span class="nr">▲ Nr ${i.nr} – ${i.label}</span>
-      ${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}</div>`).join('')}
-    ${bevaka.map(i=>`<div class="anm bev"><span class="nr">● Nr ${i.nr} – ${i.label}</span>
-      ${i.comment?`<div class="cm">→ ${i.comment}</div>`:''}</div>`).join('')}
+  ${akut.length || bevaka.length ? `<div class="section"><h3>AnmÃ¤rkningar</h3>
+    ${akut.map(i=>`<div class="anm akut"><span class="nr">â–² Nr ${i.nr} â€“ ${i.label}</span>
+      ${i.comment?`<div class="cm">â†’ ${i.comment}</div>`:''}</div>`).join('')}
+    ${bevaka.map(i=>`<div class="anm bev"><span class="nr">â— Nr ${i.nr} â€“ ${i.label}</span>
+      ${i.comment?`<div class="cm">â†’ ${i.comment}</div>`:''}</div>`).join('')}
   </div>` : ''}
 
   <div class="items">${itemsHtml}</div>
 
   <div class="footer">
-    <span>Liljegrens i Tyresö AB · Serviceprotokoll</span>
+    <span>Liljegrens i TyresÃ¶ AB Â· Serviceprotokoll</span>
     <span>Utskrivet ${new Date().toLocaleDateString('sv-SE')}</span>
   </div>
   <script>window.onload=()=>window.print();<\/script>
@@ -2279,15 +2279,15 @@ function printRecord(rec) {
 }
 
 function goBack() {
-  if (confirm('Gå tillbaka? Osparade ändringar försvinner.')) {
+  if (confirm('GÃ¥ tillbaka? Osparade Ã¤ndringar fÃ¶rsvinner.')) {
     showPage('start');
     document.getElementById('checklist-container').innerHTML = '';
   }
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // BUILD CHECKLIST
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function buildChecklist(items) {
   const container = document.getElementById('checklist-container');
   container.innerHTML = '';
@@ -2331,15 +2331,15 @@ function buildItem(item) {
   top.appendChild(nr); top.appendChild(lbl); top.appendChild(rg);
   div.appendChild(top);
   const cb = document.createElement('div'); cb.className='comment-box'; cb.id=id+'-comment';
-  const cl = document.createElement('label'); cl.textContent='Kommentar / åtgärd:';
-  const ta = document.createElement('textarea'); ta.placeholder='Beskriv åtgärd eller notering...';
+  const cl = document.createElement('label'); cl.textContent='Kommentar / Ã¥tgÃ¤rd:';
+  const ta = document.createElement('textarea'); ta.placeholder='Beskriv Ã¥tgÃ¤rd eller notering...';
   ta.addEventListener('input', updateSummary);
 
   // Foto-rad
   const photoRow = document.createElement('div'); photoRow.className='photo-row';
   const photoBtn = document.createElement('button');
   photoBtn.type='button'; photoBtn.className='photo-btn';
-  photoBtn.innerHTML='📷 Lägg till foto';
+  photoBtn.innerHTML='ðŸ“· LÃ¤gg till foto';
   const fileInput = document.createElement('input');
   fileInput.type='file'; fileInput.accept='image/*'; fileInput.capture='environment';
   fileInput.style.display='none';
@@ -2354,7 +2354,7 @@ function buildItem(item) {
 async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {
   const file = fileInput.files[0];
   if (!file) return;
-  photoBtn.textContent = '⏳ Laddar upp…';
+  photoBtn.textContent = 'â³ Laddar uppâ€¦';
   photoBtn.classList.add('uploading');
   photoBtn.disabled = true;
   try {
@@ -2369,7 +2369,7 @@ async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {
     thumb.className = 'photo-thumb';
     thumb.src = API + '/uploads/' + data.filename;
     thumb.dataset.filename = data.filename;
-    thumb.title = 'Klicka för att se fullstorlek';
+    thumb.title = 'Klicka fÃ¶r att se fullstorlek';
     thumb.addEventListener('click', () => window.open(thumb.src, '_blank'));
 
     const removeBtn = document.createElement('span');
@@ -2377,19 +2377,19 @@ async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {
     removeBtn.textContent = 'Ta bort';
     removeBtn.addEventListener('click', () => {
       thumb.remove(); removeBtn.remove();
-      photoBtn.textContent = '📷 Lägg till foto';
+      photoBtn.textContent = 'ðŸ“· LÃ¤gg till foto';
       photoBtn.classList.remove('uploading');
       photoBtn.disabled = false;
     });
 
     photoRow.appendChild(thumb);
     photoRow.appendChild(removeBtn);
-    photoBtn.textContent = '📷 Byt foto';
+    photoBtn.textContent = 'ðŸ“· Byt foto';
     photoBtn.classList.remove('uploading');
     photoBtn.disabled = false;
   } catch(e) {
     alert('Kunde inte ladda upp foto: ' + e.message);
-    photoBtn.textContent = '📷 Lägg till foto';
+    photoBtn.textContent = 'ðŸ“· LÃ¤gg till foto';
     photoBtn.classList.remove('uploading');
     photoBtn.disabled = false;
   }
@@ -2403,9 +2403,9 @@ function onStatusChange(nr, val, div) {
   updateSummary();
 }
 
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // SUMMARY
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function updateSummary() {
   const radios = document.querySelectorAll('.check-item input[type=radio]:checked');
   let ok=0,bevaka=0,akut=0; const flagged=[];
@@ -2418,20 +2418,20 @@ function updateSummary() {
   document.getElementById('cnt-bevaka').textContent=bevaka;
   document.getElementById('cnt-akut').textContent=akut;
   const os=document.getElementById('overall-status');
-  if(akut>0){os.className='overall-status akut';os.textContent='⚠ Akuta anmärkningar – åtgärd krävs';}
-  else if(bevaka>0){os.className='overall-status bevaka';os.textContent='● Bevakningspunkter noterade – följ upp';}
-  else if(ok>0){os.className='overall-status ok';os.textContent='✓ Allt kontrollerat och godkänt';}
+  if(akut>0){os.className='overall-status akut';os.textContent='âš  Akuta anmÃ¤rkningar â€“ Ã¥tgÃ¤rd krÃ¤vs';}
+  else if(bevaka>0){os.className='overall-status bevaka';os.textContent='â— Bevakningspunkter noterade â€“ fÃ¶lj upp';}
+  else if(ok>0){os.className='overall-status ok';os.textContent='âœ“ Allt kontrollerat och godkÃ¤nt';}
   else{os.className='overall-status ok';os.textContent='Fyll i kontrollpunkterna ovan';}
   const sn=document.getElementById('summary-notes');
   if(!flagged.length){sn.innerHTML='';return;}
-  let html='<h3>Anmärkningar</h3>';
+  let html='<h3>AnmÃ¤rkningar</h3>';
   flagged.forEach(f=>{
     const itemId=f.radio.name;
     const nr=itemId.replace('item-','').replace(/_/g,'.');
     const labelEl=document.querySelector(`#${itemId} .item-label`);
     const ta=document.querySelector(`#${itemId}-comment textarea`);
     html+=`<div class="summary-note-item ${f.status}">
-      <div class="snr">Nr ${nr} – ${f.status==='akut'?'🔴 Akut':'🟡 Bevaka'}</div>
+      <div class="snr">Nr ${nr} â€“ ${f.status==='akut'?'ðŸ”´ Akut':'ðŸŸ¡ Bevaka'}</div>
       <div class="stext">${labelEl?labelEl.textContent:''}</div>
       ${ta&&ta.value.trim()?`<div class="scomment">${ta.value.trim()}</div>`:''}
     </div>`;
@@ -2439,25 +2439,25 @@ function updateSummary() {
   sn.innerHTML=html;
 }
 
-// ═══════════════════════════════════════════════════
-// LEVERANSGODKÄNNANDE
-// ═══════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// LEVERANSGODKÃ„NNANDE
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const LEV_ITEMS = [
-  'Kontroll av bultband infästningar Balpress',
+  'Kontroll av bultband infÃ¤stningar Balpress',
   'Funktionskontroll av hydraulsystem',
-  'Kontroll av inkast höjd min 1100 mm',
+  'Kontroll av inkast hÃ¶jd min 1100 mm',
   'Kontroll av varning/upplysnings dekaler',
   'Kontroll av R-S dekaler',
-  'Funktionskontroll av nyckelstart, nödstoppsfunktioner',
-  'Funktionskontroll av pressplatta stannar i främre läge',
-  'Funktionskontroll av dörr, luckbrytare',
+  'Funktionskontroll av nyckelstart, nÃ¶dstoppsfunktioner',
+  'Funktionskontroll av pressplatta stannar i frÃ¤mre lÃ¤ge',
+  'Funktionskontroll av dÃ¶rr, luckbrytare',
   'Kontroll av elanslutningar och elkablar',
-  'Kontroll av inkastlucka, låsanordningar',
-  'Kontroll av behållare, säkerhetslås, spännare, tvingar',
+  'Kontroll av inkastlucka, lÃ¥sanordningar',
+  'Kontroll av behÃ¥llare, sÃ¤kerhetslÃ¥s, spÃ¤nnare, tvingar',
   'Kontroll av transportskador',
   'Styrskenor monterade',
-  'Maskinen enligt beställningen',
-  'Överlämnande av Instruktionsbok'
+  'Maskinen enligt bestÃ¤llningen',
+  'Ã–verlÃ¤mnande av Instruktionsbok'
 ];
 
 const _sigState = {};
@@ -2474,7 +2474,7 @@ function openLeverans() {
     document.getElementById('lev-tekniker').value = currentUser.name;
     document.getElementById('lev-namn-tek').value  = currentUser.name;
   }
-  // Rensa fält
+  // Rensa fÃ¤lt
   ['lev-maskin','lev-kund','lev-modell','lev-utrustning','lev-material',
    'lev-adress','lev-kontakt','lev-telnr','lev-kommentar',
    'lev-ort-kund','lev-namn-kund','lev-ort-tek'].forEach(id => {
@@ -2521,14 +2521,14 @@ async function lookupLevMachine(val) {
     document.getElementById('lev-kontakt').value = m.kontakt || '';
     document.getElementById('lev-telnr').value   = m.telefon || '';
 
-    badge.textContent = '✓ Maskin hittad';
+    badge.textContent = 'âœ“ Maskin hittad';
     badge.className = 'machine-lookup-badge ok visible';
 
     const fields = [
       { label:'Kund',        val: m.kund },
       { label:'Adress',      val: [m.adress, m.stad].filter(Boolean).join(', ') },
-      { label:'Märke / Typ', val: modStr },
-      { label:'Årsmodell',  val: m.arsmodell },
+      { label:'MÃ¤rke / Typ', val: modStr },
+      { label:'Ã…rsmodell',  val: m.arsmodell },
       { label:'Tillv.nr',   val: m.tillvnr },
       { label:'Beskrivning',val: m.beskrivning },
     ].filter(f => f.val);
@@ -2602,16 +2602,16 @@ function getLeveransData() {
 }
 
 async function saveLeverans() {
-  // Bekräftelsedialog
+  // BekrÃ¤ftelsedialog
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
   overlay.innerHTML = `
     <div style="background:#fff;border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-      <div style="font-size:28px;margin-bottom:12px;">📋</div>
-      <h3 style="margin:0 0 8px;color:#1a3a5c;font-size:17px;">Är protokollet ifyllt korrekt?</h3>
-      <p style="color:#555;font-size:14px;margin:0 0 24px;">Kontrollera att alla uppgifter och signaturer stämmer innan du sparar.</p>
+      <div style="font-size:28px;margin-bottom:12px;">ðŸ“‹</div>
+      <h3 style="margin:0 0 8px;color:#1a3a5c;font-size:17px;">Ã„r protokollet ifyllt korrekt?</h3>
+      <p style="color:#555;font-size:14px;margin:0 0 24px;">Kontrollera att alla uppgifter och signaturer stÃ¤mmer innan du sparar.</p>
       <div style="display:flex;gap:12px;">
-        <button id="lev-confirm-no" style="flex:1;padding:12px;border:2px solid #ccc;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">Nej, gå tillbaka</button>
+        <button id="lev-confirm-no" style="flex:1;padding:12px;border:2px solid #ccc;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">Nej, gÃ¥ tillbaka</button>
         <button id="lev-confirm-yes" style="flex:1;padding:12px;border:none;background:#1a3a5c;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Ja, spara</button>
       </div>
     </div>`;
@@ -2625,14 +2625,14 @@ async function saveLeverans() {
     const payload = { ...data, sig_kund: data.sig_kund.length > 100 ? data.sig_kund : '', sig_tekniker: data.sig_tekniker.length > 100 ? data.sig_tekniker : '' };
     try {
       await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-      // Visa tack-meddelande och gå tillbaka
+      // Visa tack-meddelande och gÃ¥ tillbaka
       const tack = document.createElement('div');
       tack.style.cssText = 'position:fixed;inset:0;background:#1a3a5c;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
       tack.innerHTML = `
         <div style="text-align:center;color:#fff;padding:32px;">
-          <div style="font-size:56px;margin-bottom:16px;">✅</div>
+          <div style="font-size:56px;margin-bottom:16px;">âœ…</div>
           <h2 style="font-size:24px;margin:0 0 8px;">Tack, bra jobbat!</h2>
-          <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet är sparat och skickat till kontoret.</p>
+          <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet Ã¤r sparat och skickat till kontoret.</p>
         </div>`;
       document.body.appendChild(tack);
       setTimeout(() => { document.body.removeChild(tack); showPage('start'); loadRecentProtocols(); }, 2500);
@@ -2648,7 +2648,7 @@ function sendLeveransEmail() {
   const d = getLeveransData();
   const nl = '%0D%0A';
   const enc = t => encodeURIComponent(t || '');
-  let body = enc('LEVERANSGODKÄNNANDE – LILJEGRENS I TYRESÖ AB') + nl + nl;
+  let body = enc('LEVERANSGODKÃ„NNANDE â€“ LILJEGRENS I TYRESÃ– AB') + nl + nl;
   body += enc(`Objektnummer: ${d.maskin_nr}`) + nl;
   body += enc(`Maskintyp/modell: ${d.modell}`) + nl;
   body += enc(`Kund: ${d.kund}`) + nl;
@@ -2662,7 +2662,7 @@ function sendLeveransEmail() {
   body += enc(`Tekniker: ${d.namn_tek}   Datum: ${d.datum_tek}   Ort: ${d.ort_tek}`) + nl;
   body += enc(`Kund: ${d.namn_kund}   Datum: ${d.datum_kund}   Ort: ${d.ort_kund}`) + nl;
   body += nl + enc('(Signerade original bifogas som utskrift)') + nl;
-  const subject = enc(`Leveransgodkännande – ${d.maskin_nr} – ${d.kund} – ${d.datum}`);
+  const subject = enc(`LeveransgodkÃ¤nnande â€“ ${d.maskin_nr} â€“ ${d.kund} â€“ ${d.datum}`);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
@@ -2676,9 +2676,9 @@ function printLeverans() {
 }
 
 function _printLeverans(d) {
-  const rows = d.items.map(it => `<tr><td>${it.label}</td><td style="text-align:center;font-size:16px;">${it.ok ? '☑' : '☐'}</td></tr>`).join('');
+  const rows = d.items.map(it => `<tr><td>${it.label}</td><td style="text-align:center;font-size:16px;">${it.ok ? 'â˜‘' : 'â˜'}</td></tr>`).join('');
   const w = window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>Leveransgodkännande</title>
+  w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>LeveransgodkÃ¤nnande</title>
   <style>
     @page{size:A4;margin:16mm;}
     body{font-family:Arial,sans-serif;font-size:11px;color:#000;}
@@ -2690,25 +2690,25 @@ function _printLeverans(d) {
     .sig-box img{height:100%;max-width:100%;object-fit:contain;}
     .sigs{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:10px;}
   </style></head><body>
-  <h1>Leveransgodkännande</h1>
-  <p style="margin:0 0 10px;font-size:11px;">Liljegrens i Tyresö AB · Objektnummer: <b>${d.maskin_nr}</b> · Datum: ${d.datum}</p>
+  <h1>LeveransgodkÃ¤nnande</h1>
+  <p style="margin:0 0 10px;font-size:11px;">Liljegrens i TyresÃ¶ AB Â· Objektnummer: <b>${d.maskin_nr}</b> Â· Datum: ${d.datum}</p>
   <h2>Maskin &amp; kund</h2>
   <div class="grid">
     <div class="field"><b>Maskintyp/modell:</b> ${d.modell}</div>
     <div class="field"><b>Kund:</b> ${d.kund} &nbsp;&nbsp; <b>Telnr:</b> ${d.telnr}</div>
     <div class="field"><b>Kontaktperson:</b> ${d.kontakt}</div>
     <div class="field"><b>Installationsadress:</b> ${d.adress}</div>
-    <div class="field"><b>Utrustning/tillbehör:</b> ${d.utrustning}</div>
-    <div class="field"><b>Anv. område/materialslag:</b> ${d.material}</div>
+    <div class="field"><b>Utrustning/tillbehÃ¶r:</b> ${d.utrustning}</div>
+    <div class="field"><b>Anv. omrÃ¥de/materialslag:</b> ${d.material}</div>
   </div>
-  <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
+  <h2>Kontroll av maskinens detaljer betrÃ¤ffande sÃ¤kerhet och funktion</h2>
   <table><tbody>${rows}</tbody></table>
   <h2>Kommentarer</h2>
   <div style="border:1px solid #ccc;min-height:35px;padding:5px;">${d.kommentar}</div>
-  <p style="margin-top:12px;font-size:10px;font-weight:bold;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
+  <p style="margin-top:12px;font-size:10px;font-weight:bold;">HÃ¤rmed bekrÃ¤ftas att rubricerad maskin har kontrollerats enligt ovan och att genomgÃ¥ng av handhavande och sÃ¤kerhetsfÃ¶reskrifter genomfÃ¶rts.</p>
   <div class="sigs">
-    <div><b>Underskrift Kund</b><br>Datum: ${d.datum_kund} &nbsp; Ort: ${d.ort_kund}<div class="sig-box"><img src="${d.sig_kund}"></div>Namnförtydligande: ${d.namn_kund}</div>
-    <div><b>Underskrift Liljegrens</b><br>Datum: ${d.datum_tek} &nbsp; Ort: ${d.ort_tek}<div class="sig-box"><img src="${d.sig_tekniker}"></div>Namnförtydligande: ${d.namn_tek}</div>
+    <div><b>Underskrift Kund</b><br>Datum: ${d.datum_kund} &nbsp; Ort: ${d.ort_kund}<div class="sig-box"><img src="${d.sig_kund}"></div>NamnfÃ¶rtydligande: ${d.namn_kund}</div>
+    <div><b>Underskrift Liljegrens</b><br>Datum: ${d.datum_tek} &nbsp; Ort: ${d.ort_tek}<div class="sig-box"><img src="${d.sig_tekniker}"></div>NamnfÃ¶rtydligande: ${d.namn_tek}</div>
   </div>
   </body></html>`);
   w.document.close();
