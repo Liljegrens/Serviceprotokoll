@@ -2481,9 +2481,9 @@ function openLeverans() {
   document.getElementById('lev-checklist').innerHTML = LEV_ITEMS.map((item, i) => `
     <div class="lev-check-row check-item" id="lev-row-${i}">
       <span class="lev-check-label item-label">${item}</span>
-      <div class="radio-group">
-        <div class="radio-opt"><input type="radio" name="lev-${i}" id="lev-ok-${i}" value="1" onchange="levRowChange(${i})"><label for="lev-ok-${i}">OK</label></div>
-      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap;font-size:13px;color:#555;">
+        <input type="checkbox" id="lev-item-${i}" style="width:20px;height:20px;accent-color:#2e7d32;cursor:pointer;" onchange="levRowChange(${i})"> OK
+      </label>
     </div>`).join('');
   // Signaturer
   ['kund','tekniker'].forEach(id => initSig(id));
@@ -2563,8 +2563,8 @@ function clearSig(id) {
 
 function levRowChange(i) {
   const row = document.getElementById(`lev-row-${i}`);
-  const val = document.querySelector(`input[name="lev-${i}"]:checked`)?.value;
-  row.className = 'lev-check-row check-item' + (val === '1' ? ' status-ok' : val === '2' ? ' status-bevaka' : val === '3' ? ' status-akut' : '');
+  const ok = document.getElementById(`lev-item-${i}`).checked;
+  row.className = 'lev-check-row check-item' + (ok ? ' status-ok' : '');
 }
 
 function getLeveransData() {
@@ -2588,8 +2588,8 @@ function getLeveransData() {
     sig_kund:      document.getElementById('sig-kund').toDataURL(),
     sig_tekniker:  document.getElementById('sig-tekniker').toDataURL(),
     items: LEV_ITEMS.map((label, i) => {
-      const val = document.querySelector(`input[name="lev-${i}"]:checked`)?.value || '0';
-      return { label, status: val, ok: val === '1' };
+      const ok = document.getElementById(`lev-item-${i}`)?.checked || false;
+      return { label, ok };
     }),
     tekniker: document.getElementById('lev-tekniker').value
   };
