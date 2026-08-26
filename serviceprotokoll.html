@@ -729,7 +729,7 @@
       <div style="display:flex;gap:24px;flex-wrap:wrap;">
         <div style="flex:1;min-width:240px;">
           <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">Kund</div>
-          <canvas id="sig-kund" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
+          <canvas id="sig-kund" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;border:2px dashed #aaa;"></canvas>
           <div style="display:flex;gap:8px;margin-top:8px;">
             <input type="text" id="lev-datum-kund" placeholder="Datum" class="lev-input" style="flex:1;">
             <input type="text" id="lev-ort-kund" placeholder="Ort" class="lev-input" style="flex:1;">
@@ -739,7 +739,7 @@
         </div>
         <div style="flex:1;min-width:240px;">
           <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:8px;">Liljegrens (tekniker)</div>
-          <canvas id="sig-tekniker" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
+          <canvas id="sig-tekniker" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;border:2px dashed #aaa;"></canvas>
           <div style="display:flex;gap:8px;margin-top:8px;">
             <input type="text" id="lev-datum-tek" placeholder="Datum" class="lev-input" style="flex:1;">
             <input type="text" id="lev-ort-tek" placeholder="Ort" class="lev-input" style="flex:1;">
@@ -2602,20 +2602,46 @@ function getLeveransData() {
 }
 
 async function saveLeverans() {
-  const data = getLeveransData();
-  // Spara utan signaturbilder för att hålla nere storlek — spara som separat fält
-  const payload = { ...data, sig_kund: data.sig_kund.length > 100 ? data.sig_kund : '', sig_tekniker: data.sig_tekniker.length > 100 ? data.sig_tekniker : '' };
-  const conf = document.getElementById('lev-save-confirm');
-  conf.textContent = 'Sparar...';
-  conf.style.color = '#888';
-  try {
-    await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    conf.textContent = '✓ Sparat ' + new Date().toLocaleTimeString('sv-SE');
-    conf.style.color = '#2e7d32';
-  } catch(e) {
-    conf.textContent = 'Kunde inte spara: ' + e.message;
-    conf.style.color = '#c62828';
-  }
+  // Bekräftelsedialog
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <div style="font-size:28px;margin-bottom:12px;">📋</div>
+      <h3 style="margin:0 0 8px;color:#1a3a5c;font-size:17px;">Är protokollet ifyllt korrekt?</h3>
+      <p style="color:#555;font-size:14px;margin:0 0 24px;">Kontrollera att alla uppgifter och signaturer stämmer innan du sparar.</p>
+      <div style="display:flex;gap:12px;">
+        <button id="lev-confirm-no" style="flex:1;padding:12px;border:2px solid #ccc;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">Nej, gå tillbaka</button>
+        <button id="lev-confirm-yes" style="flex:1;padding:12px;border:none;background:#1a3a5c;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Ja, spara</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#lev-confirm-no').onclick = () => document.body.removeChild(overlay);
+
+  overlay.querySelector('#lev-confirm-yes').onclick = async () => {
+    document.body.removeChild(overlay);
+    const data = getLeveransData();
+    const payload = { ...data, sig_kund: data.sig_kund.length > 100 ? data.sig_kund : '', sig_tekniker: data.sig_tekniker.length > 100 ? data.sig_tekniker : '' };
+    try {
+      await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      // Visa tack-meddelande och gå tillbaka
+      const tack = document.createElement('div');
+      tack.style.cssText = 'position:fixed;inset:0;background:#1a3a5c;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+      tack.innerHTML = `
+        <div style="text-align:center;color:#fff;padding:32px;">
+          <div style="font-size:56px;margin-bottom:16px;">✅</div>
+          <h2 style="font-size:24px;margin:0 0 8px;">Tack, bra jobbat!</h2>
+          <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet är sparat och skickat till kontoret.</p>
+        </div>`;
+      document.body.appendChild(tack);
+      setTimeout(() => { document.body.removeChild(tack); showPage('start'); loadRecentProtocols(); }, 2500);
+    } catch(e) {
+      const conf = document.getElementById('lev-save-confirm');
+      conf.textContent = 'Kunde inte spara: ' + e.message;
+      conf.style.color = '#c62828';
+    }
+  };
 }
 
 function sendLeveransEmail() {
