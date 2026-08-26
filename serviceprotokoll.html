@@ -1294,7 +1294,7 @@ function openLeveransModal(rec) {
     <div style="margin-top:16px;display:flex;gap:8px;">
       <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">🖨 Skriv ut</button>
     </div>`;
-  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-overlay').classList.add('visible');
 }
 
 function toggleOvSelect(event, id) {
