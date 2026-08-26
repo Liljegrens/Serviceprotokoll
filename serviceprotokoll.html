@@ -563,6 +563,13 @@
     .summary-notes h3 { font-size: 8pt; }
     .summary-note-item { padding: 4pt 6pt; font-size: 8pt; margin-bottom: 4pt; }
   }
+  .lev-input { background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-size:14px; }
+  .lev-clear-btn { margin-top:8px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:4px 12px;cursor:pointer; }
+  .lev-check-row { display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.07); }
+  .lev-check-row:last-child { border-bottom:none; }
+  .lev-check-label { flex:1;font-size:14px;color:#fff; }
+  .lev-check-ok { display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.7);font-size:13px;white-space:nowrap; }
+  .lev-check-ok input { width:18px;height:18px;accent-color:#4caf50; }
 </style>
 </head>
 <body>
@@ -652,78 +659,106 @@
     <h1>Leveransgodkännande</h1>
     <button class="top-btn" onclick="printLeverans()">🖨 Skriv ut</button>
   </div>
-  <div style="padding:16px;max-width:700px;margin:0 auto;">
+  <div class="protocol-body">
 
-    <div class="form-section">
-      <h3>Maskin &amp; kund</h3>
-      <div class="form-row">
-        <label>Maskintyp/modell</label>
-        <input type="text" id="lev-modell" placeholder="Modell">
+    <div class="header-card">
+      <h2>Protokolluppgifter</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Objektnummer</label>
+          <input type="text" id="lev-maskin" placeholder="t.ex. 500100" oninput="onLevMaskinInput(this.value)">
+          <div class="machine-lookup-badge" id="lev-machine-badge"></div>
+        </div>
+        <div class="field-group">
+          <label>Kund (ägare)</label>
+          <input type="text" id="lev-kund" placeholder="Fylls i automatiskt" readonly style="background:#f5f7f9;color:#546e7a;">
+        </div>
+        <div class="field-group">
+          <label>Datum</label>
+          <input type="date" id="lev-datum">
+        </div>
+        <div class="field-group">
+          <label>Tekniker</label>
+          <input type="text" id="lev-tekniker" placeholder="Namn">
+        </div>
+        <div class="field-group">
+          <label>Maskintyp/modell</label>
+          <input type="text" id="lev-modell" placeholder="Fylls i automatiskt">
+        </div>
+        <div class="field-group">
+          <label>Utrustning/tillbehör</label>
+          <input type="text" id="lev-utrustning" placeholder="">
+        </div>
+        <div class="field-group">
+          <label>Anv. område/materialslag</label>
+          <input type="text" id="lev-material" placeholder="">
+        </div>
+        <div class="field-group">
+          <label>Installationsadress</label>
+          <input type="text" id="lev-adress" placeholder="Adress">
+        </div>
+        <div class="field-group">
+          <label>Kontaktperson</label>
+          <input type="text" id="lev-kontakt" placeholder="">
+        </div>
+        <div class="field-group">
+          <label>Telefon</label>
+          <input type="text" id="lev-telnr" placeholder="">
+        </div>
       </div>
-      <div class="form-row">
-        <label>Kund</label>
-        <input type="text" id="lev-kund" placeholder="Kundnamn">
-        <label style="margin-left:12px;">Telnr</label>
-        <input type="text" id="lev-telnr" placeholder="Telefon">
-      </div>
-      <div class="form-row">
-        <label>Kontaktperson</label>
-        <input type="text" id="lev-kontakt" placeholder="Namn">
-        <label style="margin-left:12px;">Mobilnr</label>
-        <input type="text" id="lev-mobil" placeholder="Mobil">
-      </div>
-      <div class="form-row">
-        <label>Installationsadress</label>
-        <input type="text" id="lev-adress" placeholder="Adress">
-      </div>
-      <div class="form-row">
-        <label>Utrustning/tillbehör</label>
-        <input type="text" id="lev-utrustning" placeholder="">
-        <label style="margin-left:12px;">Anv. område/materialslag</label>
-        <input type="text" id="lev-material" placeholder="">
+      <div class="machine-info-card" id="lev-machine-info-card">
+        <div class="machine-info-grid" id="lev-machine-info-grid"></div>
       </div>
     </div>
 
-    <div class="form-section">
-      <h3>Kontroll av maskinens detaljer</h3>
+    <!-- Checklista -->
+    <div class="header-card">
+      <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
       <div id="lev-checklist"></div>
     </div>
 
-    <div class="form-section">
-      <h3>Kommentarer</h3>
-      <textarea id="lev-kommentar" rows="3" style="width:100%;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px;font-size:14px;"></textarea>
+    <!-- Kommentarer -->
+    <div class="header-card">
+      <h2>Kommentarer</h2>
+      <textarea id="lev-kommentar" rows="3" style="width:100%;background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
     </div>
 
-    <div class="form-section">
-      <h3>Underskrifter</h3>
-      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:12px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
+    <!-- Signaturer -->
+    <div class="header-card">
+      <h2>Underskrifter</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin:0 0 16px;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
       <div style="display:flex;gap:24px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:220px;">
-          <div style="margin-bottom:6px;font-size:13px;color:rgba(255,255,255,0.7);">Kund</div>
-          <canvas id="sig-kund" width="280" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;"></canvas>
-          <div style="display:flex;gap:8px;margin-top:6px;">
-            <input type="text" id="lev-datum-kund" placeholder="Datum" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
-            <input type="text" id="lev-ort-kund" placeholder="Ort" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+        <div style="flex:1;min-width:240px;">
+          <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:8px;">Kund</div>
+          <canvas id="sig-kund" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="text" id="lev-datum-kund" placeholder="Datum" class="lev-input" style="flex:1;">
+            <input type="text" id="lev-ort-kund" placeholder="Ort" class="lev-input" style="flex:1;">
           </div>
-          <input type="text" id="lev-namn-kund" placeholder="Namnförtydligande" style="width:100%;margin-top:6px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;box-sizing:border-box;">
-          <button onclick="clearSig('kund')" style="margin-top:6px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:3px 10px;cursor:pointer;">Rensa</button>
+          <input type="text" id="lev-namn-kund" placeholder="Namnförtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
+          <button onclick="clearSig('kund')" class="lev-clear-btn">Rensa signatur</button>
         </div>
-        <div style="flex:1;min-width:220px;">
-          <div style="margin-bottom:6px;font-size:13px;color:rgba(255,255,255,0.7);">Liljegrens (tekniker)</div>
-          <canvas id="sig-tekniker" width="280" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;"></canvas>
-          <div style="display:flex;gap:8px;margin-top:6px;">
-            <input type="text" id="lev-datum-tek" placeholder="Datum" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
-            <input type="text" id="lev-ort-tek" placeholder="Ort" style="flex:1;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;">
+        <div style="flex:1;min-width:240px;">
+          <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:8px;">Liljegrens (tekniker)</div>
+          <canvas id="sig-tekniker" width="300" height="120" style="background:#fff;border-radius:6px;touch-action:none;display:block;width:100%;"></canvas>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="text" id="lev-datum-tek" placeholder="Datum" class="lev-input" style="flex:1;">
+            <input type="text" id="lev-ort-tek" placeholder="Ort" class="lev-input" style="flex:1;">
           </div>
-          <input type="text" id="lev-namn-tek" placeholder="Namnförtydligande" style="width:100%;margin-top:6px;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px;box-sizing:border-box;">
-          <button onclick="clearSig('tekniker')" style="margin-top:6px;font-size:11px;background:none;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.6);border-radius:4px;padding:3px 10px;cursor:pointer;">Rensa</button>
+          <input type="text" id="lev-namn-tek" placeholder="Namnförtydligande" class="lev-input" style="width:100%;margin-top:6px;box-sizing:border-box;">
+          <button onclick="clearSig('tekniker')" class="lev-clear-btn">Rensa signatur</button>
         </div>
       </div>
     </div>
 
-    <div style="text-align:center;margin:24px 0;">
-      <button class="save-btn" onclick="saveLeverans()">💾 Spara</button>
+    <div class="summary-card">
+      <div class="action-btns">
+        <button class="save-btn" onclick="saveLeverans()">💾 Spara protokoll</button>
+        <button class="email-btn" onclick="sendLeveransEmail()">📧 Skicka via e-post</button>
+      </div>
+      <div class="save-confirm" id="lev-save-confirm"></div>
     </div>
+
   </div>
 </div>
 
@@ -2325,25 +2360,80 @@ const LEV_ITEMS = [
 
 const _sigState = {};
 
+let _levLookupTimer = null;
+
 function openLeverans() {
   showPage('leverans');
-  // Fyll datum
   const today = new Date().toISOString().slice(0,10);
+  document.getElementById('lev-datum').value      = today;
   document.getElementById('lev-datum-kund').value = today;
   document.getElementById('lev-datum-tek').value  = today;
-  // Fyll tekniker namn
-  if (currentUser) document.getElementById('lev-namn-tek').value = currentUser.name;
+  if (currentUser) {
+    document.getElementById('lev-tekniker').value = currentUser.name;
+    document.getElementById('lev-namn-tek').value  = currentUser.name;
+  }
+  // Rensa fält
+  ['lev-maskin','lev-kund','lev-modell','lev-utrustning','lev-material',
+   'lev-adress','lev-kontakt','lev-telnr','lev-kommentar',
+   'lev-ort-kund','lev-namn-kund','lev-ort-tek'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('lev-machine-badge').className = 'machine-lookup-badge';
+  document.getElementById('lev-machine-info-card').classList.remove('visible');
   // Bygg checklista
-  const cl = document.getElementById('lev-checklist');
-  cl.innerHTML = LEV_ITEMS.map((item, i) => `
-    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-      <span style="flex:1;font-size:14px;color:#fff;">${item}</span>
-      <label style="display:flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);font-size:13px;">
-        <input type="checkbox" id="lev-item-${i}" style="width:18px;height:18px;"> OK
-      </label>
+  document.getElementById('lev-checklist').innerHTML = LEV_ITEMS.map((item, i) => `
+    <div class="lev-check-row">
+      <span class="lev-check-label">${item}</span>
+      <label class="lev-check-ok"><input type="checkbox" id="lev-item-${i}"> OK</label>
     </div>`).join('');
-  // Initiera signaturer
+  // Signaturer
   ['kund','tekniker'].forEach(id => initSig(id));
+}
+
+function onLevMaskinInput(val) {
+  clearTimeout(_levLookupTimer);
+  _levLookupTimer = setTimeout(() => lookupLevMachine(val), 500);
+}
+
+async function lookupLevMachine(val) {
+  const badge    = document.getElementById('lev-machine-badge');
+  const infoCard = document.getElementById('lev-machine-info-card');
+  const infoGrid = document.getElementById('lev-machine-info-grid');
+  const key = val.trim();
+  if (!key) { badge.className = 'machine-lookup-badge'; infoCard.classList.remove('visible'); return; }
+  try {
+    const m = await apiFetch('/api/machines/' + encodeURIComponent(key));
+    if (!m) {
+      badge.textContent = 'Objektnummer ej hittat i register';
+      badge.className = 'machine-lookup-badge error visible';
+      infoCard.classList.remove('visible');
+      return;
+    }
+    const modStr = [m.fabrikat, m.modell].filter(Boolean).join(' ');
+    if (modStr) document.getElementById('lev-modell').value = modStr;
+    document.getElementById('lev-kund').value    = m.agare || m.kund || '';
+    document.getElementById('lev-adress').value  = [m.adress, m.stad].filter(Boolean).join(', ');
+    document.getElementById('lev-kontakt').value = m.kontakt || '';
+    document.getElementById('lev-telnr').value   = m.telefon || '';
+
+    badge.textContent = '✓ Maskin hittad';
+    badge.className = 'machine-lookup-badge ok visible';
+
+    const fields = [
+      { label:'Kund',        val: m.kund },
+      { label:'Adress',      val: [m.adress, m.stad].filter(Boolean).join(', ') },
+      { label:'Märke / Typ', val: modStr },
+      { label:'Årsmodell',  val: m.arsmodell },
+      { label:'Tillv.nr',   val: m.tillvnr },
+      { label:'Beskrivning',val: m.beskrivning },
+    ].filter(f => f.val);
+    infoGrid.innerHTML = fields.map(f => `<div class="mi-field"><div class="mi-label">${f.label}</div><div class="mi-val">${f.val}</div></div>`).join('');
+    infoCard.classList.add('visible');
+  } catch {
+    badge.textContent = 'Fel vid uppslag';
+    badge.className = 'machine-lookup-badge error visible';
+  }
 }
 
 function initSig(id) {
@@ -2373,20 +2463,18 @@ function clearSig(id) {
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
-async function saveLeverans() {
-  const items = LEV_ITEMS.map((label, i) => ({
-    label, ok: document.getElementById(`lev-item-${i}`).checked
-  }));
-  const data = {
+function getLeveransData() {
+  return {
+    maskin_nr:  document.getElementById('lev-maskin').value,
     modell:     document.getElementById('lev-modell').value,
     kund:       document.getElementById('lev-kund').value,
     telnr:      document.getElementById('lev-telnr').value,
     kontakt:    document.getElementById('lev-kontakt').value,
-    mobil:      document.getElementById('lev-mobil').value,
     adress:     document.getElementById('lev-adress').value,
     utrustning: document.getElementById('lev-utrustning').value,
     material:   document.getElementById('lev-material').value,
     kommentar:  document.getElementById('lev-kommentar').value,
+    datum:      document.getElementById('lev-datum').value,
     datum_kund: document.getElementById('lev-datum-kund').value,
     ort_kund:   document.getElementById('lev-ort-kund').value,
     namn_kund:  document.getElementById('lev-namn-kund').value,
@@ -2395,50 +2483,76 @@ async function saveLeverans() {
     namn_tek:   document.getElementById('lev-namn-tek').value,
     sig_kund:      document.getElementById('sig-kund').toDataURL(),
     sig_tekniker:  document.getElementById('sig-tekniker').toDataURL(),
-    items,
-    tekniker: currentUser ? currentUser.name : ''
+    items: LEV_ITEMS.map((label, i) => ({ label, ok: document.getElementById(`lev-item-${i}`).checked })),
+    tekniker: document.getElementById('lev-tekniker').value
   };
+}
+
+async function saveLeverans() {
+  const data = getLeveransData();
+  const conf = document.getElementById('lev-save-confirm');
   try {
     await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    alert('Sparat!');
-  } catch { alert('Kunde inte spara.'); }
+    conf.textContent = '✓ Sparat ' + new Date().toLocaleTimeString('sv-SE');
+    conf.style.color = '#a5d6a7';
+  } catch { conf.textContent = 'Kunde inte spara.'; conf.style.color = '#ef9a9a'; }
+}
+
+function sendLeveransEmail() {
+  const d = getLeveransData();
+  const nl = '%0D%0A';
+  const enc = t => encodeURIComponent(t || '');
+  let body = enc('LEVERANSGODKÄNNANDE – LILJEGRENS I TYRESÖ AB') + nl + nl;
+  body += enc(`Objektnummer: ${d.maskin_nr}`) + nl;
+  body += enc(`Maskintyp/modell: ${d.modell}`) + nl;
+  body += enc(`Kund: ${d.kund}`) + nl;
+  body += enc(`Kontaktperson: ${d.kontakt}   Telnr: ${d.telnr}`) + nl;
+  body += enc(`Installationsadress: ${d.adress}`) + nl;
+  body += enc(`Utrustning: ${d.utrustning}   Material: ${d.material}`) + nl + nl;
+  body += enc('KONTROLLPUNKTER:') + nl;
+  d.items.forEach(it => { body += enc(`${it.ok ? '[OK]' : '[ ]'} ${it.label}`) + nl; });
+  if (d.kommentar) { body += nl + enc('Kommentarer:') + nl + enc(d.kommentar) + nl; }
+  body += nl + enc(`Tekniker: ${d.namn_tek}   Datum: ${d.datum_tek}   Ort: ${d.ort_tek}`) + nl;
+  body += enc(`Kund signatur: ${d.namn_kund}   Datum: ${d.datum_kund}   Ort: ${d.ort_kund}`) + nl;
+  const subject = enc(`Leveransgodkännande – ${d.maskin_nr} – ${d.kund} – ${d.datum}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 function printLeverans() {
-  const items = LEV_ITEMS.map((label, i) => {
-    const ok = document.getElementById(`lev-item-${i}`).checked;
-    return `<tr><td>${label}</td><td style="text-align:center;">${ok ? '☑' : '☐'}</td></tr>`;
-  }).join('');
-  const sigKund = document.getElementById('sig-kund').toDataURL();
-  const sigTek  = document.getElementById('sig-tekniker').toDataURL();
+  const d = getLeveransData();
+  const rows = d.items.map(it => `<tr><td>${it.label}</td><td style="text-align:center;font-size:16px;">${it.ok ? '☑' : '☐'}</td></tr>`).join('');
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>Leveransgodkännande</title>
-  <style>body{font-family:Arial,sans-serif;font-size:12px;margin:20mm;}h1{font-size:18px;}h2{font-size:13px;border-bottom:1px solid #000;margin-top:16px;}
-  table{width:100%;border-collapse:collapse;}td{padding:5px 8px;border:1px solid #ccc;}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-  .field{border:1px solid #ccc;padding:4px 8px;font-size:11px;}
-  .sig-box{border:1px solid #000;padding:8px;}.sig-box img{width:100%;max-height:80px;object-fit:contain;}
-  .sigs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;}
+  <style>
+    @page{size:A4;margin:16mm;}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#000;}
+    h1{font-size:20px;margin:0 0 4px;}h2{font-size:12px;border-bottom:1px solid #000;padding-bottom:3px;margin:14px 0 6px;}
+    table{width:100%;border-collapse:collapse;}td{padding:5px 8px;border:1px solid #ccc;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
+    .field{border:1px solid #ccc;padding:4px 8px;}
+    .sig-box{border:1px solid #000;height:70px;margin:4px 0;}
+    .sig-box img{height:100%;max-width:100%;object-fit:contain;}
+    .sigs{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:10px;}
   </style></head><body>
   <h1>Leveransgodkännande</h1>
-  <p>Blanketten ifylls av ansvarig/utsedd person från Liljegrens i Tyresö AB</p>
+  <p style="margin:0 0 10px;font-size:11px;">Liljegrens i Tyresö AB · Objektnummer: <b>${d.maskin_nr}</b> · Datum: ${d.datum}</p>
   <h2>Maskin &amp; kund</h2>
   <div class="grid">
-    <div class="field"><b>Maskintyp/modell:</b> ${document.getElementById('lev-modell').value}</div>
-    <div class="field"><b>Kund:</b> ${document.getElementById('lev-kund').value} &nbsp; <b>Telnr:</b> ${document.getElementById('lev-telnr').value}</div>
-    <div class="field"><b>Kontaktperson:</b> ${document.getElementById('lev-kontakt').value} &nbsp; <b>Mobil:</b> ${document.getElementById('lev-mobil').value}</div>
-    <div class="field"><b>Adress:</b> ${document.getElementById('lev-adress').value}</div>
-    <div class="field"><b>Utrustning:</b> ${document.getElementById('lev-utrustning').value}</div>
-    <div class="field"><b>Material/område:</b> ${document.getElementById('lev-material').value}</div>
+    <div class="field"><b>Maskintyp/modell:</b> ${d.modell}</div>
+    <div class="field"><b>Kund:</b> ${d.kund} &nbsp;&nbsp; <b>Telnr:</b> ${d.telnr}</div>
+    <div class="field"><b>Kontaktperson:</b> ${d.kontakt}</div>
+    <div class="field"><b>Installationsadress:</b> ${d.adress}</div>
+    <div class="field"><b>Utrustning/tillbehör:</b> ${d.utrustning}</div>
+    <div class="field"><b>Anv. område/materialslag:</b> ${d.material}</div>
   </div>
   <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
-  <table><tbody>${items}</tbody></table>
+  <table><tbody>${rows}</tbody></table>
   <h2>Kommentarer</h2>
-  <div style="border:1px solid #ccc;min-height:40px;padding:6px;">${document.getElementById('lev-kommentar').value}</div>
-  <p style="margin-top:16px;font-size:11px;"><b>Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</b></p>
+  <div style="border:1px solid #ccc;min-height:35px;padding:5px;">${d.kommentar}</div>
+  <p style="margin-top:12px;font-size:10px;font-weight:bold;">Härmed bekräftas att rubricerad maskin har kontrollerats enligt ovan och att genomgång av handhavande och säkerhetsföreskrifter genomförts.</p>
   <div class="sigs">
-    <div><b>Kund</b><br>Datum: ${document.getElementById('lev-datum-kund').value} &nbsp; Ort: ${document.getElementById('lev-ort-kund').value}<div class="sig-box"><img src="${sigKund}"></div>Namnförtydligande: ${document.getElementById('lev-namn-kund').value}</div>
-    <div><b>Liljegrens (tekniker)</b><br>Datum: ${document.getElementById('lev-datum-tek').value} &nbsp; Ort: ${document.getElementById('lev-ort-tek').value}<div class="sig-box"><img src="${sigTek}"></div>Namnförtydligande: ${document.getElementById('lev-namn-tek').value}</div>
+    <div><b>Underskrift Kund</b><br>Datum: ${d.datum_kund} &nbsp; Ort: ${d.ort_kund}<div class="sig-box"><img src="${d.sig_kund}"></div>Namnförtydligande: ${d.namn_kund}</div>
+    <div><b>Underskrift Liljegrens</b><br>Datum: ${d.datum_tek} &nbsp; Ort: ${d.ort_tek}<div class="sig-box"><img src="${d.sig_tekniker}"></div>Namnförtydligande: ${d.namn_tek}</div>
   </div>
   </body></html>`);
   w.document.close();
