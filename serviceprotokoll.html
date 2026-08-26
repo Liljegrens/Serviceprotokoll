@@ -629,7 +629,7 @@
     </div>
     <div class="start-card" onclick="openLeverans()">
       <div class="icon">📦</div>
-      <h2>Leveransgodkännande</h2>
+      <h2>Leveransgodkännande Ragn-Sells</h2>
       <p>Typ 3 · Överlämning av utrustning till kund</p>
     </div>
   </div>
@@ -655,7 +655,7 @@
 <div id="leverans-page" style="display:none;">
   <div class="top-bar">
     <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
-    <h1>Leveransgodkännande</h1>
+    <h1>Leveransgodkännande Ragn-Sells</h1>
     <button class="top-btn" onclick="printLeverans()">🖨 Skriv ut</button>
   </div>
   <div class="protocol-body">
@@ -1121,7 +1121,7 @@ async function loadRecentProtocols() {
               <span class="recent-maskin">${rec.maskin_nr}</span>
               <span class="recent-kund">${rec.kund}</span>
             </div>
-            <div class="recent-sub">${rec.datum} · ${rec.tekniker} · Leveransgodkännande</div>
+            <div class="recent-sub">${rec.datum} · ${rec.tekniker} · Leveransgodkännande Ragn-Sells</div>
           </div>
           <div class="recent-badges">
             <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
@@ -1255,7 +1255,7 @@ async function loadOverview() {
         <input type="checkbox" disabled style="opacity:0.3;">
         <div class="ov-row-info" style="cursor:pointer;">
           <div class="ov-row-title">📦 ${d.maskin_nr||'–'} · ${d.kund||'–'}</div>
-          <div class="ov-row-sub">${d.datum||'–'} · Leveransgodkännande · ${d.tekniker||'–'}</div>
+          <div class="ov-row-sub">${d.datum||'–'} · Leveransgodkännande Ragn-Sells · ${d.tekniker||'–'}</div>
         </div>
         <div class="ov-row-badges">
           <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
@@ -1282,7 +1282,7 @@ function openLeveransModal(rec) {
         <div style="flex:1;"><b>Kund:</b> ${d.namn_kund||''}<br><img src="${d.sig_kund}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
         <div style="flex:1;"><b>Tekniker:</b> ${d.namn_tek||''}<br><img src="${d.sig_tekniker||''}" style="max-width:100%;border:1px solid #ccc;border-radius:4px;margin-top:4px;"></div>
        </div>` : `<p style="color:#888;font-size:13px;">Signaturer ej sparade i denna version.</p>`;
-  document.getElementById('modal-title').textContent = `Leveransgodkännande · ${d.maskin_nr||'–'}`;
+  document.getElementById('modal-title').textContent = `Leveransgodkännande Ragn-Sells · ${d.maskin_nr||'–'}`;
   document.getElementById('modal-body').innerHTML = `
     <div style="font-size:13px;color:#555;margin-bottom:12px;">${d.datum||''} · ${d.kund||''} · ${d.tekniker||''}</div>
     <div style="margin-bottom:8px;"><b>Modell:</b> ${d.modell||''} &nbsp; <b>Adress:</b> ${d.adress||''}</div>
