@@ -719,7 +719,7 @@
     <!-- Kommentarer -->
     <div class="header-card">
       <h2>Kommentarer</h2>
-      <textarea id="lev-kommentar" rows="3" style="width:100%;background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
+      <textarea id="lev-kommentar" rows="3" style="width:100%;background:#fff;color:#333;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
     </div>
 
     <!-- Signaturer -->
@@ -2500,12 +2500,19 @@ function getLeveransData() {
 
 async function saveLeverans() {
   const data = getLeveransData();
+  // Spara utan signaturbilder för att hålla nere storlek — spara som separat fält
+  const payload = { ...data, sig_kund: data.sig_kund.length > 100 ? data.sig_kund : '', sig_tekniker: data.sig_tekniker.length > 100 ? data.sig_tekniker : '' };
   const conf = document.getElementById('lev-save-confirm');
+  conf.textContent = 'Sparar...';
+  conf.style.color = '#888';
   try {
-    await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    await apiFetch('/api/leverans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     conf.textContent = '✓ Sparat ' + new Date().toLocaleTimeString('sv-SE');
-    conf.style.color = '#a5d6a7';
-  } catch { conf.textContent = 'Kunde inte spara.'; conf.style.color = '#ef9a9a'; }
+    conf.style.color = '#2e7d32';
+  } catch(e) {
+    conf.textContent = 'Kunde inte spara: ' + e.message;
+    conf.style.color = '#c62828';
+  }
 }
 
 function sendLeveransEmail() {
@@ -2522,8 +2529,10 @@ function sendLeveransEmail() {
   body += enc('KONTROLLPUNKTER:') + nl;
   d.items.forEach(it => { body += enc(`${it.ok ? '[OK]' : '[ ]'} ${it.label}`) + nl; });
   if (d.kommentar) { body += nl + enc('Kommentarer:') + nl + enc(d.kommentar) + nl; }
-  body += nl + enc(`Tekniker: ${d.namn_tek}   Datum: ${d.datum_tek}   Ort: ${d.ort_tek}`) + nl;
-  body += enc(`Kund signatur: ${d.namn_kund}   Datum: ${d.datum_kund}   Ort: ${d.ort_kund}`) + nl;
+  body += nl + enc('SIGNATURER:') + nl;
+  body += enc(`Tekniker: ${d.namn_tek}   Datum: ${d.datum_tek}   Ort: ${d.ort_tek}`) + nl;
+  body += enc(`Kund: ${d.namn_kund}   Datum: ${d.datum_kund}   Ort: ${d.ort_kund}`) + nl;
+  body += nl + enc('(Signerade original bifogas som utskrift)') + nl;
   const subject = enc(`Leveransgodkännande – ${d.maskin_nr} – ${d.kund} – ${d.datum}`);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
