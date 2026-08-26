@@ -606,7 +606,7 @@
   <div class="register-bar">
     <span>📋 Maskinregister</span>
     <span class="reg-status" id="reg-status">Kontrollerar...</span>
-    <button class="load-btn" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
+    <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
     <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
   </div>
 
@@ -867,6 +867,7 @@ async function initAuth() {
     loadRecentProtocols();
     if (currentUser.role === 'admin') {
       document.getElementById('users-section').style.display = '';
+      document.getElementById('reg-upload-btn').style.display = '';
       loadUsersAdmin();
     }
   }
