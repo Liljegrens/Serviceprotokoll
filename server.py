@@ -97,6 +97,10 @@ def index():
 def manifest():
     return send_from_directory(BASE, 'manifest.json')
 
+@app.route('/balp-maskin.png')
+def serve_balp_img():
+    return send_from_directory(BASE, 'balp-maskin.png')
+
 @app.route('/logo.png')
 def logo():
     return send_from_directory(BASE, 'logo.png')
