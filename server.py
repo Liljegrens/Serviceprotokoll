@@ -97,6 +97,10 @@ def index():
 def manifest():
     return send_from_directory(BASE, 'manifest.json')
 
+@app.route('/RS-logo.png')
+def serve_rs_logo():
+    return send_from_directory(BASE, 'RS-logo.png')
+
 @app.route('/komp-bild.png')
 def serve_komp_img():
     return send_from_directory(BASE, 'komp-bild.png')
