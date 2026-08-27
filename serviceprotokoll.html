@@ -987,14 +987,17 @@ async function initAuth() {
   } else {
     showPage('start');
     updateUserGreeting();
+    applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
-    if (currentUser.role === 'admin') {
-      document.getElementById('users-section').style.display = '';
-      document.getElementById('reg-upload-btn').style.display = '';
-      loadUsersAdmin();
-    }
   }
+}
+
+function applyRoleUI() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  document.getElementById('users-section').style.display  = isAdmin ? '' : 'none';
+  document.getElementById('reg-upload-btn').style.display = isAdmin ? '' : 'none';
+  if (isAdmin) loadUsersAdmin();
 }
 
 async function loadUsersAdmin() {
@@ -1063,6 +1066,7 @@ async function doLogin() {
     document.getElementById('login-pin').value = '';
     showPage('start');
     updateUserGreeting();
+    applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
   } catch {
