@@ -302,6 +302,38 @@ def init_leverans_db():
 
 init_leverans_db()
 
+def init_balp_db():
+    with get_db() as db:
+        db.execute('''CREATE TABLE IF NOT EXISTS balp (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_at  TEXT,
+            tekniker  TEXT,
+            maskin_nr TEXT,
+            data_json TEXT
+        )''')
+
+init_balp_db()
+
+@app.route('/api/balp', methods=['POST'])
+def save_balp():
+    data = request.get_json()
+    with get_db() as db:
+        db.execute('INSERT INTO balp (saved_at, tekniker, maskin_nr, data_json) VALUES (?,?,?,?)',
+                   (datetime.now().isoformat(), data.get('tekniker',''), data.get('maskin_nr',''), json.dumps(data, ensure_ascii=False)))
+    return jsonify({'ok': True})
+
+@app.route('/api/balp', methods=['GET'])
+def list_balp():
+    with get_db() as db:
+        rows = db.execute('SELECT id, saved_at, tekniker, maskin_nr, data_json FROM balp ORDER BY saved_at DESC').fetchall()
+    return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
+
+@app.route('/api/balp/<int:balp_id>', methods=['DELETE'])
+def delete_balp(balp_id):
+    with get_db() as db:
+        db.execute('DELETE FROM balp WHERE id=?', (balp_id,))
+    return jsonify({'ok': True})
+
 @app.route('/api/leverans', methods=['POST'])
 def save_leverans():
     data = request.get_json()

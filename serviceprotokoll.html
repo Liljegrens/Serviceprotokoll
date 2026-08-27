@@ -637,6 +637,11 @@
       <h2>Leveransgodkännande Ragn-Sells</h2>
       <p>Typ 3 · Överlämning av utrustning till kund</p>
     </div>
+    <div class="start-card" onclick="openBalp()">
+      <div class="icon">🗜️</div>
+      <h2>Serviceprotokoll Balpressar</h2>
+      <p>Typ 4 · Serviceprotokoll för balpressar</p>
+    </div>
   </div>
 
   <!-- Användarhantering (admin) -->
@@ -760,6 +765,93 @@
       <button style="flex:1;padding:14px;background:#fff;color:#1a3a5c;border:2px solid #1a3a5c;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="sendLeveransEmail()">📧 Skicka via e-post</button>
     </div>
     <div id="lev-save-confirm" style="text-align:center;font-size:14px;margin-bottom:16px;"></div>
+
+  </div>
+</div>
+
+<!-- ═══════════ BALP PAGE ═══════════ -->
+<div id="balp-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <h1>Serviceprotokoll Balpressar</h1>
+    <button class="top-btn" onclick="printBalp()">🖨 Skriv ut</button>
+  </div>
+  <div class="protocol-body">
+
+    <div class="header-card">
+      <h2>Protokolluppgifter</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Objektnummer</label>
+          <input type="text" id="balp-maskin" placeholder="t.ex. 500100" oninput="onBalpMaskinInput(this.value)">
+          <div class="machine-lookup-badge" id="balp-machine-badge"></div>
+        </div>
+        <div class="field-group">
+          <label>Anläggningsnamn</label>
+          <input type="text" id="balp-anlaggning" placeholder="Fylls i automatiskt" readonly style="background:#f5f7f9;color:#546e7a;">
+        </div>
+        <div class="field-group">
+          <label>Maskinnummer</label>
+          <input type="text" id="balp-maskinnr" placeholder="">
+        </div>
+        <div class="field-group">
+          <label>Märke</label>
+          <input type="text" id="balp-marke" placeholder="Fylls i automatiskt">
+        </div>
+        <div class="field-group">
+          <label>Typ</label>
+          <input type="text" id="balp-typ" placeholder="Fylls i automatiskt">
+        </div>
+        <div class="field-group">
+          <label>Fraktion</label>
+          <input type="text" id="balp-fraktion" placeholder="">
+        </div>
+        <div class="field-group">
+          <label>ggr/år</label>
+          <input type="number" id="balp-ggr" placeholder="" min="1">
+        </div>
+        <div class="field-group">
+          <label>Utfört datum</label>
+          <input type="date" id="balp-datum">
+        </div>
+        <div class="field-group">
+          <label>Montör</label>
+          <input type="text" id="balp-tekniker" placeholder="Namn">
+        </div>
+        <div class="field-group">
+          <label>Faktura</label>
+          <input type="text" id="balp-faktura" placeholder="">
+        </div>
+      </div>
+      <div class="machine-info-card" id="balp-machine-info-card">
+        <div class="machine-info-grid" id="balp-machine-info-grid"></div>
+      </div>
+    </div>
+
+    <!-- Checklista -->
+    <div class="header-card">
+      <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
+      <div id="balp-checklist"></div>
+    </div>
+
+    <!-- Extra arbete -->
+    <div class="header-card">
+      <h2>Extra utfört arbete</h2>
+      <p style="font-size:13px;color:#555;margin-bottom:10px;">Antal timmar, utfört arbete och ev. material</p>
+      <textarea id="balp-extra" rows="3" style="width:100%;background:#fff;color:#333;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
+    </div>
+
+    <!-- Kommentarer -->
+    <div class="header-card">
+      <h2>Kommentarer</h2>
+      <textarea id="balp-kommentar" rows="3" style="width:100%;background:#fff;color:#333;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:14px;box-sizing:border-box;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:12px;margin:24px 0;flex-wrap:wrap;">
+      <button style="flex:1;padding:14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="saveBalp()">💾 Spara protokoll</button>
+      <button style="flex:1;padding:14px;background:#fff;color:#1a3a5c;border:2px solid #1a3a5c;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;" onclick="sendBalpEmail()">📧 Skicka via e-post</button>
+    </div>
+    <div id="balp-save-confirm" style="text-align:center;font-size:14px;margin-bottom:16px;"></div>
 
   </div>
 </div>
@@ -1092,26 +1184,28 @@ async function loadRecentProtocols() {
   if (section) section.style.display = '';
   const list = document.getElementById('recent-list');
   try {
-    const [serviceRecs, leveransRecs] = await Promise.all([
+    const [serviceRecs, leveransRecs, balpRecs] = await Promise.all([
       apiFetch('/api/protocols/recent?limit=15'),
-      apiFetch('/api/leverans')
+      apiFetch('/api/leverans'),
+      apiFetch('/api/balp')
     ]);
 
-    // Normalisera leveransprotokoll till samma format
     const levNorm = leveransRecs.map(r => ({
-      _type: 'leverans',
-      _raw: r,
-      saved_at: r.saved_at,
-      maskin_nr: r.data?.maskin_nr || '–',
-      kund: r.data?.kund || '',
-      datum: r.data?.datum || '',
-      tekniker: r.data?.tekniker || '–'
+      _type: 'leverans', _raw: r, saved_at: r.saved_at,
+      maskin_nr: r.data?.maskin_nr || '–', kund: r.data?.kund || '',
+      datum: r.data?.datum || '', tekniker: r.data?.tekniker || '–'
+    }));
+    const balpNorm = balpRecs.map(r => ({
+      _type: 'balp', _raw: r, saved_at: r.saved_at,
+      maskin_nr: r.data?.maskin_nr || '–', kund: r.data?.anlaggning || '',
+      datum: r.data?.datum || '', tekniker: r.data?.tekniker || '–'
     }));
 
     // Slå ihop och sortera på saved_at, visa 5 senaste
     const all = [
       ...serviceRecs.map(r => ({ _type: 'service', _raw: r, saved_at: r.saved_at, ...r })),
-      ...levNorm
+      ...levNorm,
+      ...balpNorm
     ].sort((a, b) => (b.saved_at || '').localeCompare(a.saved_at || '')).slice(0, 5);
 
     if (!all.length) {
@@ -1136,6 +1230,20 @@ async function loadRecentProtocols() {
             <span class="badge" style="background:#e3f2fd;color:#1565c0;">Leverans</span>
           </div>`;
         div.onclick = () => openLeveransModal(rec._raw);
+      } else if (rec._type === 'balp') {
+        div.innerHTML = `
+          <span class="recent-icon">🗜️</span>
+          <div class="recent-main">
+            <div class="recent-top">
+              <span class="recent-maskin">${rec.maskin_nr}</span>
+              <span class="recent-kund">${rec.kund}</span>
+            </div>
+            <div class="recent-sub">${rec.datum} · ${rec.tekniker} · Serviceprotokoll Balpressar</div>
+          </div>
+          <div class="recent-badges">
+            <span class="badge" style="background:#e8f5e9;color:#2e7d32;">Balpressar</span>
+          </div>`;
+        div.onclick = () => openBalpModal(rec._raw);
       } else {
         const s = summarizeStatus(rec.items);
         const icon = rec.type === 'flygande' ? '🚗' : '🔧';
@@ -1477,6 +1585,7 @@ function showPage(page) {
   document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
   document.getElementById('overview-page').style.display = page === 'overview' ? 'block' : 'none';
   document.getElementById('leverans-page').style.display = page === 'leverans' ? 'block' : 'none';
+  document.getElementById('balp-page').style.display     = page === 'balp'     ? 'block' : 'none';
 }
 
 function updateUserGreeting() {
@@ -2763,6 +2872,268 @@ function _printLeverans(d) {
   </body></html>`);
   w.document.close();
   w.print();
+}
+
+// ═══════════════════════════════════════════════════
+// BALPRESSAR PROTOCOL
+// ═══════════════════════════════════════════════════
+const BALP_ITEMS = [
+  'Lucklås (fjäder, låsning, mikrokontakt, låsskjuts)',
+  'Gasdämpare, luckbalansarm',
+  'Dörrlås (smörjning, slitagekontroll)',
+  'Dörrögnjärn (låsringar, smörjning)',
+  'Nedhållare, Fällbara hakar (smörjning)',
+  'Kuggrem, kedjor (sträckning, smörjning)',
+  'Kilremmar (sträckning)',
+  'Centrumlager (kontroll)',
+  'Spindlar (balanskontroll, smörjning)',
+  'Spindellager (avsyning av infästen etc)',
+  'Elektronik (kontroll kontaktorer, brytare, rengöring)',
+  'Elmotor (kontroll lager, kabel, remhjul)',
+  'Uttippning pressplatta (fjäder, låsring, styrrulle, smörjning)',
+  'Uttippning botten (axlar, låsringar, smörjning)',
+  'Rengöring av maskinen',
+  'Komplettering av skruvar, lampor etc.'
+];
+
+let _balpLookupTimer = null;
+
+function openBalp() {
+  showPage('balp');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('balp-datum').value = today;
+  if (currentUser) document.getElementById('balp-tekniker').value = currentUser.name;
+  ['balp-maskin','balp-anlaggning','balp-maskinnr','balp-marke','balp-typ',
+   'balp-fraktion','balp-ggr','balp-faktura','balp-extra','balp-kommentar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('balp-machine-badge').className = 'machine-lookup-badge';
+  document.getElementById('balp-machine-info-card').classList.remove('visible');
+
+  document.getElementById('balp-checklist').innerHTML = BALP_ITEMS.map((label, i) => `
+    <div class="check-item" id="balp-row-${i}">
+      <div class="item-label">${label}</div>
+      <div class="item-controls">
+        <label class="status-btn ok-btn">
+          <input type="radio" name="balp-item-${i}" value="ok" onchange="balpRowChange(${i})"> OK
+        </label>
+        <label class="status-btn bevaka-btn">
+          <input type="radio" name="balp-item-${i}" value="bevaka" onchange="balpRowChange(${i})"> Bevaka
+        </label>
+        <label class="status-btn akut-btn">
+          <input type="radio" name="balp-item-${i}" value="akut" onchange="balpRowChange(${i})"> Akut
+        </label>
+      </div>
+      <input type="text" class="item-note" id="balp-note-${i}" placeholder="Anteckning…">
+    </div>`).join('');
+}
+
+function balpRowChange(i) {
+  const row = document.getElementById(`balp-row-${i}`);
+  const val = document.querySelector(`input[name="balp-item-${i}"]:checked`)?.value || '';
+  row.className = 'check-item' + (val ? ' status-' + val : '');
+}
+
+function onBalpMaskinInput(val) {
+  clearTimeout(_balpLookupTimer);
+  _balpLookupTimer = setTimeout(() => lookupBalpMachine(val), 500);
+}
+
+async function lookupBalpMachine(val) {
+  const badge    = document.getElementById('balp-machine-badge');
+  const infoCard = document.getElementById('balp-machine-info-card');
+  const infoGrid = document.getElementById('balp-machine-info-grid');
+  const key = val.trim();
+  if (!key) { badge.className = 'machine-lookup-badge'; infoCard.classList.remove('visible'); return; }
+  try {
+    const m = await apiFetch('/api/machines/' + encodeURIComponent(key));
+    if (!m) {
+      badge.textContent = 'Objektnummer ej hittat i register';
+      badge.className = 'machine-lookup-badge error visible';
+      infoCard.classList.remove('visible');
+      return;
+    }
+    document.getElementById('balp-anlaggning').value = m.anlaggning || m.kund || '';
+    document.getElementById('balp-marke').value = m.fabrikat || '';
+    document.getElementById('balp-typ').value   = m.modell || '';
+    badge.textContent = '✓ Maskin hittad';
+    badge.className = 'machine-lookup-badge ok visible';
+    const fields = [
+      { label:'Kund',        val: m.kund },
+      { label:'Märke / Typ', val: [m.fabrikat, m.modell].filter(Boolean).join(' ') },
+      { label:'Årsmodell',  val: m.arsmodell },
+      { label:'Tillv.nr',   val: m.tillvnr },
+    ].filter(f => f.val);
+    infoGrid.innerHTML = fields.map(f => `<div class="mi-field"><div class="mi-label">${f.label}</div><div class="mi-val">${f.val}</div></div>`).join('');
+    infoCard.classList.add('visible');
+  } catch {
+    badge.textContent = 'Fel vid uppslag';
+    badge.className = 'machine-lookup-badge error visible';
+  }
+}
+
+function getBalpData() {
+  return {
+    maskin_nr:   document.getElementById('balp-maskin').value,
+    anlaggning:  document.getElementById('balp-anlaggning').value,
+    maskinnr:    document.getElementById('balp-maskinnr').value,
+    marke:       document.getElementById('balp-marke').value,
+    typ:         document.getElementById('balp-typ').value,
+    fraktion:    document.getElementById('balp-fraktion').value,
+    ggr:         document.getElementById('balp-ggr').value,
+    datum:       document.getElementById('balp-datum').value,
+    tekniker:    document.getElementById('balp-tekniker').value,
+    faktura:     document.getElementById('balp-faktura').value,
+    extra:       document.getElementById('balp-extra').value,
+    kommentar:   document.getElementById('balp-kommentar').value,
+    items: BALP_ITEMS.map((label, i) => ({
+      label,
+      status: document.querySelector(`input[name="balp-item-${i}"]:checked`)?.value || '',
+      note:   document.getElementById(`balp-note-${i}`)?.value || ''
+    }))
+  };
+}
+
+async function saveBalp() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:12px;padding:32px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <div style="font-size:28px;margin-bottom:12px;">📋</div>
+      <h3 style="margin:0 0 8px;color:#1a3a5c;font-size:17px;">Är protokollet ifyllt korrekt?</h3>
+      <p style="color:#555;font-size:14px;margin:0 0 24px;">Kontrollera att alla uppgifter stämmer innan du sparar.</p>
+      <div style="display:flex;gap:12px;">
+        <button id="balp-confirm-no" style="flex:1;padding:12px;border:2px solid #ccc;background:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">Nej, gå tillbaka</button>
+        <button id="balp-confirm-yes" style="flex:1;padding:12px;border:none;background:#1a3a5c;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Ja, spara</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#balp-confirm-no').onclick = () => document.body.removeChild(overlay);
+  overlay.querySelector('#balp-confirm-yes').onclick = async () => {
+    document.body.removeChild(overlay);
+    const data = getBalpData();
+    try {
+      await apiFetch('/api/balp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      const tack = document.createElement('div');
+      tack.style.cssText = 'position:fixed;inset:0;background:#1a3a5c;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+      tack.innerHTML = `
+        <div style="text-align:center;color:#fff;padding:32px;">
+          <div style="font-size:56px;margin-bottom:16px;">✅</div>
+          <h2 style="font-size:24px;margin:0 0 8px;">Tack, bra jobbat!</h2>
+          <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet är sparat och skickat till kontoret.</p>
+        </div>`;
+      document.body.appendChild(tack);
+      setTimeout(() => { document.body.removeChild(tack); showPage('start'); loadRecentProtocols(); }, 2500);
+    } catch(e) {
+      const conf = document.getElementById('balp-save-confirm');
+      conf.textContent = 'Kunde inte spara: ' + e.message;
+      conf.style.color = '#c62828';
+    }
+  };
+}
+
+function sendBalpEmail() {
+  const d = getBalpData();
+  const nl = '%0D%0A';
+  const enc = t => encodeURIComponent(t || '');
+  let body = enc('SERVICEPROTOKOLL BALPRESSAR – LILJEGRENS I TYRESÖ AB') + nl + nl;
+  body += enc(`Objektnummer: ${d.maskin_nr}`) + nl;
+  body += enc(`Anläggning: ${d.anlaggning}`) + nl;
+  body += enc(`Maskinnummer: ${d.maskinnr}   Märke: ${d.marke}   Typ: ${d.typ}`) + nl;
+  body += enc(`Fraktion: ${d.fraktion}   ggr/år: ${d.ggr}`) + nl;
+  body += enc(`Datum: ${d.datum}   Montör: ${d.tekniker}   Faktura: ${d.faktura}`) + nl + nl;
+  body += enc('KONTROLLPUNKTER:') + nl;
+  d.items.forEach(it => {
+    const s = it.status ? `[${it.status.toUpperCase()}]` : '[ ]';
+    body += enc(`${s} ${it.label}${it.note ? ' – ' + it.note : ''}`) + nl;
+  });
+  if (d.extra) { body += nl + enc('Extra utfört arbete:') + nl + enc(d.extra) + nl; }
+  if (d.kommentar) { body += nl + enc('Kommentarer:') + nl + enc(d.kommentar) + nl; }
+  const subject = enc(`Serviceprotokoll Balpressar – ${d.maskin_nr} – ${d.datum}`);
+  window.location.href = `mailto:service@liljegrens.se?subject=${subject}&body=${body}`;
+}
+
+function openBalpModal(rec) {
+  const d = rec.data || rec;
+  const statusColor = { ok:'#2e7d32', bevaka:'#f57f17', akut:'#c62828', '':'' };
+  const statusLabel = { ok:'OK', bevaka:'Bevaka', akut:'Akut', '':'–' };
+  const rows = (d.items||[]).map(it => `
+    <tr>
+      <td style="padding:5px 8px;border:1px solid #e0e0e0;">${it.label}</td>
+      <td style="padding:5px 8px;border:1px solid #e0e0e0;text-align:center;font-weight:600;color:${statusColor[it.status]||'#888'};">${statusLabel[it.status]||'–'}</td>
+      <td style="padding:5px 8px;border:1px solid #e0e0e0;color:#555;">${it.note||''}</td>
+    </tr>`).join('');
+  document.getElementById('modal-title').textContent = `Balpressar – ${d.maskin_nr||''}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="font-size:13px;color:#555;margin-bottom:12px;">
+      ${d.datum||''} · ${d.tekniker||''} · ${d.anlaggning||''}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;">
+      <thead><tr style="background:#f5f7f9;">
+        <th style="padding:6px 8px;border:1px solid #e0e0e0;text-align:left;">Kontrollpunkt</th>
+        <th style="padding:6px 8px;border:1px solid #e0e0e0;text-align:center;">Status</th>
+        <th style="padding:6px 8px;border:1px solid #e0e0e0;text-align:left;">Anteckning</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${d.extra ? `<div style="margin-bottom:8px;"><b>Extra arbete:</b><br>${d.extra}</div>` : ''}
+    ${d.kommentar ? `<div style="margin-bottom:8px;"><b>Kommentarer:</b><br>${d.kommentar}</div>` : ''}
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <button onclick="printBalpFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})" style="padding:10px 18px;background:#1a3a5c;color:#fff;border:none;border-radius:7px;font-weight:600;cursor:pointer;">🖨 Skriv ut</button>
+      ${currentUser && currentUser.role==='admin' ? `<button onclick="confirmDeleteBalp(${rec.id})" style="padding:10px 18px;background:#c62828;color:#fff;border:none;border-radius:7px;font-weight:600;cursor:pointer;">🗑 Radera</button>` : ''}
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function confirmDeleteBalp(id) {
+  confirmDelete('Radera detta balpressprotokoll?', async () => {
+    await apiFetch('/api/balp/' + id, { method:'DELETE' });
+    document.getElementById('modal-overlay').classList.remove('visible');
+    loadRecentProtocols();
+    loadOverview();
+  });
+}
+
+function printBalpFromData(d) {
+  const statusLabel = { ok:'OK', bevaka:'Bevaka', akut:'Akut', '':'–' };
+  const rows = (d.items||[]).map(it => `
+    <tr><td>${it.label}</td><td style="text-align:center;font-weight:600;">${statusLabel[it.status]||'–'}</td><td>${it.note||''}</td></tr>`).join('');
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><title>Serviceprotokoll Balpressar</title>
+  <style>
+    @page{size:A4;margin:16mm;}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#000;}
+    h1{font-size:18px;margin:0 0 4px;}h2{font-size:12px;border-bottom:1px solid #000;padding-bottom:3px;margin:12px 0 6px;}
+    table{width:100%;border-collapse:collapse;}td,th{padding:5px 8px;border:1px solid #ccc;}th{background:#f0f0f0;text-align:left;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
+    .field{border:1px solid #ccc;padding:4px 8px;}
+  </style></head><body>
+  <h1>Serviceprotokoll Balpressar</h1>
+  <p style="margin:0 0 10px;font-size:11px;">Liljegrens i Tyresö AB · Objektnummer: <b>${d.maskin_nr}</b> · Datum: <b>${d.datum}</b></p>
+  <h2>Maskinuppgifter</h2>
+  <div class="grid">
+    <div class="field"><b>Anläggning:</b> ${d.anlaggning}</div>
+    <div class="field"><b>Maskinnummer:</b> ${d.maskinnr}</div>
+    <div class="field"><b>Märke:</b> ${d.marke}</div>
+    <div class="field"><b>Typ:</b> ${d.typ}</div>
+    <div class="field"><b>Fraktion:</b> ${d.fraktion}</div>
+    <div class="field"><b>ggr/år:</b> ${d.ggr}</div>
+    <div class="field"><b>Montör:</b> ${d.tekniker}</div>
+    <div class="field"><b>Faktura:</b> ${d.faktura}</div>
+  </div>
+  <h2>Kontroll av maskinens detaljer beträffande säkerhet och funktion</h2>
+  <table><thead><tr><th>Kontrollpunkt</th><th style="width:70px;text-align:center;">Status</th><th>Anteckning</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  ${d.extra ? `<h2>Extra utfört arbete</h2><div style="border:1px solid #ccc;min-height:30px;padding:5px;">${d.extra}</div>` : ''}
+  ${d.kommentar ? `<h2>Kommentarer</h2><div style="border:1px solid #ccc;min-height:30px;padding:5px;">${d.kommentar}</div>` : ''}
+  </body></html>`);
+  w.document.close();
+  w.print();
+}
+
+function printBalp() {
+  printBalpFromData(getBalpData());
 }
 </script>
 </body>
