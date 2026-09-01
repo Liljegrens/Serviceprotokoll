@@ -651,6 +651,11 @@
     </div>
   </div>
 
+  <!-- CRM Maskiner (admin) -->
+  <div class="recent-section admin-only" id="crm-section" style="display:none;">
+    <h3>Maskiner <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('maskiner')">Öppna maskinregister →</button></h3>
+  </div>
+
   <!-- Användarhantering (admin) -->
   <div class="recent-section admin-only" id="users-section" style="display:none;">
     <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
@@ -856,6 +861,54 @@
         <button class="email-btn" onclick="sendBalpEmail()">📧 Skicka via e-post</button>
       </div>
       <div id="balp-save-confirm" class="save-confirm"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ MASKINER PAGE (CRM) ═══════════ -->
+<div id="maskiner-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <h1>Maskinregister</h1>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <div class="header-card">
+      <input type="text" id="maskin-search" placeholder="Sök på objektnummer, kund eller anläggning…"
+        style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-family:Arial,sans-serif;"
+        oninput="filterMaskiner(this.value)">
+    </div>
+    <div id="maskin-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════ MASKINKORT PAGE (CRM) ═══════════ -->
+<div id="maskinkort-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('maskiner')">← Maskinregister</button>
+    <h1 id="maskinkort-title">Maskinkort</h1>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:16px;">
+
+    <!-- Maskininfo -->
+    <div class="header-card" id="maskinkort-info"></div>
+
+    <!-- Statistik -->
+    <div class="header-card" id="maskinkort-stats" style="display:flex;gap:16px;flex-wrap:wrap;"></div>
+
+    <!-- Historik -->
+    <div class="section-header" style="margin-top:20px;">Protokollhistorik</div>
+    <div class="checklist-card" id="maskinkort-historik" style="padding:8px 0;"></div>
+
+    <!-- Anteckningar -->
+    <div class="section-header" style="margin-top:20px;">Anteckningar</div>
+    <div class="checklist-card" style="padding:16px;">
+      <div id="maskinkort-notes" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;">
+        <textarea id="maskinkort-note-input" rows="2" placeholder="Skriv en anteckning…"
+          style="flex:1;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;"></textarea>
+        <button onclick="saveNote()" style="padding:10px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;align-self:flex-end;">Spara</button>
+      </div>
     </div>
 
   </div>
@@ -1093,6 +1146,7 @@ async function initAuth() {
 function applyRoleUI() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   document.getElementById('users-section').style.display  = isAdmin ? '' : 'none';
+  document.getElementById('crm-section').style.display    = isAdmin ? '' : 'none';
   document.getElementById('reg-upload-btn').style.display = isAdmin ? '' : 'none';
   if (isAdmin) loadUsersAdmin();
 }
@@ -1589,8 +1643,11 @@ function showPage(page) {
   document.getElementById('start-page').style.display    = page === 'start'    ? 'flex'  : 'none';
   document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
   document.getElementById('overview-page').style.display = page === 'overview' ? 'block' : 'none';
-  document.getElementById('leverans-page').style.display = page === 'leverans' ? 'block' : 'none';
-  document.getElementById('balp-page').style.display     = page === 'balp'     ? 'block' : 'none';
+  document.getElementById('leverans-page').style.display   = page === 'leverans'   ? 'block' : 'none';
+  document.getElementById('balp-page').style.display       = page === 'balp'       ? 'block' : 'none';
+  document.getElementById('maskiner-page').style.display   = page === 'maskiner'   ? 'block' : 'none';
+  document.getElementById('maskinkort-page').style.display = page === 'maskinkort' ? 'block' : 'none';
+  if (page === 'maskiner') loadMaskiner();
 }
 
 function updateUserGreeting() {
@@ -3205,6 +3262,162 @@ function printBalpFromData(d) {
 }
 
 function printBalp() { printBalpFromData(getBalpData()); }
+
+// ═══════════════════════════════════════════════════
+// CRM — MASKINREGISTER
+// ═══════════════════════════════════════════════════
+let _allMaskiner = [];
+let _currentMaskinNr = null;
+
+async function loadMaskiner() {
+  const list = document.getElementById('maskin-list');
+  list.innerHTML = '<div class="recent-empty" style="color:#888;padding:24px;text-align:center;">Laddar...</div>';
+  try {
+    _allMaskiner = await apiFetch('/api/machines');
+    renderMaskiner(_allMaskiner);
+  } catch {
+    list.innerHTML = '<div class="recent-empty" style="color:#c62828;padding:24px;text-align:center;">Kunde inte ladda maskinregister.</div>';
+  }
+}
+
+function filterMaskiner(q) {
+  const lower = q.toLowerCase();
+  const filtered = _allMaskiner.filter(m =>
+    (m.nr||'').toLowerCase().includes(lower) ||
+    (m.kund||'').toLowerCase().includes(lower) ||
+    (m.anlaggning||'').toLowerCase().includes(lower) ||
+    (m.fabrikat||'').toLowerCase().includes(lower)
+  );
+  renderMaskiner(filtered);
+}
+
+function renderMaskiner(maskiner) {
+  const list = document.getElementById('maskin-list');
+  if (!maskiner.length) {
+    list.innerHTML = '<div class="recent-empty" style="color:#888;padding:24px;text-align:center;">Inga maskiner matchar sökningen.</div>';
+    return;
+  }
+  list.innerHTML = maskiner.map(m => `
+    <div class="ov-row" onclick="openMaskinkort('${m.nr}')">
+      <div class="ov-row-info">
+        <div class="ov-row-title">${m.nr} — ${m.kund || m.anlaggning || '–'}</div>
+        <div class="ov-row-sub">${[m.fabrikat, m.modell].filter(Boolean).join(' ')}${m.anlaggning ? ' · ' + m.anlaggning : ''}${m.stad ? ' · ' + m.stad : ''}</div>
+      </div>
+      <div class="ov-row-badges">
+        <span style="font-size:13px;color:var(--gray);">→</span>
+      </div>
+    </div>`).join('');
+}
+
+async function openMaskinkort(nr) {
+  _currentMaskinNr = nr;
+  showPage('maskinkort');
+  document.getElementById('maskinkort-title').textContent = 'Maskinkort – ' + nr;
+  document.getElementById('maskinkort-info').innerHTML = '<div style="color:#888;font-size:13px;">Laddar…</div>';
+  document.getElementById('maskinkort-historik').innerHTML = '<div style="color:#888;font-size:13px;padding:16px;">Laddar historik…</div>';
+  document.getElementById('maskinkort-notes').innerHTML = '';
+  document.getElementById('maskinkort-note-input').value = '';
+
+  try {
+    const [machine, history, notes] = await Promise.all([
+      apiFetch('/api/machines/' + encodeURIComponent(nr)),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/history'),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes')
+    ]);
+    renderMaskinkortInfo(machine);
+    renderMaskinkortStats(history);
+    renderMaskinkortHistorik(history);
+    renderMaskinkortNotes(notes);
+  } catch(e) {
+    document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
+  }
+}
+
+function renderMaskinkortInfo(m) {
+  if (!m) { document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Maskin ej hittad i register.</div>'; return; }
+  const fields = [
+    ['Objektnummer', m.nr], ['Kund', m.kund], ['Anläggning', m.anlaggning],
+    ['Adress', [m.adress, m.stad].filter(Boolean).join(', ')],
+    ['Märke', m.fabrikat], ['Modell', m.modell], ['Årsmodell', m.arsmodell],
+    ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
+    ['Beskrivning', m.beskrivning], ['Notering', m.notering]
+  ].filter(([,v]) => v);
+  document.getElementById('maskinkort-info').innerHTML = `
+    <h2>Maskinuppgifter</h2>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+      ${fields.map(([l,v]) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`).join('')}
+    </div>`;
+}
+
+function renderMaskinkortStats(history) {
+  const total   = history.length;
+  const service = history.filter(h => h._type === 'service').length;
+  const leverans= history.filter(h => h._type === 'leverans').length;
+  const balp    = history.filter(h => h._type === 'balp').length;
+  const senaste = history[0]?.datum || history[0]?.saved_at?.slice(0,10) || '–';
+  document.getElementById('maskinkort-stats').innerHTML = `
+    <div class="stat-box ok" style="flex:1 1 120px;"><div class="num">${total}</div><div class="lbl">Totalt</div></div>
+    <div class="stat-box ok" style="flex:1 1 120px;background:#e8eef3;color:var(--brand);"><div class="num">${service}</div><div class="lbl">Service</div></div>
+    <div class="stat-box ok" style="flex:1 1 120px;background:#e3f2fd;color:#1565c0;"><div class="num">${leverans}</div><div class="lbl">Leverans</div></div>
+    <div class="stat-box ok" style="flex:1 1 120px;background:#f3e5f5;color:#6a1b9a;"><div class="num">${balp}</div><div class="lbl">Balpressar</div></div>
+    <div style="flex:1 1 160px;background:var(--card);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--gray);font-weight:600;">SENASTE SERVICE</div>
+      <div style="font-size:16px;font-weight:700;color:var(--brand);margin-top:4px;">${senaste}</div>
+    </div>`;
+}
+
+function renderMaskinkortHistorik(history) {
+  const el = document.getElementById('maskinkort-historik');
+  if (!history.length) {
+    el.innerHTML = '<div style="padding:16px;color:#888;font-size:13px;">Inga protokoll sparade för denna maskin.</div>';
+    return;
+  }
+  const typeIcon  = { service:'🔧', leverans:'📦', balp:'🗜️' };
+  const typeLabel = { service:'Service', leverans:'Leverans', balp:'Balpressar' };
+  const typeBadge = { service:'background:#e8eef3;color:var(--brand)', leverans:'background:#e3f2fd;color:#1565c0', balp:'background:#f3e5f5;color:#6a1b9a' };
+  el.innerHTML = history.map(h => {
+    const datum = h.datum || h.saved_at?.slice(0,10) || '–';
+    const tek   = h.tekniker || '–';
+    const label = h.type === 'flygande' ? 'Flygande service' : typeLabel[h._type] || h._type;
+    const icon  = typeIcon[h._type] || '📄';
+    return `<div class="check-item" style="cursor:pointer;" onclick="openHistorikPost(${JSON.stringify(h).replace(/"/g,'&quot;')})">
+      <div class="item-top">
+        <span style="font-size:20px;flex-shrink:0;">${icon}</span>
+        <span class="item-label">${datum} · ${tek}</span>
+        <span class="badge" style="${typeBadge[h._type]||''};padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;">${label}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openHistorikPost(h) {
+  if (h._type === 'leverans') openLeveransModal(h);
+  else if (h._type === 'balp') openBalpModal(h);
+  else openHistoryModal(h);
+}
+
+function renderMaskinkortNotes(notes) {
+  const el = document.getElementById('maskinkort-notes');
+  if (!notes.length) { el.innerHTML = '<div style="color:#888;font-size:13px;margin-bottom:8px;">Inga anteckningar än.</div>'; return; }
+  el.innerHTML = notes.map(n => `
+    <div style="border-left:3px solid var(--brand);padding:8px 12px;margin-bottom:8px;background:#f5f7f9;border-radius:0 6px 6px 0;">
+      <div style="font-size:11px;color:var(--gray);margin-bottom:3px;">${n.saved_at?.slice(0,16).replace('T',' ')} · ${n.author}</div>
+      <div style="font-size:14px;color:#212121;">${n.note}</div>
+    </div>`).join('');
+}
+
+async function saveNote() {
+  const input = document.getElementById('maskinkort-note-input');
+  const note = input.value.trim();
+  if (!note || !_currentMaskinNr) return;
+  await apiFetch('/api/machines/' + encodeURIComponent(_currentMaskinNr) + '/notes', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ note, author: currentUser?.name || '' })
+  });
+  input.value = '';
+  const notes = await apiFetch('/api/machines/' + encodeURIComponent(_currentMaskinNr) + '/notes');
+  renderMaskinkortNotes(notes);
+}
 </script>
 </body>
 </html>
