@@ -861,8 +861,29 @@
     </div>
 
     <div class="recent-section" style="margin-top:20px;">
-      <h3>Protokollöversikt <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('overview')">Öppna →</button></h3>
+      <h3>Protokollöversikt (komprimatorer) <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('overview')">Öppna →</button></h3>
     </div>
+
+    <div class="recent-section" style="margin-top:20px;">
+      <h3>Fordonskontroller <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('fk-overview')">Öppna →</button></h3>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ FK OVERVIEW PAGE ═══════════ -->
+<div id="fk-overview-page" style="display:none;" class="section-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('admin')">← Admin</button>
+    <h1>Fordonskontroller</h1>
+    <span></span>
+  </div>
+  <div style="padding:16px;max-width:900px;margin:0 auto;">
+    <div class="header-card" style="margin-bottom:16px;">
+      <input type="text" id="fk-ov-search" placeholder="Sök på regnr eller förare…"
+        style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;"
+        oninput="filterFkOverview(this.value)">
+    </div>
+    <div id="fk-ov-list"><div class="recent-empty" style="padding:24px;text-align:center;color:#888;">Laddar...</div></div>
   </div>
 </div>
 
@@ -1381,6 +1402,130 @@ async function uploadFordonRegister(event) {
   }
 }
 
+// ── FK Overview ─────────────────────────────────────────────────────────────
+let fkAllRecords = [];
+
+async function loadFkOverview() {
+  const list = document.getElementById('fk-ov-list');
+  list.innerHTML = '<p style="color:var(--gray);padding:16px;">Laddar...</p>';
+  try {
+    fkAllRecords = await apiFetch('/api/fordonskontroll');
+    renderFkOverview(fkAllRecords);
+  } catch {
+    list.innerHTML = '<p style="color:var(--akut);padding:16px;">Kunde inte ladda protokoll.</p>';
+  }
+}
+
+function renderFkOverview(records) {
+  const list = document.getElementById('fk-ov-list');
+  if (!records.length) {
+    list.innerHTML = '<p style="color:var(--gray);padding:16px;">Inga sparade kontroller.</p>';
+    return;
+  }
+  list.innerHTML = records.map(r => {
+    const d = r.data || {};
+    const datum = d.datum || r.datum || '';
+    const datumD = new Date(datum);
+    const datumStr = isNaN(datumD) ? datum : datumD.toLocaleDateString('sv-SE');
+    const items = d.items || [];
+    const akutCount = items.filter(i => i.value === '3').length;
+    const bevCount = items.filter(i => i.value === '2').length;
+    const regnr = d.regnr || r.regnr || '—';
+    const tekniker = d.tekniker || r.tekniker || '';
+    const typ = d.typ || '';
+    return `
+      <div class="checklist-card" style="margin-bottom:10px;cursor:pointer;" onclick="showFkDetail(${r.id})">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:22px;">${getVehicleIcon(typ)}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:#212121;font-size:15px;">${regnr}</div>
+            <div style="color:var(--gray);font-size:12px;">${datumStr} · ${tekniker}</div>
+          </div>
+          ${akutCount ? `<span style="background:var(--akut);color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;">${akutCount} Akut</span>` : ''}
+          ${bevCount ? `<span style="background:var(--warning,#f59e0b);color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;">${bevCount} Bev.</span>` : ''}
+          <button class="load-btn" style="font-size:11px;padding:4px 10px;background:var(--akut);" onclick="event.stopPropagation();deleteFkRecord(${r.id})">Ta bort</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function getVehicleIcon(typ) {
+  if (!typ) return '🚗';
+  const t = typ.toLowerCase();
+  if (t === 'truck') return '🏗️';
+  if (t === 'maskin') return '⚙️';
+  return '🚛';
+}
+
+function filterFkOverview(query) {
+  const q = query.toLowerCase();
+  const filtered = q ? fkAllRecords.filter(r => {
+    const d = r.data || {};
+    return (d.regnr || r.regnr || '').toLowerCase().includes(q) ||
+           (d.tekniker || r.tekniker || '').toLowerCase().includes(q);
+  }) : fkAllRecords;
+  renderFkOverview(filtered);
+}
+
+async function showFkDetail(id) {
+  const r = fkAllRecords.find(x => x.id === id);
+  if (!r) return;
+  const d = r.data || {};
+  const regnr = d.regnr || r.regnr || '—';
+  const tekniker = d.tekniker || r.tekniker || '—';
+  const datum = d.datum || r.datum || '';
+  const datumD = new Date(datum);
+  const datumStr = isNaN(datumD) ? datum : datumD.toLocaleDateString('sv-SE');
+  const typ = d.typ || '';
+  const items = d.items || [];
+  const rows = items.map(i => {
+    const valLabel = i.value === '1' ? '<span style="color:var(--ok)">OK</span>' :
+                     i.value === '2' ? '<span style="color:var(--warning,#f59e0b)">Bevaka</span>' :
+                     i.value === '3' ? '<span style="color:var(--akut)">Akut</span>' : '—';
+    return `<tr>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--gray);font-size:12px;">${i.nr}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;">${i.label}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600;">${valLabel}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--gray);font-size:12px;">${i.comment || ''}</td>
+    </tr>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:var(--card);border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span style="font-size:28px;">${getVehicleIcon(typ)}</span>
+        <div>
+          <h2 style="margin:0;color:#212121;font-size:18px;">${regnr}</h2>
+          <p style="margin:0;color:var(--gray);font-size:13px;">${datumStr} · Förare: ${tekniker}${d.km ? ' · ' + d.km + ' km' : ''}</p>
+        </div>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="margin-left:auto;background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);">✕</button>
+      </div>
+      ${d.summary_notes ? `<div style="background:var(--bg);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#212121;"><b>Övrig anmärkning:</b> ${d.summary_notes}</div>` : ''}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="padding:6px 8px;text-align:left;font-size:12px;color:var(--gray);border-bottom:2px solid var(--border);">Nr</th>
+          <th style="padding:6px 8px;text-align:left;font-size:12px;color:var(--gray);border-bottom:2px solid var(--border);">Kontrollpunkt</th>
+          <th style="padding:6px 8px;text-align:left;font-size:12px;color:var(--gray);border-bottom:2px solid var(--border);">Status</th>
+          <th style="padding:6px 8px;text-align:left;font-size:12px;color:var(--gray);border-bottom:2px solid var(--border);">Anmärkning</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+async function deleteFkRecord(id) {
+  if (!confirm('Ta bort denna fordonskontroll?')) return;
+  try {
+    await fetch(API + '/api/fordonskontroll/' + id, { method: 'DELETE' });
+    await loadFkOverview();
+  } catch { alert('Kunde inte ta bort.'); }
+}
+// ── /FK Overview ─────────────────────────────────────────────────────────────
+
 async function loadUsersAdmin() {
   const list = document.getElementById('users-list');
   try {
@@ -1884,6 +2029,7 @@ function showPage(page) {
     'maskinkort':         ['maskinkort-page',          'block'],
     'fordonskontroll':    ['fordonskontroll-page',     'block'],
     'materialkontroll':   ['materialkontroll-page',    'block'],
+    'fk-overview':        ['fk-overview-page',         'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -1891,6 +2037,7 @@ function showPage(page) {
   });
   if (page === 'maskiner') loadMaskiner();
   if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); }
+  if (page === 'fk-overview') loadFkOverview();
   if (page === 'fordonskontroll') openFordonskontroll();
 }
 
