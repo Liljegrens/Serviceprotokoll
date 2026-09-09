@@ -1341,9 +1341,9 @@ function applyRoleUI() {
   const adminTile = document.getElementById('home-admin-tile');
   if (adminTile) adminTile.style.display = isAdmin ? 'flex' : 'none';
   const regBtn = document.getElementById('reg-upload-btn');
-  if (regBtn) regBtn.style.display = isAdmin ? '' : 'none';
+  if (regBtn) regBtn.style.display = isAdmin ? 'inline-block' : 'none';
   const fordonBtn = document.getElementById('fordon-upload-btn');
-  if (fordonBtn) fordonBtn.style.display = isAdmin ? '' : 'none';
+  if (fordonBtn) fordonBtn.style.display = isAdmin ? 'inline-block' : 'none';
 }
 
 function loadUsers() {
@@ -1386,10 +1386,10 @@ async function loadUsersAdmin() {
   try {
     const users = await apiFetch('/api/users');
     list.innerHTML = users.map(u => `
-      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-        <span style="flex:1;color:#fff;">${u.name}</span>
-        <span style="color:rgba(255,255,255,0.5);font-size:12px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</span>
-        ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:rgba(255,80,80,0.3);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : ''}
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="flex:1;color:#212121;font-weight:600;">${u.name}</span>
+        <span style="color:var(--gray);font-size:12px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</span>
+        ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:var(--akut);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : ''}
       </div>`).join('');
   } catch { list.textContent = 'Kunde inte ladda användare.'; }
 }
