@@ -3709,14 +3709,17 @@ async function openFordonskontroll() {
       list.innerHTML = '<div style="color:#c62828;font-size:14px;">Inget fordonsregister laddat. Admin laddar upp från Excelfilen under Admin.</div>';
       return;
     }
-    list.innerHTML = _fkFordon.map(f => `
-      <div class="check-item" style="cursor:pointer;" onclick="selectFordon('${f.regnr}')">
+    list.innerHTML = _fkFordon.map(f => {
+      const isFordon = ['lastbil','skåpbil','bil','pickup','traktor','truck'].some(t => (f.typ||'').toLowerCase().includes(t));
+      const icon = isFordon ? '🚛' : '⚙️';
+      return `<div class="check-item" style="cursor:pointer;" onclick="selectFordon('${f.regnr}')">
         <div class="item-top">
-          <span style="font-size:22px;">🚛</span>
+          <span style="font-size:22px;">${icon}</span>
           <span class="item-label">${f.regnr} — ${f.marke || ''} ${f.modell || ''}</span>
-          <span style="font-size:12px;color:var(--gray);">${f.forare || ''}</span>
+          <span style="font-size:12px;color:var(--gray);">${[f.typ, f.forare].filter(Boolean).join(' · ')}</span>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch {
     document.getElementById('fk-fordon-list').innerHTML = '<div style="color:#c62828;">Kunde inte ladda fordon.</div>';
   }

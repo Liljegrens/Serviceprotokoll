@@ -452,19 +452,25 @@ def upload_fordon():
     imported = 0
     with get_fordon_db() as db:
         db.execute('DELETE FROM fordon')
+        # Flik 1: Fordon — kolumner: Regnr, Typ, Märke, Modell, Årsmodell, Besiktning, Förare, Avdelning, Notering
         if 'Fordon' in wb.sheetnames:
-            ws = wb['Fordon']
-            for row in ws.iter_rows(min_row=3, values_only=True):
+            for row in wb['Fordon'].iter_rows(min_row=3, values_only=True):
                 regnr = str(row[0]).strip() if row[0] else None
-                if not regnr or regnr.lower().startswith('fyll'):
-                    continue
-                db.execute('''INSERT OR REPLACE INTO fordon
-                    (regnr, typ, marke, modell, arsmodell, besiktning, forare, avdelning, notering)
-                    VALUES (?,?,?,?,?,?,?,?,?)''',
-                    (regnr,
-                     str(row[1] or ''), str(row[2] or ''), str(row[3] or ''),
+                if not regnr or regnr.lower().startswith('fyll'): continue
+                db.execute('INSERT OR REPLACE INTO fordon (regnr,typ,marke,modell,arsmodell,besiktning,forare,avdelning,notering) VALUES (?,?,?,?,?,?,?,?,?)',
+                    (regnr, str(row[1] or ''), str(row[2] or ''), str(row[3] or ''),
                      str(row[4] or ''), str(row[5] or ''), str(row[6] or ''),
                      str(row[7] or ''), str(row[8] or '')))
+                imported += 1
+        # Flik 2: Maskiner — kolumner: Maskin-ID, Typ, Märke, Modell, Årsmodell, Serienr, Placering, Ansvarig, Senast service, Notering
+        if 'Maskiner' in wb.sheetnames:
+            for row in wb['Maskiner'].iter_rows(min_row=3, values_only=True):
+                regnr = str(row[0]).strip() if row[0] else None
+                if not regnr or regnr.lower().startswith('fyll'): continue
+                db.execute('INSERT OR REPLACE INTO fordon (regnr,typ,marke,modell,arsmodell,besiktning,forare,avdelning,notering) VALUES (?,?,?,?,?,?,?,?,?)',
+                    (regnr, str(row[1] or ''), str(row[2] or ''), str(row[3] or ''),
+                     str(row[4] or ''), str(row[5] or ''), str(row[7] or ''),
+                     str(row[6] or ''), str(row[9] or '')))
                 imported += 1
     return jsonify({'imported': imported})
 
