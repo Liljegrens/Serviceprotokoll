@@ -1328,7 +1328,7 @@ async function initAuth() {
 function applyRoleUI() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   const adminTile = document.getElementById('home-admin-tile');
-  if (adminTile) adminTile.style.display = isAdmin ? '' : 'none';
+  if (adminTile) adminTile.style.display = isAdmin ? 'flex' : 'none';
   const regBtn = document.getElementById('reg-upload-btn');
   if (regBtn) regBtn.style.display = isAdmin ? '' : 'none';
   const fordonBtn = document.getElementById('fordon-upload-btn');
