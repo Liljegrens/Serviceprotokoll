@@ -79,9 +79,10 @@
     width: 100%; max-width: 640px; margin-top: 28px;
   }
   .recent-section h3 {
-    color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 700;
+    color: var(--brand); font-size: 12px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
   }
+  #home-page .recent-section h3 { color: rgba(255,255,255,0.7); }
   .recent-list { display: flex; flex-direction: column; gap: 8px; }
   .recent-item {
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
@@ -184,11 +185,15 @@
   .reg-status.loaded { color: var(--ok); font-weight: 600; }
   .reg-status.error { color: var(--akut); }
   .load-btn {
-    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    background: var(--brand); border: 1px solid var(--brand);
     color: #fff; padding: 8px 16px; border-radius: 7px; cursor: pointer;
     font-size: 13px; white-space: nowrap; transition: background 0.15s;
   }
-  .load-btn:hover { background: rgba(255,255,255,0.3); }
+  .load-btn:hover { background: var(--brand-light); }
+  #home-page .load-btn {
+    background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4);
+  }
+  #home-page .load-btn:hover { background: rgba(255,255,255,0.3); }
   #reg-file-input { display: none; }
 
   /* ─── HOME PAGE ─── */
