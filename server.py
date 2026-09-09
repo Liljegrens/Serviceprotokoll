@@ -94,6 +94,16 @@ def seed_users():
 
 seed_users()
 
+def ensure_admin():
+    with get_db() as db:
+        exists = db.execute("SELECT id FROM users WHERE name='Felix Liljegren'").fetchone()
+        if exists:
+            db.execute("UPDATE users SET role='admin' WHERE name='Felix Liljegren'")
+        else:
+            db.execute("INSERT OR IGNORE INTO users (name, pin, role) VALUES ('Felix Liljegren','1234','admin')")
+
+ensure_admin()
+
 # ── Serve frontend ───────────────────────────────────────────
 
 @app.route('/')
