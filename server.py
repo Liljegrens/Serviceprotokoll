@@ -396,6 +396,95 @@ def delete_balp(balp_id):
         db.execute('DELETE FROM balp WHERE id=?', (balp_id,))
     return jsonify({'ok': True})
 
+# ── Fordonsregister & Fordonskontroll ───────────────────────────────────────
+
+FORDON_DB = os.path.join(BASE, 'fordon-register.db')
+
+def get_fordon_db():
+    conn = sqlite3.connect(FORDON_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_fordon_db():
+    with get_fordon_db() as db:
+        db.executescript("""
+        CREATE TABLE IF NOT EXISTS fordon (
+            regnr      TEXT PRIMARY KEY,
+            typ        TEXT DEFAULT '',
+            marke      TEXT DEFAULT '',
+            modell     TEXT DEFAULT '',
+            arsmodell  TEXT DEFAULT '',
+            besiktning TEXT DEFAULT '',
+            forare     TEXT DEFAULT '',
+            avdelning  TEXT DEFAULT '',
+            notering   TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS fordonskontroll (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            regnr     TEXT NOT NULL,
+            datum     TEXT,
+            tekniker  TEXT,
+            saved_at  TEXT,
+            data_json TEXT
+        );
+        """)
+
+init_fordon_db()
+
+@app.route('/api/fordon/upload', methods=['POST'])
+def upload_fordon():
+    f = request.files.get('file')
+    if not f:
+        return jsonify({'error': 'Ingen fil'}), 400
+    path = os.path.join(UPLOADS, 'fordon-register.xlsx')
+    f.save(path)
+    wb = openpyxl.load_workbook(path, data_only=True)
+    imported = 0
+    with get_fordon_db() as db:
+        db.execute('DELETE FROM fordon')
+        if 'Fordon' in wb.sheetnames:
+            ws = wb['Fordon']
+            for row in ws.iter_rows(min_row=3, values_only=True):
+                regnr = str(row[0]).strip() if row[0] else None
+                if not regnr or regnr.lower().startswith('fyll'):
+                    continue
+                db.execute('''INSERT OR REPLACE INTO fordon
+                    (regnr, typ, marke, modell, arsmodell, besiktning, forare, avdelning, notering)
+                    VALUES (?,?,?,?,?,?,?,?,?)''',
+                    (regnr,
+                     str(row[1] or ''), str(row[2] or ''), str(row[3] or ''),
+                     str(row[4] or ''), str(row[5] or ''), str(row[6] or ''),
+                     str(row[7] or ''), str(row[8] or '')))
+                imported += 1
+    return jsonify({'imported': imported})
+
+@app.route('/api/fordon', methods=['GET'])
+def list_fordon():
+    with get_fordon_db() as db:
+        rows = db.execute('SELECT * FROM fordon ORDER BY regnr').fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/fordonskontroll', methods=['POST'])
+def save_fordonskontroll():
+    data = request.get_json()
+    with get_fordon_db() as db:
+        db.execute('INSERT INTO fordonskontroll (regnr, datum, tekniker, saved_at, data_json) VALUES (?,?,?,?,?)',
+                   (data.get('regnr',''), data.get('datum',''), data.get('tekniker',''),
+                    datetime.now().isoformat(), json.dumps(data, ensure_ascii=False)))
+    return jsonify({'ok': True})
+
+@app.route('/api/fordonskontroll', methods=['GET'])
+def list_fordonskontroll():
+    with get_fordon_db() as db:
+        rows = db.execute('SELECT id, saved_at, regnr, tekniker, datum, data_json FROM fordonskontroll ORDER BY saved_at DESC').fetchall()
+    return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
+
+@app.route('/api/fordonskontroll/<int:fk_id>', methods=['DELETE'])
+def delete_fordonskontroll(fk_id):
+    with get_fordon_db() as db:
+        db.execute('DELETE FROM fordonskontroll WHERE id=?', (fk_id,))
+    return jsonify({'ok': True})
+
 @app.route('/api/leverans', methods=['POST'])
 def save_leverans():
     data = request.get_json()

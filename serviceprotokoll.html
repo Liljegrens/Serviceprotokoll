@@ -744,6 +744,67 @@
   </div>
 </div>
 
+<!-- ═══════════ FORDONSKONTROLL PAGE ═══════════ -->
+<div id="fordonskontroll-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('egenkontroller')">← Tillbaka</button>
+    <h1 id="fk-title">Fordonskontroll</h1>
+    <button class="top-btn" onclick="printFordonskontroll()">🖨 Skriv ut</button>
+  </div>
+  <div class="protocol-body">
+
+    <!-- Välj fordon -->
+    <div class="header-card" id="fk-picker-card">
+      <h2>Välj fordon</h2>
+      <div id="fk-fordon-list" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+        <div style="color:#888;font-size:14px;">Laddar fordon...</div>
+      </div>
+    </div>
+
+    <!-- Formulär (dolt tills fordon valts) -->
+    <div id="fk-form" style="display:none;">
+      <div class="header-card">
+        <h2>Kontrollinformation</h2>
+        <div class="field-grid">
+          <div class="field-group">
+            <label>Fordon</label>
+            <input type="text" id="fk-regnr" readonly style="background:#f5f7f9;color:#546e7a;font-weight:700;">
+          </div>
+          <div class="field-group">
+            <label>Datum</label>
+            <input type="date" id="fk-datum">
+          </div>
+          <div class="field-group">
+            <label>Förare / Tekniker</label>
+            <input type="text" id="fk-tekniker" placeholder="Namn">
+          </div>
+          <div class="field-group">
+            <label>Mätarställning (km)</label>
+            <input type="number" id="fk-km" placeholder="t.ex. 125400">
+          </div>
+        </div>
+      </div>
+
+      <div id="fk-checklist-container"></div>
+
+      <div class="summary-card" id="fk-summary" style="display:none;">
+        <div class="overall-status" id="fk-overall-status">OK</div>
+        <div class="summary-stats">
+          <div class="stat-box ok"><div class="num" id="fk-ok-count">0</div><div class="lbl">OK</div></div>
+          <div class="stat-box bevaka"><div class="num" id="fk-bevaka-count">0</div><div class="lbl">Bevaka</div></div>
+          <div class="stat-box akut"><div class="num" id="fk-akut-count">0</div><div class="lbl">Akut</div></div>
+        </div>
+        <textarea id="fk-summary-notes" class="comment-box" style="display:block;margin-top:12px;" rows="3" placeholder="Övriga noteringar..."></textarea>
+      </div>
+
+      <div class="action-btns">
+        <button class="save-btn" onclick="saveFordonskontroll()">💾 Spara protokoll</button>
+        <button class="email-btn" onclick="sendFkEmail()">📧 Skicka e-post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ DOKUMENT PAGE ═══════════ -->
 <div id="dokument-page" style="display:none;" class="section-page">
   <div class="top-bar">
@@ -766,11 +827,17 @@
     <span></span>
   </div>
   <div class="section-body">
-    <div class="register-bar" style="margin-bottom:20px;border-radius:10px;">
-      <span>📋 Maskinregister</span>
+    <div class="register-bar" style="margin-bottom:12px;border-radius:10px;">
+      <span>📋 Maskinregister (kunder)</span>
       <span class="reg-status" id="reg-status">Kontrollerar...</span>
       <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
       <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
+    </div>
+    <div class="register-bar" style="margin-bottom:20px;border-radius:10px;">
+      <span>🚛 Fordonsregister (egna)</span>
+      <span class="reg-status" id="fordon-reg-status">Kontrollerar...</span>
+      <button class="load-btn" id="fordon-upload-btn" style="display:none;" onclick="document.getElementById('fordon-file-input').click()">Uppdatera från Excel</button>
+      <input type="file" id="fordon-file-input" accept=".xlsx,.xls" onchange="uploadFordonRegister(event)">
     </div>
 
     <div class="recent-section" style="margin-top:0;">
@@ -1264,11 +1331,43 @@ function applyRoleUI() {
   if (adminTile) adminTile.style.display = isAdmin ? '' : 'none';
   const regBtn = document.getElementById('reg-upload-btn');
   if (regBtn) regBtn.style.display = isAdmin ? '' : 'none';
+  const fordonBtn = document.getElementById('fordon-upload-btn');
+  if (fordonBtn) fordonBtn.style.display = isAdmin ? '' : 'none';
 }
 
 function loadUsers() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   if (isAdmin) loadUsersAdmin();
+}
+
+async function checkFordonRegisterStatus() {
+  try {
+    const fordon = await apiFetch('/api/fordon');
+    const st = document.getElementById('fordon-reg-status');
+    if (st) st.textContent = fordon.length > 0 ? `${fordon.length} fordon inladdade` : 'Registret är tomt';
+    if (st) st.className = 'reg-status' + (fordon.length > 0 ? ' loaded' : '');
+  } catch {
+    const st = document.getElementById('fordon-reg-status');
+    if (st) { st.textContent = 'Ingen serveranslutning'; st.className = 'reg-status error'; }
+  }
+}
+
+async function uploadFordonRegister(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const st = document.getElementById('fordon-reg-status');
+  st.textContent = 'Laddar upp...'; st.className = 'reg-status';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch(API + '/api/fordon/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Fel');
+    st.textContent = `${data.imported} fordon inladdade`;
+    st.className = 'reg-status loaded';
+  } catch(e) {
+    st.textContent = 'Fel: ' + e.message; st.className = 'reg-status error';
+  }
 }
 
 async function loadUsersAdmin() {
@@ -1772,13 +1871,16 @@ function showPage(page) {
     'balp':               ['balp-page',                'block'],
     'maskiner':           ['maskiner-page',            'block'],
     'maskinkort':         ['maskinkort-page',          'block'],
+    'fordonskontroll':    ['fordonskontroll-page',     'block'],
+    'materialkontroll':   ['materialkontroll-page',    'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
     if (el) el.style.display = (page === key) ? flex : 'none';
   });
   if (page === 'maskiner') loadMaskiner();
-  if (page === 'admin') { checkRegisterStatus(); loadUsers(); }
+  if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); }
+  if (page === 'fordonskontroll') openFordonskontroll();
 }
 
 function updateUserGreeting() {
@@ -3548,6 +3650,204 @@ async function saveNote() {
   input.value = '';
   const notes = await apiFetch('/api/machines/' + encodeURIComponent(_currentMaskinNr) + '/notes');
   renderMaskinkortNotes(notes);
+}
+
+// ═══════════════════════════════════════════════════
+// FORDONSKONTROLL
+// ═══════════════════════════════════════════════════
+
+const FK_ITEMS = [
+  { section: 'Bromsar & styrning' },
+  { nr: 1,  label: 'Bromsar fungerar normalt' },
+  { nr: 2,  label: 'Handbromsen håller' },
+  { nr: 3,  label: 'Styrning utan onormalt spel' },
+  { section: 'Däck & hjul' },
+  { nr: 4,  label: 'Däckens skick och lufttryck OK' },
+  { nr: 5,  label: 'Inga synliga skador på fälgar' },
+  { section: 'Belysning' },
+  { nr: 6,  label: 'Strålkastare fungerar' },
+  { nr: 7,  label: 'Blinkers (fram och bak) fungerar' },
+  { nr: 8,  label: 'Bromsljus fungerar' },
+  { nr: 9,  label: 'Backljus fungerar' },
+  { nr: 10, label: 'Varningsljus (4-blinkern) fungerar' },
+  { section: 'Vätskor & motor' },
+  { nr: 11, label: 'Motorolja på rätt nivå' },
+  { nr: 12, label: 'Kylvätska på rätt nivå' },
+  { nr: 13, label: 'Spolarvätska tillräcklig' },
+  { section: 'Kaross & övrigt' },
+  { nr: 14, label: 'Inga synliga skador på fordonet' },
+  { nr: 15, label: 'Backspeglar hela och rätt inställda' },
+  { nr: 16, label: 'Vindrutetorkare fungerar' },
+  { section: 'Säkerhetsutrustning' },
+  { nr: 17, label: 'Brandsläckare finns och är godkänd' },
+  { nr: 18, label: 'Varningstriangel finns' },
+  { nr: 19, label: 'Reflexvästar finns' },
+];
+
+let _fkFordon = [];
+
+async function openFordonskontroll() {
+  document.getElementById('fk-form').style.display = 'none';
+  document.getElementById('fk-picker-card').style.display = '';
+  document.getElementById('fk-checklist-container').innerHTML = '';
+  document.getElementById('fk-summary').style.display = 'none';
+  try {
+    _fkFordon = await apiFetch('/api/fordon');
+    const list = document.getElementById('fk-fordon-list');
+    if (!_fkFordon.length) {
+      list.innerHTML = '<div style="color:#c62828;font-size:14px;">Inget fordonsregister laddat. Admin laddar upp från Excelfilen under Admin.</div>';
+      return;
+    }
+    list.innerHTML = _fkFordon.map(f => `
+      <div class="check-item" style="cursor:pointer;" onclick="selectFordon('${f.regnr}')">
+        <div class="item-top">
+          <span style="font-size:22px;">🚛</span>
+          <span class="item-label">${f.regnr} — ${f.marke || ''} ${f.modell || ''}</span>
+          <span style="font-size:12px;color:var(--gray);">${f.forare || ''}</span>
+        </div>
+      </div>`).join('');
+  } catch {
+    document.getElementById('fk-fordon-list').innerHTML = '<div style="color:#c62828;">Kunde inte ladda fordon.</div>';
+  }
+}
+
+function selectFordon(regnr) {
+  const f = _fkFordon.find(x => x.regnr === regnr);
+  document.getElementById('fk-picker-card').style.display = 'none';
+  document.getElementById('fk-form').style.display = '';
+  document.getElementById('fk-regnr').value = regnr + (f ? ` — ${f.marke||''} ${f.modell||''}`.trim() : '');
+  document.getElementById('fk-datum').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fk-tekniker').value = currentUser?.name || '';
+  document.getElementById('fk-km').value = '';
+  document.getElementById('fk-title').textContent = 'Fordonskontroll – ' + regnr;
+  buildFkChecklist();
+  updateFkSummary();
+}
+
+function buildFkItem(item) {
+  return `
+    <div class="check-item" id="fk-item-${item.nr}">
+      <div class="item-top">
+        <span class="item-nr">${item.nr}</span>
+        <span class="item-label">${item.label}</span>
+        <div class="radio-group">
+          <label class="radio-opt ok-opt"><input type="radio" name="fk-r${item.nr}" value="1" onchange="onFkChange(${item.nr})"> OK</label>
+          <label class="radio-opt bev-opt"><input type="radio" name="fk-r${item.nr}" value="2" onchange="onFkChange(${item.nr})"> Bevaka</label>
+          <label class="radio-opt aku-opt"><input type="radio" name="fk-r${item.nr}" value="3" onchange="onFkChange(${item.nr})"> Akut</label>
+        </div>
+      </div>
+      <textarea class="comment-box" id="fk-comment-${item.nr}" rows="2" placeholder="Anmärkning / åtgärd..."></textarea>
+    </div>`;
+}
+
+function buildFkChecklist() {
+  let html = '';
+  FK_ITEMS.forEach(item => {
+    if (item.section) {
+      html += `<div class="section-header">${item.section}</div><div class="checklist-card">`;
+    } else if (item.nr) {
+      html += buildFkItem(item);
+      const next = FK_ITEMS[FK_ITEMS.indexOf(item) + 1];
+      if (!next || next.section) html += '</div>';
+    }
+  });
+  document.getElementById('fk-checklist-container').innerHTML = html;
+  document.getElementById('fk-summary').style.display = '';
+}
+
+function onFkChange(nr) {
+  const val = document.querySelector(`input[name="fk-r${nr}"]:checked`)?.value;
+  const box = document.getElementById(`fk-comment-${nr}`);
+  box.style.display = (val === '2' || val === '3') ? 'block' : 'none';
+  if (val === '2' || val === '3') {
+    if (!box.value) box.placeholder = val === '3' ? 'Beskriv felet / åtgärd som krävs...' : 'Beskriv vad som ska bevakas...';
+    box.focus();
+  }
+  updateFkSummary();
+}
+
+function updateFkSummary() {
+  const items = FK_ITEMS.filter(i => i.nr);
+  let ok = 0, bev = 0, aku = 0;
+  items.forEach(i => {
+    const v = document.querySelector(`input[name="fk-r${i.nr}"]:checked`)?.value;
+    if (v === '1') ok++;
+    else if (v === '2') bev++;
+    else if (v === '3') aku++;
+  });
+  document.getElementById('fk-ok-count').textContent = ok;
+  document.getElementById('fk-bevaka-count').textContent = bev;
+  document.getElementById('fk-akut-count').textContent = aku;
+  const os = document.getElementById('fk-overall-status');
+  if (aku > 0) { os.textContent = '⚠️ AKUT'; os.className = 'overall-status akut'; }
+  else if (bev > 0) { os.textContent = '👁 BEVAKA'; os.className = 'overall-status bevaka'; }
+  else if (ok > 0) { os.textContent = '✅ OK'; os.className = 'overall-status ok'; }
+  else { os.textContent = '—'; os.className = 'overall-status'; }
+}
+
+function getFkData() {
+  const regnrRaw = document.getElementById('fk-regnr').value;
+  const regnr = regnrRaw.split('—')[0].trim();
+  const items = FK_ITEMS.filter(i => i.nr).map(i => ({
+    nr: i.nr, label: i.label,
+    value: document.querySelector(`input[name="fk-r${i.nr}"]:checked`)?.value || '',
+    comment: document.getElementById(`fk-comment-${i.nr}`)?.value || ''
+  }));
+  return {
+    regnr, datum: document.getElementById('fk-datum').value,
+    tekniker: document.getElementById('fk-tekniker').value,
+    km: document.getElementById('fk-km').value,
+    items, summary_notes: document.getElementById('fk-summary-notes').value
+  };
+}
+
+async function saveFordonskontroll() {
+  const data = getFkData();
+  if (!data.regnr) { alert('Välj ett fordon.'); return; }
+  const answered = data.items.filter(i => i.value).length;
+  if (answered < data.items.length) {
+    if (!confirm(`${data.items.length - answered} punkter är inte ifyllda. Spara ändå?`)) return;
+  }
+  await apiFetch('/api/fordonskontroll', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  const tack = document.createElement('div');
+  tack.className = 'tack-screen';
+  tack.innerHTML = '<div class="tack-icon">✅</div><div class="tack-text">Protokoll sparat!</div>';
+  document.body.appendChild(tack);
+  setTimeout(() => { document.body.removeChild(tack); showPage('egenkontroller'); }, 2000);
+}
+
+function sendFkEmail() {
+  const data = getFkData();
+  const akuta = data.items.filter(i => i.value === '3');
+  const bevaka = data.items.filter(i => i.value === '2');
+  let body = `Fordonskontroll – ${data.regnr}\nDatum: ${data.datum}\nFörare: ${data.tekniker}\nMätarställning: ${data.km} km\n\n`;
+  if (akuta.length) body += 'AKUT:\n' + akuta.map(i => `  ${i.nr}. ${i.label}${i.comment ? '\n     → ' + i.comment : ''}`).join('\n') + '\n\n';
+  if (bevaka.length) body += 'Bevaka:\n' + bevaka.map(i => `  ${i.nr}. ${i.label}${i.comment ? '\n     → ' + i.comment : ''}`).join('\n') + '\n\n';
+  if (data.summary_notes) body += 'Övrigt: ' + data.summary_notes;
+  window.location.href = `mailto:felix@liljegrens.se?subject=Fordonskontroll ${data.regnr} ${data.datum}&body=${encodeURIComponent(body)}`;
+}
+
+function printFordonskontroll() {
+  const data = getFkData();
+  const rows = data.items.map(i => {
+    const lbl = ['','OK','Bevaka','Akut'][+i.value] || '–';
+    const cls = [,'ok','bevaka','akut'][+i.value] || '';
+    return `<tr><td>${i.nr}</td><td>${i.label}</td><td class="${cls}">${lbl}</td><td>${i.comment||''}</td></tr>`;
+  }).join('');
+  const w = window.open('','_blank');
+  w.document.write(`<html><head><title>Fordonskontroll ${data.regnr}</title>
+    <style>body{font-family:Arial;font-size:12px}table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #ccc;padding:5px 8px;text-align:left}th{background:#1a3a5c;color:#fff}
+    .ok{color:#2e7d32}.bevaka{color:#f57f17}.akut{color:#c62828;font-weight:bold}</style></head>
+    <body><h2>Fordonskontroll – ${data.regnr}</h2>
+    <p>Datum: ${data.datum} | Förare: ${data.tekniker} | Mätarst.: ${data.km} km</p>
+    <table><tr><th>#</th><th>Kontrollpunkt</th><th>Status</th><th>Anmärkning / Åtgärd</th></tr>${rows}</table>
+    ${data.summary_notes ? '<p><b>Övrigt:</b> ' + data.summary_notes + '</p>' : ''}
+    </body></html>`);
+  w.document.close(); w.print();
 }
 </script>
 </body>
