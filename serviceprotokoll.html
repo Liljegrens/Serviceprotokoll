@@ -875,7 +875,7 @@
   <div class="top-bar">
     <button class="back-btn" onclick="showPage('admin')">← Admin</button>
     <h1>Fordonskontroller</h1>
-    <span></span>
+    <button class="load-btn" style="font-size:13px;padding:8px 16px;" onclick="exportFkExcel()">⬇ Exportera Excel</button>
   </div>
   <div style="padding:16px;max-width:900px;margin:0 auto;">
     <div class="header-card" style="margin-bottom:16px;">
@@ -1515,6 +1515,10 @@ async function showFkDetail(id) {
     </div>`;
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
   document.body.appendChild(modal);
+}
+
+function exportFkExcel() {
+  window.open(API + '/api/fordonskontroll/export', '_blank');
 }
 
 async function deleteFkRecord(id) {

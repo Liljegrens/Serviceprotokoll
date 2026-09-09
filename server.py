@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, request, send_from_directory, session
-import sqlite3, json, os, secrets, uuid
+from flask import Flask, jsonify, request, send_from_directory, session, send_file
+import sqlite3, json, os, secrets, uuid, io
 from datetime import datetime
 import openpyxl
 
@@ -484,6 +484,85 @@ def list_fordonskontroll():
     with get_fordon_db() as db:
         rows = db.execute('SELECT id, saved_at, regnr, tekniker, datum, data_json FROM fordonskontroll ORDER BY saved_at DESC').fetchall()
     return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
+
+@app.route('/api/fordonskontroll/export', methods=['GET'])
+def export_fordonskontroll():
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    with get_fordon_db() as db:
+        rows = db.execute('SELECT id, saved_at, regnr, tekniker, datum, data_json FROM fordonskontroll ORDER BY saved_at DESC').fetchall()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Fordonskontroller'
+
+    HEADER_FILL = PatternFill('solid', fgColor='1A3A5C')
+    HEADER_FONT = Font(name='Arial', bold=True, color='FFFFFF', size=11)
+    BODY_FONT   = Font(name='Arial', size=10)
+    THIN = Side(style='thin', color='CFD8DC')
+    BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+    OK_FILL   = PatternFill('solid', fgColor='C8E6C9')
+    BEV_FILL  = PatternFill('solid', fgColor='FFF9C4')
+    AKUT_FILL = PatternFill('solid', fgColor='FFCDD2')
+
+    headers = ['Protokoll-ID', 'Datum', 'Regnr', 'Förare', 'Km-ställning', 'Nr', 'Kontrollpunkt', 'Status', 'Anmärkning', 'Övrigt']
+    for col, h in enumerate(headers, 1):
+        c = ws.cell(row=1, column=col, value=h)
+        c.font = HEADER_FONT
+        c.fill = HEADER_FILL
+        c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        c.border = BORDER
+    ws.row_dimensions[1].height = 30
+
+    row_idx = 2
+    for r in rows:
+        d = json.loads(r['data_json'])
+        datum   = d.get('datum', r['datum'] or '')
+        regnr   = d.get('regnr', r['regnr'] or '')
+        tekniker= d.get('tekniker', r['tekniker'] or '')
+        km      = d.get('km', '')
+        ovrig   = d.get('summary_notes', '')
+        items   = d.get('items', [])
+
+        if not items:
+            # Skriv en rad ändå
+            for col, val in enumerate([r['id'], datum, regnr, tekniker, km, '', '', '', '', ovrig], 1):
+                c = ws.cell(row=row_idx, column=col, value=val)
+                c.font = BODY_FONT; c.border = BORDER; c.alignment = Alignment(vertical='center')
+            ws.row_dimensions[row_idx].height = 18
+            row_idx += 1
+        else:
+            for i, item in enumerate(items):
+                val_text = {'1': 'OK', '2': 'Bevaka', '3': 'Akut'}.get(item.get('value', ''), '')
+                fill = {'OK': OK_FILL, 'Bevaka': BEV_FILL, 'Akut': AKUT_FILL}.get(val_text)
+                for col, val in enumerate([
+                    r['id'] if i == 0 else '',
+                    datum   if i == 0 else '',
+                    regnr   if i == 0 else '',
+                    tekniker if i == 0 else '',
+                    km      if i == 0 else '',
+                    item.get('nr',''), item.get('label',''), val_text, item.get('comment',''),
+                    ovrig   if i == 0 else ''
+                ], 1):
+                    c = ws.cell(row=row_idx, column=col, value=val)
+                    c.font = BODY_FONT; c.border = BORDER
+                    c.alignment = Alignment(vertical='center', wrap_text=(col in (7,9)))
+                    if fill and col == 8:
+                        c.fill = fill
+                ws.row_dimensions[row_idx].height = 18
+                row_idx += 1
+
+    col_widths = [12, 12, 12, 18, 10, 6, 32, 10, 28, 28]
+    for i, w in enumerate(col_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    ws.freeze_panes = 'A2'
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    filename = f"fordonskontroller_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return send_file(buf, as_attachment=True, download_name=filename,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/api/fordonskontroll/<int:fk_id>', methods=['DELETE'])
 def delete_fordonskontroll(fk_id):
