@@ -61,6 +61,13 @@ def init_db():
             machine_type     TEXT DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS idx_protocols_maskin ON protocols(maskin_nr);
+        CREATE TABLE IF NOT EXISTS machine_notes (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            maskin_nr TEXT NOT NULL,
+            saved_at  TEXT,
+            author    TEXT,
+            note      TEXT
+        );
         CREATE TABLE IF NOT EXISTS users (
             id       INTEGER PRIMARY KEY AUTOINCREMENT,
             name     TEXT NOT NULL,
@@ -300,6 +307,49 @@ def get_machine(nr):
     if not row:
         return jsonify(None), 404
     return jsonify(dict(row))
+
+@app.route('/api/machines/<nr>/history', methods=['GET'])
+def get_machine_history(nr):
+    with get_db() as db:
+        service = db.execute(
+            'SELECT id, saved_at, datum, type, tekniker, kund, modell, items_json, workflow_status FROM protocols WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY saved_at DESC',
+            (nr,)).fetchall()
+        leverans = db.execute(
+            'SELECT id, saved_at, data_json FROM leverans WHERE UPPER(data_json) LIKE ? ORDER BY saved_at DESC',
+            (f'%"maskin_nr": "{nr}"%',)).fetchall()
+        balp = db.execute(
+            'SELECT id, saved_at, data_json FROM balp WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY saved_at DESC',
+            (nr,)).fetchall()
+    result = []
+    for r in service:
+        d = dict(r)
+        d['_type'] = 'service'
+        d['items'] = json.loads(d.pop('items_json') or '[]')
+        result.append(d)
+    for r in leverans:
+        d = {'_type': 'leverans', 'id': r['id'], 'saved_at': r['saved_at']}
+        d.update(json.loads(r['data_json']))
+        result.append(d)
+    for r in balp:
+        d = {'_type': 'balp', 'id': r['id'], 'saved_at': r['saved_at']}
+        d.update(json.loads(r['data_json']))
+        result.append(d)
+    result.sort(key=lambda x: x.get('saved_at',''), reverse=True)
+    return jsonify(result)
+
+@app.route('/api/machines/<nr>/notes', methods=['GET'])
+def get_machine_notes(nr):
+    with get_db() as db:
+        rows = db.execute('SELECT id, saved_at, author, note FROM machine_notes WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY saved_at DESC', (nr,)).fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/machines/<nr>/notes', methods=['POST'])
+def add_machine_note(nr):
+    data = request.get_json()
+    with get_db() as db:
+        db.execute('INSERT INTO machine_notes (maskin_nr, saved_at, author, note) VALUES (?,?,?,?)',
+                   (nr, datetime.now().isoformat(), data.get('author',''), data.get('note','')))
+    return jsonify({'ok': True})
 
 # ── Leveransgodkännande ──────────────────────────────────────
 
