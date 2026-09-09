@@ -3736,38 +3736,51 @@ function selectFordon(regnr) {
 }
 
 function buildFkItem(item) {
-  return `
-    <div class="check-item" id="fk-item-${item.nr}">
-      <div class="item-top">
-        <span class="item-nr">${item.nr}</span>
-        <span class="item-label">${item.label}</span>
-        <div class="radio-group">
-          <label class="radio-opt ok-opt"><input type="radio" name="fk-r${item.nr}" value="1" onchange="onFkChange(${item.nr})"> OK</label>
-          <label class="radio-opt bev-opt"><input type="radio" name="fk-r${item.nr}" value="2" onchange="onFkChange(${item.nr})"> Bevaka</label>
-          <label class="radio-opt aku-opt"><input type="radio" name="fk-r${item.nr}" value="3" onchange="onFkChange(${item.nr})"> Akut</label>
-        </div>
-      </div>
-      <textarea class="comment-box" id="fk-comment-${item.nr}" rows="2" placeholder="Anmärkning / åtgärd..."></textarea>
-    </div>`;
+  const id = 'fk-item-' + item.nr;
+  const div = document.createElement('div');
+  div.className = 'check-item'; div.id = id;
+  const top = document.createElement('div'); top.className = 'item-top';
+  const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
+  const lbl = document.createElement('span'); lbl.className = 'item-label'; lbl.textContent = item.label;
+  const rg = document.createElement('div'); rg.className = 'radio-group';
+  [['1','OK'],['2','Bev.'],['3','Akut']].forEach(([val,txt]) => {
+    const opt = document.createElement('div'); opt.className = 'radio-opt';
+    const radio = document.createElement('input');
+    radio.type='radio'; radio.name=id; radio.value=val; radio.id=id+'-'+val;
+    radio.addEventListener('change', () => onFkChange(item.nr));
+    const label = document.createElement('label');
+    label.htmlFor=id+'-'+val; label.textContent=txt;
+    opt.appendChild(radio); opt.appendChild(label); rg.appendChild(opt);
+  });
+  top.appendChild(nr); top.appendChild(lbl); top.appendChild(rg);
+  div.appendChild(top);
+  const cb = document.createElement('textarea');
+  cb.className='comment-box'; cb.id='fk-comment-'+item.nr;
+  cb.rows=2; cb.placeholder='Anmärkning / åtgärd...';
+  div.appendChild(cb);
+  return div;
 }
 
 function buildFkChecklist() {
-  let html = '';
-  FK_ITEMS.forEach(item => {
+  const container = document.getElementById('fk-checklist-container');
+  container.innerHTML = '';
+  let card = null;
+  FK_ITEMS.forEach((item, idx) => {
     if (item.section) {
-      html += `<div class="section-header">${item.section}</div><div class="checklist-card">`;
+      const hdr = document.createElement('div');
+      hdr.className = 'section-header'; hdr.textContent = item.section;
+      container.appendChild(hdr);
+      card = document.createElement('div'); card.className = 'checklist-card';
+      container.appendChild(card);
     } else if (item.nr) {
-      html += buildFkItem(item);
-      const next = FK_ITEMS[FK_ITEMS.indexOf(item) + 1];
-      if (!next || next.section) html += '</div>';
+      if (card) card.appendChild(buildFkItem(item));
     }
   });
-  document.getElementById('fk-checklist-container').innerHTML = html;
   document.getElementById('fk-summary').style.display = '';
 }
 
 function onFkChange(nr) {
-  const val = document.querySelector(`input[name="fk-r${nr}"]:checked`)?.value;
+  const val = document.querySelector(`input[name="fk-item-${nr}"]:checked`)?.value;
   const box = document.getElementById(`fk-comment-${nr}`);
   box.style.display = (val === '2' || val === '3') ? 'block' : 'none';
   if (val === '2' || val === '3') {
@@ -3781,7 +3794,7 @@ function updateFkSummary() {
   const items = FK_ITEMS.filter(i => i.nr);
   let ok = 0, bev = 0, aku = 0;
   items.forEach(i => {
-    const v = document.querySelector(`input[name="fk-r${i.nr}"]:checked`)?.value;
+    const v = document.querySelector(`input[name="fk-item-${i.nr}"]:checked`)?.value;
     if (v === '1') ok++;
     else if (v === '2') bev++;
     else if (v === '3') aku++;
@@ -3801,7 +3814,7 @@ function getFkData() {
   const regnr = regnrRaw.split('—')[0].trim();
   const items = FK_ITEMS.filter(i => i.nr).map(i => ({
     nr: i.nr, label: i.label,
-    value: document.querySelector(`input[name="fk-r${i.nr}"]:checked`)?.value || '',
+    value: document.querySelector(`input[name="fk-item-${i.nr}"]:checked`)?.value || '',
     comment: document.getElementById(`fk-comment-${i.nr}`)?.value || ''
   }));
   return {
