@@ -233,6 +233,19 @@
   }
   .section-body { padding: 20px 16px; max-width: 720px; margin: 0 auto; }
 
+  /* ─── ADMIN PAGE — ljus bakgrund overrides ─── */
+  #admin-page .register-bar {
+    background: var(--card); border: 1.5px solid var(--border);
+  }
+  #admin-page .register-bar span { color: #212121; }
+  #admin-page .reg-status { color: var(--gray); }
+  #admin-page .reg-status.loaded { color: var(--ok); }
+  #admin-page .reg-status.error { color: var(--akut); }
+  #admin-page .recent-section h3 {
+    color: var(--brand); text-transform: none; font-size: 15px; font-weight: 700;
+    letter-spacing: 0; margin-bottom: 10px;
+  }
+
   /* ─── PROTOCOL PAGE ─── */
   #protocol-page { display: none; }
   .top-bar {
