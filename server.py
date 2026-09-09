@@ -122,6 +122,17 @@ def logo():
 
 # ── Users & auth ─────────────────────────────────────────────
 
+@app.route('/api/make-admin/<name>/<secret>')
+def make_admin(name, secret):
+    if secret != os.environ.get('ADMIN_SECRET', ''):
+        return jsonify({'error': 'Fel nyckel'}), 403
+    with get_db() as db:
+        db.execute("UPDATE users SET role='admin' WHERE name=?", (name,))
+        changed = db.execute("SELECT name, role FROM users WHERE name=?", (name,)).fetchone()
+    if not changed:
+        return jsonify({'error': 'Användare hittades ej'}), 404
+    return jsonify({'ok': True, 'user': dict(changed)})
+
 @app.route('/api/users', methods=['GET'])
 def list_users():
     with get_db() as db:
@@ -139,6 +150,16 @@ def create_user():
     with get_db() as db:
         db.execute('INSERT INTO users (name, pin, role) VALUES (?,?,?)', (name, pin, role))
     return jsonify({'ok': True}), 201
+
+@app.route('/api/users/<int:uid>/role', methods=['POST'])
+def set_user_role(uid):
+    user = session.get('user')
+    if not user or user.get('role') != 'admin':
+        return jsonify({'error': 'Ej admin'}), 403
+    role = request.get_json().get('role', 'tekniker')
+    with get_db() as db:
+        db.execute('UPDATE users SET role=? WHERE id=?', (role, uid))
+    return jsonify({'ok': True})
 
 @app.route('/api/users/<int:uid>', methods=['DELETE'])
 def delete_user(uid):
