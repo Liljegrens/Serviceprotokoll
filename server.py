@@ -4,11 +4,13 @@ from datetime import datetime
 import openpyxl
 
 BASE    = os.path.dirname(os.path.abspath(__file__))
-DB      = os.path.join(BASE, 'serviceprotokoll.db')
-UPLOADS = os.path.join(BASE, 'uploads')
+# Persistent data directory: Railway Volume at /data, fallback to repo dir locally
+DATA_DIR = '/data' if os.path.isdir('/data') else BASE
+DB      = os.path.join(DATA_DIR, 'serviceprotokoll.db')
+UPLOADS = os.path.join(DATA_DIR, 'uploads')
 os.makedirs(UPLOADS, exist_ok=True)
 app  = Flask(__name__, static_folder=BASE)
-_key_file = os.path.join(BASE, '.secret_key')
+_key_file = os.path.join(DATA_DIR, '.secret_key')
 if os.environ.get('SECRET_KEY'):
     app.secret_key = os.environ['SECRET_KEY']
 elif os.path.exists(_key_file):
@@ -408,7 +410,7 @@ def delete_balp(balp_id):
 
 # ── Fordonsregister & Fordonskontroll ───────────────────────────────────────
 
-FORDON_DB = os.path.join(BASE, 'fordon-register.db')
+FORDON_DB = os.path.join(DATA_DIR, 'fordon-register.db')
 
 def get_fordon_db():
     conn = sqlite3.connect(FORDON_DB)
