@@ -191,6 +191,31 @@
   .load-btn:hover { background: rgba(255,255,255,0.3); }
   #reg-file-input { display: none; }
 
+  /* ─── HOME PAGE ─── */
+  #home-page {
+    min-height: 100vh; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 32px 16px 48px;
+    background: linear-gradient(160deg, var(--brand) 0%, var(--brand-light) 100%);
+  }
+
+  /* ─── HOME GRID ─── */
+  .home-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 16px; width: 100%; max-width: 500px; padding: 0 4px;
+  }
+  .home-tile {
+    background: rgba(255,255,255,0.13); border: 1.5px solid rgba(255,255,255,0.22);
+    border-radius: 16px; padding: 28px 16px 22px;
+    cursor: pointer; transition: background 0.15s, transform 0.15s;
+    text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .home-tile:hover, .home-tile:active { background: rgba(255,255,255,0.22); transform: scale(1.03); }
+  .home-tile .tile-icon { font-size: 40px; line-height: 1; }
+  .home-tile .tile-label { color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.2px; }
+  .home-tile .tile-sub { color: rgba(255,255,255,0.65); font-size: 11px; }
+  .home-tile.admin-only { display: none; }
+
+  /* ─── START CARDS (protocol picker) ─── */
   .start-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 640px; }
   .start-card {
     background: #fff; border-radius: 12px; padding: 32px 28px; flex: 1 1 240px;
@@ -201,6 +226,12 @@
   .start-card .icon { font-size: 48px; margin-bottom: 16px; }
   .start-card h2 { font-size: 18px; color: var(--brand); font-weight: 700; }
   .start-card p { font-size: 13px; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+
+  /* ─── SECTION PAGE (egenkontroller, dokument etc) ─── */
+  .section-page {
+    min-height: 100vh; background: var(--bg);
+  }
+  .section-body { padding: 20px 16px; max-width: 720px; margin: 0 auto; }
 
   /* ─── PROTOCOL PAGE ─── */
   #protocol-page { display: none; }
@@ -603,10 +634,13 @@
 </div>
 
 <!-- ═══════════ START PAGE ═══════════ -->
-<div id="start-page">
-  <div class="logo-area">
+<!-- ═══════════ HOME PAGE ═══════════ -->
+<div id="home-page" style="display:none;">
+  <div class="logo-area" style="margin-bottom:28px;">
+    <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;overflow:hidden;">
+      <img src="/logo.png" style="width:100%;height:100%;object-fit:cover;">
+    </div>
     <h1>Liljegrens i Tyresö AB</h1>
-    <p>Serviceprotokoll – Komprimatorer</p>
   </div>
 
   <div class="user-bar">
@@ -614,69 +648,150 @@
     <button class="load-btn" onclick="doLogout()">Logga ut</button>
   </div>
 
-  <div class="register-bar">
-    <span>📋 Maskinregister</span>
-    <span class="reg-status" id="reg-status">Kontrollerar...</span>
-    <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
-    <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
-  </div>
-
-  <div class="start-cards">
-    <div class="start-card" onclick="openProtocol('verkstad')">
-      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
-        <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
-      </div>
-      <h2>Verkstadsprotokoll Komprimator</h2>
-      <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
+  <div class="home-grid">
+    <div class="home-tile" onclick="showPage('serviceprotokoll')">
+      <div class="tile-icon">🔧</div>
+      <div class="tile-label">Serviceprotokoll</div>
+      <div class="tile-sub">Protokoll & historik</div>
     </div>
-    <div class="start-card" onclick="openProtocol('flygande')">
-      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
-        <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
-      </div>
-      <h2>Flygande protokoll Komprimator</h2>
-      <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
+    <div class="home-tile" onclick="showPage('egenkontroller')">
+      <div class="tile-icon">✅</div>
+      <div class="tile-label">Egenkontroller</div>
+      <div class="tile-sub">Fordon & material</div>
     </div>
-    <div class="start-card" onclick="openLeverans()">
-      <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
-      <div class="icon">📦</div>
-      <h2>Leveransgodkännande Ragn-Sells</h2>
-      <p>Typ 3 · Överlämning av utrustning till kund</p>
+    <div class="home-tile" onclick="showPage('dokument')">
+      <div class="tile-icon">📄</div>
+      <div class="tile-label">Dokument</div>
+      <div class="tile-sub">Manualer & instruktioner</div>
     </div>
-    <div class="start-card" onclick="openBalp()">
-      <img src="/balp-maskin.png" alt="Balpressmaskin" style="height:80px;object-fit:contain;margin-bottom:12px;">
-      <h2>Serviceprotokoll Balpressar</h2>
-      <p>Typ 4 · Serviceprotokoll för balpressar</p>
+    <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
+      <div class="tile-icon">⚙️</div>
+      <div class="tile-label">Admin</div>
+      <div class="tile-sub">Register & användare</div>
     </div>
-  </div>
-
-  <!-- CRM Maskiner (admin) -->
-  <div class="recent-section admin-only" id="crm-section" style="display:none;">
-    <h3>Maskiner <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('maskiner')">Öppna maskinregister →</button></h3>
-  </div>
-
-  <!-- Användarhantering (admin) -->
-  <div class="recent-section admin-only" id="users-section" style="display:none;">
-    <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
-    <div id="users-list"></div>
   </div>
 
   <!-- Senaste protokoll -->
-  <div class="recent-section" id="recent-section">
+  <div class="recent-section" id="recent-section" style="margin-top:28px;">
     <h3>Senaste protokoll</h3>
     <div class="recent-list" id="recent-list">
       <div class="recent-empty">Laddar...</div>
     </div>
     <div id="recent-admin-link"></div>
   </div>
+</div>
 
+<!-- ═══════════ SERVICEPROTOKOLL PAGE ═══════════ -->
+<div id="serviceprotokoll-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1>Serviceprotokoll</h1>
+    <span></span>
+  </div>
+  <div style="background:linear-gradient(160deg,var(--brand) 0%,var(--brand-light) 100%);padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;">
+    <div class="start-cards">
+      <div class="start-card" onclick="openProtocol('verkstad')">
+        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
+          <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+        </div>
+        <h2>Verkstadsprotokoll Komprimator</h2>
+        <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
+      </div>
+      <div class="start-card" onclick="openProtocol('flygande')">
+        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
+          <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+        </div>
+        <h2>Flygande protokoll Komprimator</h2>
+        <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
+      </div>
+      <div class="start-card" onclick="openLeverans()">
+        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+        <div class="icon">📦</div>
+        <h2>Leveransgodkännande Ragn-Sells</h2>
+        <p>Typ 3 · Överlämning av utrustning till kund</p>
+      </div>
+      <div class="start-card" onclick="openBalp()">
+        <img src="/balp-maskin.png" alt="Balpressmaskin" style="height:80px;object-fit:contain;margin-bottom:12px;">
+        <h2>Serviceprotokoll Balpressar</h2>
+        <p>Typ 4 · Serviceprotokoll för balpressar</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EGENKONTROLLER PAGE ═══════════ -->
+<div id="egenkontroller-page" style="display:none;" class="section-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1>Egenkontroller</h1>
+    <span></span>
+  </div>
+  <div class="section-body">
+    <div class="start-cards" style="margin-top:16px;">
+      <div class="start-card" onclick="showPage('fordonskontroll')">
+        <div class="icon">🚛</div>
+        <h2>Fordonskontroll</h2>
+        <p>Daglig kontroll av fordon inför körning</p>
+      </div>
+      <div class="start-card" onclick="showPage('materialkontroll')">
+        <div class="icon">🗃️</div>
+        <h2>Materialkontroll</h2>
+        <p>Veckokontroll av reservdelar och material i bilarna</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DOKUMENT PAGE ═══════════ -->
+<div id="dokument-page" style="display:none;" class="section-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1>Dokument</h1>
+    <span></span>
+  </div>
+  <div class="section-body">
+    <div style="color:#888;text-align:center;padding:48px 0;font-size:15px;">
+      📄 Dokument kommer snart
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN PAGE ═══════════ -->
+<div id="admin-page" style="display:none;" class="section-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1>Administration</h1>
+    <span></span>
+  </div>
+  <div class="section-body">
+    <div class="register-bar" style="margin-bottom:20px;border-radius:10px;">
+      <span>📋 Maskinregister</span>
+      <span class="reg-status" id="reg-status">Kontrollerar...</span>
+      <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
+      <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
+    </div>
+
+    <div class="recent-section" style="margin-top:0;">
+      <h3>Maskiner <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('maskiner')">Öppna maskinregister →</button></h3>
+    </div>
+
+    <div class="recent-section" style="margin-top:20px;" id="users-section">
+      <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
+      <div id="users-list"></div>
+    </div>
+
+    <div class="recent-section" style="margin-top:20px;">
+      <h3>Protokollöversikt <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('overview')">Öppna →</button></h3>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ LEVERANS PAGE ═══════════ -->
 <div id="leverans-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <button class="back-btn" onclick="showPage('serviceprotokoll')">← Tillbaka</button>
     <h1>Leveransgodkännande Ragn-Sells</h1>
     <button class="top-btn" onclick="printLeverans()">🖨 Skriv ut</button>
   </div>
@@ -784,7 +899,7 @@
 <!-- ═══════════ BALP PAGE ═══════════ -->
 <div id="balp-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <button class="back-btn" onclick="showPage('serviceprotokoll')">← Tillbaka</button>
     <h1>Serviceprotokoll Balpressar</h1>
     <button class="top-btn" onclick="printBalp()">🖨 Skriv ut</button>
   </div>
@@ -869,7 +984,7 @@
 <!-- ═══════════ MASKINER PAGE (CRM) ═══════════ -->
 <div id="maskiner-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <button class="back-btn" onclick="showPage('admin')">← Admin</button>
     <h1>Maskinregister</h1>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
@@ -917,7 +1032,7 @@
 <!-- ═══════════ OVERVIEW PAGE ═══════════ -->
 <div id="overview-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('start')">← Tillbaka</button>
+    <button class="back-btn" onclick="showPage('admin')">← Admin</button>
     <h1>Protokollöversikt</h1>
     <button class="top-btn" id="pdf-batch-btn" onclick="batchPDF()" style="display:none;">🖨 Skapa samlad PDF</button>
   </div>
@@ -1135,7 +1250,7 @@ async function initAuth() {
     await loadUserList();
     showPage('login');
   } else {
-    showPage('start');
+    showPage('home');
     updateUserGreeting();
     applyRoleUI();
     checkRegisterStatus();
@@ -1145,9 +1260,14 @@ async function initAuth() {
 
 function applyRoleUI() {
   const isAdmin = currentUser && currentUser.role === 'admin';
-  document.getElementById('users-section').style.display  = isAdmin ? '' : 'none';
-  document.getElementById('crm-section').style.display    = isAdmin ? '' : 'none';
-  document.getElementById('reg-upload-btn').style.display = isAdmin ? '' : 'none';
+  const adminTile = document.getElementById('home-admin-tile');
+  if (adminTile) adminTile.style.display = isAdmin ? '' : 'none';
+  const regBtn = document.getElementById('reg-upload-btn');
+  if (regBtn) regBtn.style.display = isAdmin ? '' : 'none';
+}
+
+function loadUsers() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
   if (isAdmin) loadUsersAdmin();
 }
 
@@ -1215,7 +1335,7 @@ async function doLogin() {
       body: JSON.stringify({ name, pin })
     });
     document.getElementById('login-pin').value = '';
-    showPage('start');
+    showPage('home');
     updateUserGreeting();
     applyRoleUI();
     checkRegisterStatus();
@@ -1639,15 +1759,26 @@ function buildBatchHTML(protocols) {
 }
 
 function showPage(page) {
-  document.getElementById('login-page').style.display    = page === 'login'    ? 'flex'  : 'none';
-  document.getElementById('start-page').style.display    = page === 'start'    ? 'flex'  : 'none';
-  document.getElementById('protocol-page').style.display = page === 'protocol' ? 'block' : 'none';
-  document.getElementById('overview-page').style.display = page === 'overview' ? 'block' : 'none';
-  document.getElementById('leverans-page').style.display   = page === 'leverans'   ? 'block' : 'none';
-  document.getElementById('balp-page').style.display       = page === 'balp'       ? 'block' : 'none';
-  document.getElementById('maskiner-page').style.display   = page === 'maskiner'   ? 'block' : 'none';
-  document.getElementById('maskinkort-page').style.display = page === 'maskinkort' ? 'block' : 'none';
+  const pages = {
+    'login':              ['login-page',              'flex'],
+    'home':               ['home-page',               'flex'],
+    'serviceprotokoll':   ['serviceprotokoll-page',   'block'],
+    'egenkontroller':     ['egenkontroller-page',      'block'],
+    'dokument':           ['dokument-page',            'block'],
+    'admin':              ['admin-page',               'block'],
+    'protocol':           ['protocol-page',            'block'],
+    'overview':           ['overview-page',            'block'],
+    'leverans':           ['leverans-page',            'block'],
+    'balp':               ['balp-page',                'block'],
+    'maskiner':           ['maskiner-page',            'block'],
+    'maskinkort':         ['maskinkort-page',          'block'],
+  };
+  Object.entries(pages).forEach(([key, [id, flex]]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (page === key) ? flex : 'none';
+  });
   if (page === 'maskiner') loadMaskiner();
+  if (page === 'admin') { checkRegisterStatus(); loadUsers(); }
 }
 
 function updateUserGreeting() {
@@ -2501,7 +2632,7 @@ function printRecord(rec) {
 
 function goBack() {
   if (confirm('Gå tillbaka? Osparade ändringar försvinner.')) {
-    showPage('start');
+    showPage('home');
     document.getElementById('checklist-container').innerHTML = '';
   }
 }
@@ -2856,7 +2987,7 @@ async function saveLeverans() {
           <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet är sparat och skickat till kontoret.</p>
         </div>`;
       document.body.appendChild(tack);
-      setTimeout(() => { document.body.removeChild(tack); showPage('start'); loadRecentProtocols(); }, 2500);
+      setTimeout(() => { document.body.removeChild(tack); showPage('home'); loadRecentProtocols(); }, 2500);
     } catch(e) {
       const conf = document.getElementById('lev-save-confirm');
       conf.textContent = 'Kunde inte spara: ' + e.message;
@@ -3145,7 +3276,7 @@ async function saveBalp() {
         <p style="color:rgba(255,255,255,0.7);font-size:15px;margin:0;">Protokollet är sparat och skickat till kontoret.</p>
       </div>`;
       document.body.appendChild(tack);
-      setTimeout(() => { document.body.removeChild(tack); showPage('start'); loadRecentProtocols(); }, 2500);
+      setTimeout(() => { document.body.removeChild(tack); showPage('home'); loadRecentProtocols(); }, 2500);
     } catch(e) {
       document.getElementById('balp-save-confirm').textContent = 'Kunde inte spara: ' + e.message;
       document.getElementById('balp-save-confirm').style.color = '#c62828';
