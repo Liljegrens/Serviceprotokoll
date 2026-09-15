@@ -1260,19 +1260,6 @@
             <label>Maskinens gångtid (timmar)</label>
             <input type="number" id="f-gangtid" placeholder="t.ex. 1250" min="0">
           </div>
-          <div class="field-group" id="mot-kaj-field" style="display:none;">
-            <label>Står mot kaj?</label>
-            <div class="radio-group" style="margin-top:6px;">
-              <div class="radio-opt">
-                <input type="radio" name="f-mot-kaj" value="ja" id="f-mot-kaj-ja">
-                <label for="f-mot-kaj-ja">Ja</label>
-              </div>
-              <div class="radio-opt">
-                <input type="radio" name="f-mot-kaj" value="nej" id="f-mot-kaj-nej" checked>
-                <label for="f-mot-kaj-nej">Nej</label>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -2863,9 +2850,6 @@ async function saveProtocol() {
         items,
         ...(['komprimator','vandare','vandare-kaly'].includes(currentType) ? {
           gangtid: document.getElementById('f-gangtid')?.value || '',
-          ...(currentType === 'vandare' ? {
-            mot_kaj: document.querySelector('input[name="f-mot-kaj"]:checked')?.value || '',
-          } : {}),
         } : {}),
       })
     });
@@ -2894,8 +2878,6 @@ function openProtocol(type) {
   const isVandare = ['vandare','vandare-kaly'].includes(type);
   const topFields = document.getElementById('vandare-top-fields');
   if (topFields) topFields.style.display = isKompExtra ? '' : 'none';
-  const motKajField = document.getElementById('mot-kaj-field');
-  if (motKajField) motKajField.style.display = isVandare ? '' : 'none';
   // Dölj utskriftsknapp för tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
@@ -4064,11 +4046,29 @@ function renderMaskinkortInfo(m) {
     ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
     ['Beskrivning', m.beskrivning], ['Notering', m.notering]
   ].filter(([,v]) => v);
+  const kajVal = m.mot_kaj || 'nej';
   document.getElementById('maskinkort-info').innerHTML = `
     <h2>Maskinuppgifter</h2>
     <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
       ${fields.map(([l,v]) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`).join('')}
+      <div class="field-group">
+        <label>Står mot kaj</label>
+        <div class="radio-group" style="margin-top:6px;">
+          <div class="radio-opt"><input type="radio" name="mk-mot-kaj" value="ja" id="mk-mot-kaj-ja" ${kajVal==='ja'?'checked':''}><label for="mk-mot-kaj-ja">Ja</label></div>
+          <div class="radio-opt"><input type="radio" name="mk-mot-kaj" value="nej" id="mk-mot-kaj-nej" ${kajVal!=='ja'?'checked':''}><label for="mk-mot-kaj-nej">Nej</label></div>
+        </div>
+        <button onclick="saveMotKaj('${m.nr}')" style="margin-top:8px;padding:4px 12px;font-size:12px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara</button>
+      </div>
     </div>`;
+}
+
+async function saveMotKaj(nr) {
+  const val = document.querySelector('input[name="mk-mot-kaj"]:checked')?.value || 'nej';
+  await fetch('/api/machines/' + encodeURIComponent(nr), {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ mot_kaj: val })
+  });
 }
 
 function renderMaskinkortStats(history) {

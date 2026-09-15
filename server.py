@@ -77,6 +77,11 @@ def init_db():
             role     TEXT DEFAULT 'tekniker'
         );
         """)
+    # Migration: lägg till mot_kaj om kolumnen saknas
+    with get_db() as db:
+        cols = [r[1] for r in db.execute("PRAGMA table_info(machines)").fetchall()]
+        if 'mot_kaj' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN mot_kaj TEXT DEFAULT ''")
 
 init_db()
 
@@ -320,6 +325,19 @@ def get_machine(nr):
         return jsonify(None), 404
     return jsonify(dict(row))
 
+@app.route('/api/machines/<nr>', methods=['PATCH'])
+def patch_machine(nr):
+    data = request.get_json(force=True)
+    allowed = {'mot_kaj', 'notering'}
+    updates = {k: v for k, v in data.items() if k in allowed}
+    if not updates:
+        return jsonify({'error': 'Inga giltiga fält'}), 400
+    set_clause = ', '.join(f'{k}=?' for k in updates)
+    with get_db() as db:
+        db.execute(f'UPDATE machines SET {set_clause} WHERE UPPER(nr)=UPPER(?)',
+                   list(updates.values()) + [nr])
+    return jsonify({'ok': True})
+
 @app.route('/api/machines/<nr>/history', methods=['GET'])
 def get_machine_history(nr):
     with get_db() as db:
@@ -436,6 +454,14 @@ def init_fordon_db():
             regnr     TEXT NOT NULL,
             datum     TEXT,
             tekniker  TEXT,
+            saved_at  TEXT,
+            data_json TEXT
+        );
+        CREATE TABLE IF NOT EXISTS materialkontroll (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            regnr     TEXT NOT NULL,
+            datum     TEXT,
+            ansvarig  TEXT,
             saved_at  TEXT,
             data_json TEXT
         );
@@ -571,6 +597,21 @@ def delete_fordonskontroll(fk_id):
     with get_fordon_db() as db:
         db.execute('DELETE FROM fordonskontroll WHERE id=?', (fk_id,))
     return jsonify({'ok': True})
+
+@app.route('/api/materialkontroll', methods=['POST'])
+def save_materialkontroll():
+    data = request.get_json()
+    with get_fordon_db() as db:
+        db.execute('INSERT INTO materialkontroll (regnr, datum, ansvarig, saved_at, data_json) VALUES (?,?,?,?,?)',
+                   (data.get('regnr',''), data.get('datum',''), data.get('ansvarig',''),
+                    datetime.now().isoformat(), json.dumps(data, ensure_ascii=False)))
+    return jsonify({'ok': True})
+
+@app.route('/api/materialkontroll', methods=['GET'])
+def list_materialkontroll():
+    with get_fordon_db() as db:
+        rows = db.execute('SELECT id, saved_at, regnr, ansvarig, datum, data_json FROM materialkontroll ORDER BY saved_at DESC').fetchall()
+    return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
 
 @app.route('/api/leverans', methods=['POST'])
 def save_leverans():
