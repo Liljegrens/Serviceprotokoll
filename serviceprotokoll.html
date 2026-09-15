@@ -1253,6 +1253,23 @@
         </div>
       </div>
 
+      <!-- Gångtid + Mot kaj – visas högst upp för komprimator/vändare-protokoll -->
+      <div id="vandare-top-fields" style="display:none;">
+        <div class="field-grid" style="margin-top:12px;">
+          <div class="field-group">
+            <label>Maskinens gångtid (timmar)</label>
+            <input type="number" id="f-gangtid" placeholder="t.ex. 1250" min="0">
+          </div>
+          <div class="field-group" id="mot-kaj-field" style="display:none;">
+            <label>Står mot kaj?</label>
+            <div style="display:flex;gap:20px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="ja"> Ja</label>
+              <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="nej" checked> Nej</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Machine info card (visas efter uppslag) -->
       <div class="machine-info-card" id="machine-info-card">
         <div class="machine-info-grid" id="machine-info-grid"></div>
@@ -1278,19 +1295,8 @@
           <label>Antal ggr / år</label>
           <input type="number" id="f-antal-ggr" placeholder="t.ex. 2" min="1">
         </div>
-        <div class="field-group">
-          <label>Står mot kaj?</label>
-          <div style="display:flex;gap:16px;margin-top:6px;">
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="ja"> Ja</label>
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="nej" checked> Nej</label>
-          </div>
-        </div>
       </div>
       <div class="field-grid">
-        <div class="field-group">
-          <label>Maskinens gångtid (timmar)</label>
-          <input type="number" id="f-gangtid" placeholder="t.ex. 1250" min="0">
-        </div>
         <div class="field-group">
           <label>Antal timmar extraarbete</label>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
@@ -2922,9 +2928,14 @@ function openProtocol(type) {
   // Visa/dölj komprimator-extrafält
   const kompExtra = document.getElementById('komp-extra-fields');
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
+  const isVandare = ['vandare','vandare-kaly'].includes(type);
   if (kompExtra) kompExtra.style.display = isKompExtra ? '' : 'none';
+  const topFields = document.getElementById('vandare-top-fields');
+  if (topFields) topFields.style.display = isKompExtra ? '' : 'none';
+  const motKajField = document.getElementById('mot-kaj-field');
+  if (motKajField) motKajField.style.display = isVandare ? '' : 'none';
   const vandareExtra = document.getElementById('vandare-extra-fields');
-  if (vandareExtra) vandareExtra.style.display = ['vandare','vandare-kaly'].includes(type) ? '' : 'none';
+  if (vandareExtra) vandareExtra.style.display = isVandare ? '' : 'none';
   // Dölj utskriftsknapp för tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
