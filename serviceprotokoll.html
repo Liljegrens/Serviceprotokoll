@@ -2470,17 +2470,6 @@ async function lookupMachine(val) {
           : f.val}</div>
       </div>`).join('');
 
-    // Auto-detektera maskintyp från beskrivning och byt checklista
-    const detectedType = detectMachineType(m.beskrivning || '');
-    if (detectedType && detectedType !== currentMachineType) {
-      currentMachineType = detectedType;
-      buildChecklist(getChecklistItems());
-      showMachineTypeNotice(detectedType, m.beskrivning);
-    } else if (!detectedType) {
-      currentMachineType = null;
-      buildChecklist(getChecklistItems());
-      hideMachineTypeNotice();
-    }
 
     // Visa "Står mot kaj" från maskinregistret (för vändare-protokoll)
     const motKajDisplay = document.getElementById('mot-kaj-display');
