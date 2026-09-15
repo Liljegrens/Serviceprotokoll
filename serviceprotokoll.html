@@ -1260,6 +1260,10 @@
             <label>Maskinens gångtid (timmar)</label>
             <input type="number" id="f-gangtid" placeholder="t.ex. 1250" min="0">
           </div>
+          <div class="field-group" id="mot-kaj-field" style="display:none;">
+            <label>Står mot kaj</label>
+            <div id="mot-kaj-display" style="font-size:14px;padding:6px 0;color:#212121;font-weight:600;">–</div>
+          </div>
         </div>
       </div>
 
@@ -2454,6 +2458,19 @@ async function lookupMachine(val) {
       currentMachineType = null;
       buildChecklist(getChecklistItems());
       hideMachineTypeNotice();
+    }
+
+    // Visa "Står mot kaj" från maskinregistret (för vändare-protokoll)
+    const motKajDisplay = document.getElementById('mot-kaj-display');
+    const motKajField = document.getElementById('mot-kaj-field');
+    if (motKajDisplay && motKajField) {
+      const isVandare = ['vandare','vandare-kaly'].includes(currentType);
+      if (isVandare && m.mot_kaj) {
+        motKajDisplay.textContent = m.mot_kaj === 'ja' ? 'Ja' : 'Nej';
+        motKajField.style.display = '';
+      } else {
+        motKajField.style.display = 'none';
+      }
     }
 
     badge.textContent = '✓ ' + m.kund;
