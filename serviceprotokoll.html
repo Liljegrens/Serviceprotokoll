@@ -728,6 +728,17 @@
         <h2>Serviceprotokoll Balpressar</h2>
         <p>Typ 4 · Serviceprotokoll för balpressar</p>
       </div>
+      <div class="start-card" onclick="openProtocol('komprimator')">
+        <div style="font-size:48px;margin-bottom:12px;">🗜️</div>
+        <h2>Serviceprotokoll Komprimator 2025</h2>
+        <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
+      </div>
+      <div class="start-card" onclick="openProtocol('vandare')">
+        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+        <div style="font-size:36px;margin-bottom:8px;">🔄</div>
+        <h2>Serviceprotokoll Komprimator Vändare</h2>
+        <p>Typ 6 · R-S Röda/Svarta – sprickbildning, slitage, smörjning</p>
+      </div>
     </div>
   </div>
 </div>
@@ -866,6 +877,46 @@
 
     <div class="recent-section" style="margin-top:20px;">
       <h3>Fordonskontroller <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('fk-overview')">Öppna →</button></h3>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MATERIALKONTROLL PAGE ═══════════ -->
+<div id="materialkontroll-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('egenkontroller')">← Tillbaka</button>
+    <h1>Materialkontroll</h1>
+    <span></span>
+  </div>
+  <div style="padding:16px;max-width:700px;margin:0 auto;">
+
+    <div class="checklist-card" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px;">Bil / Regnr</label>
+          <input type="text" id="mk-regnr" placeholder="t.ex. UHR17S" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px;">Datum</label>
+          <input type="date" id="mk-datum" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--gray);display:block;margin-bottom:4px;">Ansvarig</label>
+          <input type="text" id="mk-ansvarig" placeholder="Namn" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;">
+        </div>
+      </div>
+    </div>
+
+    <div id="mk-checklist-container"></div>
+
+    <div class="checklist-card" style="margin-top:16px;">
+      <label style="font-size:13px;font-weight:600;color:#212121;display:block;margin-bottom:8px;">Övrig anmärkning</label>
+      <textarea id="mk-notes" rows="3" placeholder="Notering om saknat material, beställning etc…"
+        style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+      <button class="load-btn" style="flex:1;padding:14px;" onclick="saveMaterialkontroll()">💾 Spara protokoll</button>
     </div>
   </div>
 </div>
@@ -1209,6 +1260,54 @@
 
     <div id="checklist-container"></div>
 
+    <!-- Extra fält för komprimatorprotokoll -->
+    <div id="komp-extra-fields" style="display:none;" class="header-card">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">Komprimatorspecifikt</h2>
+      <div class="field-grid" id="vandare-extra-fields" style="display:none;">
+        <div class="field-group">
+          <label>Fraktion</label>
+          <input type="text" id="f-fraktion" placeholder="t.ex. Brännbart">
+        </div>
+        <div class="field-group">
+          <label>Antal ggr / år</label>
+          <input type="number" id="f-antal-ggr" placeholder="t.ex. 2" min="1">
+        </div>
+        <div class="field-group">
+          <label>Står mot kaj?</label>
+          <div style="display:flex;gap:16px;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="ja"> Ja</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="nej" checked> Nej</label>
+          </div>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Maskinens gångtid (timmar)</label>
+          <input type="number" id="f-gangtid" placeholder="t.ex. 1250" min="0">
+        </div>
+        <div class="field-group">
+          <label>Antal timmar extraarbete</label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value=""> Inget</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="0.5"> 0,5h</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="1"> 1h</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="1.5"> 1,5h</label>
+          </div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label>Utfört extraarbete inkl. material</label>
+        <textarea id="f-extraarbete" rows="3" placeholder="Beskriv vad som gjorts och ev. material…" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;margin-top:4px;"></textarea>
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label>Fel, skador och åtgärder fotodokumenterade och bifogade i Tid?</label>
+        <div style="display:flex;gap:20px;margin-top:6px;">
+          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-foto" value="ja"> Ja</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-foto" value="nej"> Nej</label>
+        </div>
+      </div>
+    </div>
+
     <div class="summary-card">
       <h2>Sammanfattning</h2>
       <div id="overall-status" class="overall-status ok">Fyll i kontrollpunkterna ovan</div>
@@ -1322,6 +1421,86 @@ const KALY_ITEMS = [
   { nr:'K6', label:'Aggregat – väderskyddat, skick på kåpa och tätningar' },
   { section: 'FUNKTION' },
   { nr:'K7', label:'Manöver – funktion, knappar och display' },
+];
+
+const VANDARE_ITEMS = [
+  { section: '1. KONTROLL AV SPRICKBILDNING' },
+  { nr:'1.1', label:'Cylinderfästningar, buntband, balpress' },
+  { nr:'1.2', label:'Spännkrokar, tvingar, låsningar' },
+  { nr:'1.3', label:'Balkar' },
+  { nr:'1.4', label:'Maskin inmontering' },
+  { section: '2. KONTROLL AV SLITAGE' },
+  { nr:'2.1', label:'Skraplist övre' },
+  { nr:'2.2', label:'Skraplist nedre' },
+  { nr:'2.3', label:'Glidklossar' },
+  { section: '3. KONTROLL' },
+  { nr:'3.1',  label:'Pressplattans front och bottenplåt' },
+  { nr:'3.2',  label:'Inkastets sidoplåt' },
+  { nr:'3.3',  label:'Follow-me-plåtar' },
+  { nr:'3.4',  label:'Gränslägesbrytare, tryckvakt' },
+  { nr:'3.5',  label:'Hydraultryck, cykeltider' },
+  { nr:'3.6',  label:'Oljenivå och oljeläckage' },
+  { nr:'3.7',  label:'Rengöring/byte av oljefilter vid behov' },
+  { nr:'3.8',  label:'Pressplattans vändningar, stannar i främre läge' },
+  { nr:'3.9',  label:'El-anslutningar, elskåp' },
+  { nr:'3.10', label:'Nödstopp funktioner, nyckelstart' },
+  { nr:'3.11', label:'Varnings-/upplysningsskyltar' },
+  { nr:'3.12', label:'Justering bultband, infästningar' },
+  { section: '4. SMÖRJNING' },
+  { nr:'4.1', label:'Extrautrustning, behållare' },
+  { nr:'4.2', label:'Anläggningsytor, smörjnippel' },
+  { nr:'4.3', label:'Spännkrokar, tvingar, låsningar' },
+  { section: '5. FUNKTIONSKONTROLL UNDER DRIFT' },
+  { nr:'5.1', label:'Driftkontroll' },
+];
+
+const KOMP_NYTT_ITEMS = [
+  { section: '1. RENSLUCKAN' },
+  { sub: 'Kontroll & rensning', note: 'Vid noteringar på Anmärkning redovisas dessa under kommentarsfältet nedan. Vid rensning av pressplatta >10 min noteras arbetstiden och orsak.' },
+  { nr:'1.1',  label:'Glidklossar' },
+  { nr:'1.2',  label:'Justering' },
+  { nr:'1.3',  label:'Infästning cylinder' },
+  { nr:'1.4',  label:'Oljeläckage cylinder' },
+  { nr:'1.5',  label:'Hydraulslangar' },
+  { nr:'1.6',  label:'Pressplattans sido/bottenplåt' },
+  { nr:'1.7',  label:'Varningsdekaler' },
+  { nr:'1.8',  label:'Rullar/hjul' },
+  { nr:'1.9',  label:'Lyftkrok' },
+  { nr:'1.10', label:'Rensning bakom pressplatta' },
+  { section: '2. INKASTLOCK' },
+  { nr:'2.1',  label:'Gångjärn' },
+  { nr:'2.2',  label:'Öppningsfunktion (hydraulik, gasdämpare/fjäder)' },
+  { nr:'2.3',  label:'Låsning för transport' },
+  { nr:'2.4',  label:'Dekal – Kryp ej in' },
+  { nr:'2.5',  label:'Dekal – Klämrisk' },
+  { nr:'2.6',  label:'Jalusiplåtar' },
+  { nr:'2.7',  label:'Skraplister' },
+  { section: '3. HYDRAUL- OCH MOTORUTRYMMET' },
+  { nr:'3.1',  label:'Kontroll el' },
+  { nr:'3.2',  label:'Motor' },
+  { nr:'3.3',  label:'Kablage' },
+  { nr:'3.4',  label:'Komponenter' },
+  { nr:'3.5',  label:'Hydraulik (tank, ventil, pump)' },
+  { nr:'3.6',  label:'Hydraulslangar' },
+  { nr:'3.7',  label:'Hydraulolja' },
+  { nr:'3.8',  label:'Oljefilter' },
+  { section: '4. BAKLUCKAN' },
+  { nr:'4.1',  label:'Lyftkrok' },
+  { nr:'4.2',  label:'Rullar/hjul' },
+  { nr:'4.3',  label:'Låsningar' },
+  { nr:'4.4',  label:'Vantskruv' },
+  { nr:'4.5',  label:'Extra tvingar' },
+  { nr:'4.6',  label:'Upphängningskedja' },
+  { nr:'4.7',  label:'Säkerhetslåsning/krok' },
+  { nr:'4.8',  label:'Dekaler – Parkera ej' },
+  { section: '5. FUNKTIONSKONTROLL / ALLMÄNÖVERSYN' },
+  { nr:'5.1',  label:'Manöverpanel' },
+  { nr:'5.2',  label:'Nödstopp' },
+  { nr:'5.3',  label:'Instruktioner' },
+  { nr:'5.4',  label:'Avfall' },
+  { nr:'5.5',  label:'Reflexer' },
+  { nr:'5.6',  label:'Skyddsräcke (1100mm framför maskin)' },
+  { nr:'5.7',  label:'Lackering' },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -1529,6 +1708,127 @@ async function deleteFkRecord(id) {
   } catch { alert('Kunde inte ta bort.'); }
 }
 // ── /FK Overview ─────────────────────────────────────────────────────────────
+
+// ── Materialkontroll ─────────────────────────────────────────────────────────
+const MK_ITEMS = [
+  { section: 'El & kablar' },
+  { nr: 1,  label: 'Elkabel 16 A 5G 2,5mm',              artnr: '130032', antal: '10m' },
+  { nr: 2,  label: 'Elkabel 32 A 5G 6mm',                artnr: '130031', antal: '10m' },
+  { nr: 3,  label: 'Vägguttag 16A',                      artnr: '130026', antal: '1 st' },
+  { nr: 4,  label: 'Vägguttag 32A',                      artnr: '130028', antal: '1 st' },
+  { nr: 5,  label: 'Stickpropp 16A Hane Fasvänd',        artnr: '130024', antal: '1 st' },
+  { nr: 6,  label: 'Stickpropp 32A Hane Fasvänd',        artnr: '130023', antal: '1 st' },
+  { nr: 7,  label: 'Stickpropp 16A Hona',                artnr: '130020', antal: '1 st' },
+  { nr: 8,  label: 'Stickpropp 32A Hona',                artnr: '130027', antal: '1 st' },
+  { nr: 9,  label: 'Låscylinder / Nyckelstart TYP 455',  artnr: '130018', antal: '1 st' },
+  { nr: 10, label: 'Låscylinder / Nyckelstart TYP MS1',  artnr: '130017', antal: '1 st' },
+  { section: 'Hydraulik & smörj' },
+  { nr: 11, label: 'Gasdämpare 650 x 700N',              artnr: '100325', antal: '2 st' },
+  { nr: 12, label: 'Gasdämpare 650 x 900N',              artnr: '100326', antal: '2 st' },
+  { nr: 13, label: 'Gasdämpare 650 x 1200N',             artnr: '100327', antal: '2 st' },
+  { nr: 14, label: 'Hydraulolja',                        artnr: '100347', antal: '20L' },
+  { nr: 15, label: 'Absolhink',                          artnr: '100348', antal: '1 st' },
+  { nr: 16, label: 'Absol dukar (ca 4 ark)',             artnr: '100348-1', antal: '4 st' },
+  { nr: 17, label: 'Fett tub (Renolit MP Plus 500g)',    artnr: 'x100231', antal: '1 st' },
+  { nr: 18, label: 'Smörjnippel M8',                    artnr: '100322', antal: '1 pkt' },
+  { nr: 19, label: 'Smörjnippel M10',                   artnr: '100323', antal: '1 pkt' },
+  { section: 'Diverse' },
+  { nr: 20, label: 'Trasor',                            artnr: 'x100207', antal: '1 st' },
+  { nr: 21, label: 'Sopsäck 125L',                      artnr: 'X100230', antal: '1 rulle' },
+  { nr: 22, label: 'Tom oljedunk (spillolja)',           artnr: '100403', antal: '1 st' },
+  { nr: 23, label: 'Hink för använd absol',             artnr: '100406', antal: '1 st' },
+  { nr: 24, label: 'Spade',                             artnr: '—', antal: '1 st' },
+  { nr: 25, label: 'Oljepluggar',                       artnr: '—', antal: '1 set' },
+  { section: 'Säkerhet' },
+  { nr: 26, label: 'Brandsläckare',                     artnr: '—', antal: '1 st' },
+  { nr: 27, label: 'Brandfilt',                         artnr: '—', antal: '1 st' },
+  { nr: 28, label: 'Första hjälpen-kit',                artnr: '—', antal: '1 st' },
+];
+
+function openMaterialkontroll() {
+  document.getElementById('mk-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('mk-ansvarig').value = currentUser ? currentUser.name : '';
+  buildMkChecklist();
+}
+
+function buildMkItem(item) {
+  const id = 'mk-item-' + item.nr;
+  const div = document.createElement('div');
+  div.className = 'check-item'; div.id = id;
+  const top = document.createElement('div'); top.className = 'item-top';
+
+  const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
+  const info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0;';
+  const lbl = document.createElement('span'); lbl.className = 'item-label'; lbl.textContent = item.label;
+  const sub = document.createElement('span');
+  sub.style.cssText = 'display:block;font-size:11px;color:var(--gray);';
+  sub.textContent = `Art.nr ${item.artnr} · Ska finnas: ${item.antal}`;
+  info.appendChild(lbl); info.appendChild(sub);
+
+  const rg = document.createElement('div'); rg.className = 'radio-group';
+  [['ok','✓ Finns'],['sak','Saknas'],['byt','Beställt']].forEach(([val,txt]) => {
+    const opt = document.createElement('div'); opt.className = 'radio-opt';
+    const radio = document.createElement('input');
+    radio.type = 'radio'; radio.name = id; radio.value = val; radio.id = id + '-' + val;
+    const label = document.createElement('label');
+    label.htmlFor = id + '-' + val; label.textContent = txt;
+    opt.appendChild(radio); opt.appendChild(label); rg.appendChild(opt);
+  });
+
+  top.appendChild(nr); top.appendChild(info); top.appendChild(rg);
+  div.appendChild(top);
+
+  const cb = document.createElement('textarea');
+  cb.className = 'comment-box'; cb.id = 'mk-comment-' + item.nr;
+  cb.rows = 2; cb.placeholder = 'Anmärkning…';
+  div.appendChild(cb);
+  return div;
+}
+
+function buildMkChecklist() {
+  const container = document.getElementById('mk-checklist-container');
+  container.innerHTML = '';
+  let card = null;
+  MK_ITEMS.forEach(item => {
+    if (item.section) {
+      const hdr = document.createElement('div');
+      hdr.className = 'section-header'; hdr.textContent = item.section;
+      container.appendChild(hdr);
+      card = document.createElement('div'); card.className = 'checklist-card';
+      container.appendChild(card);
+    } else if (item.nr && card) {
+      card.appendChild(buildMkItem(item));
+    }
+  });
+}
+
+async function saveMaterialkontroll() {
+  const regnr = document.getElementById('mk-regnr').value.trim();
+  const datum = document.getElementById('mk-datum').value;
+  const ansvarig = document.getElementById('mk-ansvarig').value.trim();
+  if (!regnr) { alert('Ange bil / regnr.'); return; }
+
+  const items = MK_ITEMS.filter(i => i.nr).map(i => ({
+    nr: i.nr, label: i.label, artnr: i.artnr, antal: i.antal,
+    value: document.querySelector(`input[name="mk-item-${i.nr}"]:checked`)?.value || '',
+    comment: document.getElementById(`mk-comment-${i.nr}`)?.value || ''
+  }));
+
+  const data = { regnr, datum, ansvarig, items, notes: document.getElementById('mk-notes').value };
+
+  try {
+    await apiFetch('/api/materialkontroll', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const tack = document.createElement('div');
+    tack.className = 'tack-screen';
+    tack.innerHTML = '<div class="tack-icon">✅</div><div class="tack-text">Protokoll sparat!</div>';
+    document.body.appendChild(tack);
+    setTimeout(() => { document.body.removeChild(tack); showPage('egenkontroller'); }, 2000);
+  } catch(e) { alert('Kunde inte spara: ' + e.message); }
+}
+// ── /Materialkontroll ─────────────────────────────────────────────────────────
 
 async function loadUsersAdmin() {
   const list = document.getElementById('users-list');
@@ -2043,6 +2343,7 @@ function showPage(page) {
   if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); }
   if (page === 'fk-overview') loadFkOverview();
   if (page === 'fordonskontroll') openFordonskontroll();
+  if (page === 'materialkontroll') openMaterialkontroll();
 }
 
 function updateUserGreeting() {
@@ -2055,11 +2356,13 @@ function updateUserGreeting() {
 // ═══════════════════════════════════════════════════
 let machineCount        = 0;
 let lookupTimer         = null;
-let currentType         = null;   // 'verkstad' | 'flygande'
+let currentType         = null;   // 'verkstad' | 'flygande' | 'komprimator'
 let currentMachineType  = null;   // 'kaly' | null | …
 
 function getChecklistItems() {
   if (currentMachineType === 'kaly') return [...KALY_ITEMS];
+  if (currentType === 'komprimator') return [...KOMP_NYTT_ITEMS];
+  if (currentType === 'vandare') return [...VANDARE_ITEMS];
   return currentType === 'flygande' ? [...SHARED_ITEMS, ...FLYGANDE_EXTRA] : [...SHARED_ITEMS];
 }
 
@@ -2552,6 +2855,17 @@ async function saveProtocol() {
         tekniker:   document.getElementById('f-tekniker').value,
         modell:     document.getElementById('f-modell').value,
         items,
+        ...((currentType === 'komprimator' || currentType === 'vandare') ? {
+          gangtid:       document.getElementById('f-gangtid')?.value || '',
+          extra_timmar:  document.querySelector('input[name="f-extra-timmar"]:checked')?.value || '',
+          extraarbete:   document.getElementById('f-extraarbete')?.value || '',
+          foto:          document.querySelector('input[name="f-foto"]:checked')?.value || '',
+          ...(currentType === 'vandare' ? {
+            fraktion:  document.getElementById('f-fraktion')?.value || '',
+            antal_ggr: document.getElementById('f-antal-ggr')?.value || '',
+            mot_kaj:   document.querySelector('input[name="f-mot-kaj"]:checked')?.value || '',
+          } : {}),
+        } : {}),
       })
     });
     conf.textContent = '✓ Protokollet är sparat!';
@@ -2572,8 +2886,13 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  document.getElementById('protocol-title').textContent =
-    type==='flygande' ? 'Typ 2 – Flygande service' : 'Typ 1 – Verkstadsintag';
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)' };
+  document.getElementById('protocol-title').textContent = titles[type] || type;
+  // Visa/dölj komprimator-extrafält
+  const kompExtra = document.getElementById('komp-extra-fields');
+  if (kompExtra) kompExtra.style.display = (type === 'komprimator' || type === 'vandare') ? '' : 'none';
+  const vandareExtra = document.getElementById('vandare-extra-fields');
+  if (vandareExtra) vandareExtra.style.display = type === 'vandare' ? '' : 'none';
   // Dölj utskriftsknapp för tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
