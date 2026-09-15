@@ -2464,8 +2464,8 @@ async function lookupMachine(val) {
     const motKajDisplay = document.getElementById('mot-kaj-display');
     const motKajField = document.getElementById('mot-kaj-field');
     if (motKajDisplay && motKajField) {
-      const isVandare = ['vandare','vandare-kaly'].includes(currentType);
-      if (isVandare && m.mot_kaj) {
+      const isKomp = ['komprimator','vandare','vandare-kaly'].includes(currentType);
+      if (isKomp && m.mot_kaj !== undefined) {
         motKajDisplay.textContent = m.mot_kaj === 'ja' ? 'Ja' : 'Nej';
         motKajField.style.display = '';
       } else {
