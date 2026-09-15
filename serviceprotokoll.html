@@ -737,7 +737,13 @@
         <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
         <div style="font-size:36px;margin-bottom:8px;">🔄</div>
         <h2>Serviceprotokoll Komprimator Vändare</h2>
-        <p>Typ 6 · R-S Röda/Svarta – sprickbildning, slitage, smörjning</p>
+        <p>Typ 6 · R-S Röda/Svarta – fullständigt protokoll</p>
+      </div>
+      <div class="start-card" onclick="openProtocol('vandare-kaly')">
+        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+        <div style="font-size:36px;margin-bottom:8px;">🔴</div>
+        <h2>Serviceprotokoll Käly Vändare</h2>
+        <p>Typ 7 · R-S Käly – röda siffror (förenklat protokoll)</p>
       </div>
     </div>
   </div>
@@ -1421,6 +1427,30 @@ const KALY_ITEMS = [
   { nr:'K6', label:'Aggregat – väderskyddat, skick på kåpa och tätningar' },
   { section: 'FUNKTION' },
   { nr:'K7', label:'Manöver – funktion, knappar och display' },
+];
+
+// Käly-variant: bara röda siffror från Word-protokollet
+const VANDARE_KALY_ITEMS = [
+  { section: '1. KONTROLL AV SPRICKBILDNING' },
+  { nr:'1.1', label:'Cylinderfästningar, buntband, balpress' },
+  { nr:'1.2', label:'Spännkrokar, tvingar, låsningar' },
+  { nr:'1.3', label:'Balkar' },
+  { nr:'1.4', label:'Maskin inmontering' },
+  { section: '3. KONTROLL' },
+  { nr:'3.2',  label:'Inkastets sidoplåt' },
+  { nr:'3.4',  label:'Gränslägesbrytare, tryckvakt' },
+  { nr:'3.5',  label:'Hydraultryck, cykeltider' },
+  { nr:'3.6',  label:'Oljenivå och oljeläckage' },
+  { nr:'3.7',  label:'Rengöring/byte av oljefilter vid behov' },
+  { nr:'3.9',  label:'El-anslutningar, elskåp' },
+  { nr:'3.10', label:'Nödstopp funktioner, nyckelstart' },
+  { nr:'3.11', label:'Varnings-/upplysningsskyltar' },
+  { nr:'3.12', label:'Justering bultband, infästningar' },
+  { section: '4. SMÖRJNING' },
+  { nr:'4.2', label:'Anläggningsytor, smörjnippel' },
+  { nr:'4.3', label:'Spännkrokar, tvingar, låsningar' },
+  { section: '5. FUNKTIONSKONTROLL UNDER DRIFT' },
+  { nr:'5.1', label:'Driftkontroll' },
 ];
 
 const VANDARE_ITEMS = [
@@ -2363,6 +2393,7 @@ function getChecklistItems() {
   if (currentMachineType === 'kaly') return [...KALY_ITEMS];
   if (currentType === 'komprimator') return [...KOMP_NYTT_ITEMS];
   if (currentType === 'vandare') return [...VANDARE_ITEMS];
+  if (currentType === 'vandare-kaly') return [...VANDARE_KALY_ITEMS];
   return currentType === 'flygande' ? [...SHARED_ITEMS, ...FLYGANDE_EXTRA] : [...SHARED_ITEMS];
 }
 
@@ -2855,7 +2886,7 @@ async function saveProtocol() {
         tekniker:   document.getElementById('f-tekniker').value,
         modell:     document.getElementById('f-modell').value,
         items,
-        ...((currentType === 'komprimator' || currentType === 'vandare') ? {
+        ...(['komprimator','vandare','vandare-kaly'].includes(currentType) ? {
           gangtid:       document.getElementById('f-gangtid')?.value || '',
           extra_timmar:  document.querySelector('input[name="f-extra-timmar"]:checked')?.value || '',
           extraarbete:   document.getElementById('f-extraarbete')?.value || '',
@@ -2886,13 +2917,14 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)' };
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
   // Visa/dölj komprimator-extrafält
   const kompExtra = document.getElementById('komp-extra-fields');
-  if (kompExtra) kompExtra.style.display = (type === 'komprimator' || type === 'vandare') ? '' : 'none';
+  const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
+  if (kompExtra) kompExtra.style.display = isKompExtra ? '' : 'none';
   const vandareExtra = document.getElementById('vandare-extra-fields');
-  if (vandareExtra) vandareExtra.style.display = type === 'vandare' ? '' : 'none';
+  if (vandareExtra) vandareExtra.style.display = ['vandare','vandare-kaly'].includes(type) ? '' : 'none';
   // Dölj utskriftsknapp för tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
