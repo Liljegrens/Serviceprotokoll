@@ -1262,9 +1262,15 @@
           </div>
           <div class="field-group" id="mot-kaj-field" style="display:none;">
             <label>Står mot kaj?</label>
-            <div style="display:flex;gap:20px;margin-top:6px;">
-              <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="ja"> Ja</label>
-              <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-mot-kaj" value="nej" checked> Nej</label>
+            <div class="radio-group" style="margin-top:6px;">
+              <div class="radio-opt">
+                <input type="radio" name="f-mot-kaj" value="ja" id="f-mot-kaj-ja">
+                <label for="f-mot-kaj-ja">Ja</label>
+              </div>
+              <div class="radio-opt">
+                <input type="radio" name="f-mot-kaj" value="nej" id="f-mot-kaj-nej" checked>
+                <label for="f-mot-kaj-nej">Nej</label>
+              </div>
             </div>
           </div>
         </div>
@@ -1313,9 +1319,15 @@
       </div>
       <div class="field-group" style="margin-top:12px;">
         <label>Fel, skador och åtgärder fotodokumenterade och bifogade i Tid?</label>
-        <div style="display:flex;gap:20px;margin-top:6px;">
-          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-foto" value="ja"> Ja</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-foto" value="nej"> Nej</label>
+        <div class="radio-group" style="margin-top:6px;">
+          <div class="radio-opt">
+            <input type="radio" name="f-foto" value="ja" id="f-foto-ja">
+            <label for="f-foto-ja">Ja</label>
+          </div>
+          <div class="radio-opt">
+            <input type="radio" name="f-foto" value="nej" id="f-foto-nej">
+            <label for="f-foto-nej">Nej</label>
+          </div>
         </div>
       </div>
     </div>
