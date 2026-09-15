@@ -1287,49 +1287,6 @@
 
     <div id="checklist-container"></div>
 
-    <!-- Extra fält för komprimatorprotokoll -->
-    <div id="komp-extra-fields" style="display:none;" class="header-card">
-      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">Komprimatorspecifikt</h2>
-      <div class="field-grid" id="vandare-extra-fields" style="display:none;">
-        <div class="field-group">
-          <label>Fraktion</label>
-          <input type="text" id="f-fraktion" placeholder="t.ex. Brännbart">
-        </div>
-        <div class="field-group">
-          <label>Antal ggr / år</label>
-          <input type="number" id="f-antal-ggr" placeholder="t.ex. 2" min="1">
-        </div>
-      </div>
-      <div class="field-grid">
-        <div class="field-group">
-          <label>Antal timmar extraarbete</label>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value=""> Inget</label>
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="0.5"> 0,5h</label>
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="1"> 1h</label>
-            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:14px;"><input type="radio" name="f-extra-timmar" value="1.5"> 1,5h</label>
-          </div>
-        </div>
-      </div>
-      <div class="field-group" style="margin-top:12px;">
-        <label>Utfört extraarbete inkl. material</label>
-        <textarea id="f-extraarbete" rows="3" placeholder="Beskriv vad som gjorts och ev. material…" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;margin-top:4px;"></textarea>
-      </div>
-      <div class="field-group" style="margin-top:12px;">
-        <label>Fel, skador och åtgärder fotodokumenterade och bifogade i Tid?</label>
-        <div class="radio-group" style="margin-top:6px;">
-          <div class="radio-opt">
-            <input type="radio" name="f-foto" value="ja" id="f-foto-ja">
-            <label for="f-foto-ja">Ja</label>
-          </div>
-          <div class="radio-opt">
-            <input type="radio" name="f-foto" value="nej" id="f-foto-nej">
-            <label for="f-foto-nej">Nej</label>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="summary-card">
       <h2>Sammanfattning</h2>
       <div id="overall-status" class="overall-status ok">Fyll i kontrollpunkterna ovan</div>
@@ -2903,14 +2860,9 @@ async function saveProtocol() {
         modell:     document.getElementById('f-modell').value,
         items,
         ...(['komprimator','vandare','vandare-kaly'].includes(currentType) ? {
-          gangtid:       document.getElementById('f-gangtid')?.value || '',
-          extra_timmar:  document.querySelector('input[name="f-extra-timmar"]:checked')?.value || '',
-          extraarbete:   document.getElementById('f-extraarbete')?.value || '',
-          foto:          document.querySelector('input[name="f-foto"]:checked')?.value || '',
+          gangtid: document.getElementById('f-gangtid')?.value || '',
           ...(currentType === 'vandare' ? {
-            fraktion:  document.getElementById('f-fraktion')?.value || '',
-            antal_ggr: document.getElementById('f-antal-ggr')?.value || '',
-            mot_kaj:   document.querySelector('input[name="f-mot-kaj"]:checked')?.value || '',
+            mot_kaj: document.querySelector('input[name="f-mot-kaj"]:checked')?.value || '',
           } : {}),
         } : {}),
       })
@@ -2935,17 +2887,13 @@ function openProtocol(type) {
   showPage('protocol');
   const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
-  // Visa/dölj komprimator-extrafält
-  const kompExtra = document.getElementById('komp-extra-fields');
+  // Visa/dölj fält beroende på protokolltyp
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
   const isVandare = ['vandare','vandare-kaly'].includes(type);
-  if (kompExtra) kompExtra.style.display = isKompExtra ? '' : 'none';
   const topFields = document.getElementById('vandare-top-fields');
   if (topFields) topFields.style.display = isKompExtra ? '' : 'none';
   const motKajField = document.getElementById('mot-kaj-field');
   if (motKajField) motKajField.style.display = isVandare ? '' : 'none';
-  const vandareExtra = document.getElementById('vandare-extra-fields');
-  if (vandareExtra) vandareExtra.style.display = isVandare ? '' : 'none';
   // Dölj utskriftsknapp för tekniker
   const printBtn = document.getElementById('print-top-btn');
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
