@@ -3038,6 +3038,11 @@ function sendEmail() {
   line('─'.repeat(48));
   line(`Godkända punkter: ${ok.length} av ${total}`);
   line();
+  if (akut.length || bevaka.length) {
+    line('─'.repeat(48));
+    line('📎 FOTON: Om du fotograferat anmärkningar – bifoga bilderna manuellt till detta mail.');
+    line();
+  }
   line('Med vänliga hälsningar,');
   line(`${tekniker}`);
   line('Liljegrens i Tyresö AB');
