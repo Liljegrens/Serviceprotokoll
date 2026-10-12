@@ -887,6 +887,31 @@
       <h3>Maskiner <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('maskiner')">Öppna maskinregister →</button></h3>
     </div>
 
+    <div class="recent-section" style="margin-top:20px;">
+      <h3>Hydrauliklogg</h3>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="text" id="admin-hlog-maskin" placeholder="Maskinnummer" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;width:160px;">
+        <button onclick="adminHlogSok()" style="padding:8px 16px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;">Hämta</button>
+      </div>
+      <div id="admin-hlog-maskininfo" style="display:none;background:#e8f0f8;border:1px solid #b0c4de;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;"></div>
+      <div id="admin-hlog-form" style="display:none;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px;">Datum</label>
+            <input type="date" id="admin-hlog-datum" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;"></div>
+          <div style="display:flex;gap:12px;align-items:center;padding-bottom:2px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="admin-hlog-filter"> Filter</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="admin-hlog-olja"> Olja</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="checkbox" id="admin-hlog-slangar"> Slangar</label>
+          </div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:4px;">Notering</label>
+            <input type="text" id="admin-hlog-not" placeholder="Valfri notering" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;width:220px;"></div>
+          <button onclick="adminHlogSpara()" style="padding:8px 16px;background:var(--ok);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;">+ Spara post</button>
+          <span id="admin-hlog-msg" style="font-size:13px;font-weight:700;color:var(--ok);display:none;"></span>
+        </div>
+        <div id="admin-hlog-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+
     <div class="recent-section" style="margin-top:20px;" id="users-section">
       <h3>Användare <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="openAddUser()">+ Lägg till</button></h3>
       <div id="users-list"></div>
@@ -4471,6 +4496,80 @@ async function addHydrauliklogg(nr) {
 async function deleteHydrauliklogg(id, nr) {
   await fetch('/api/hydrauliklogg/' + id, { method: 'DELETE' });
   loadHydrauliklogg(nr);
+}
+
+let _adminHlogNr = '';
+
+async function adminHlogSok() {
+  const nr = document.getElementById('admin-hlog-maskin').value.trim();
+  if (!nr) return;
+  _adminHlogNr = nr;
+  const infoEl = document.getElementById('admin-hlog-maskininfo');
+  const formEl = document.getElementById('admin-hlog-form');
+  infoEl.style.display = 'none'; formEl.style.display = 'none';
+  try {
+    const m = await fetch('/api/machines/' + encodeURIComponent(nr)).then(r => r.json());
+    if (!m) { infoEl.innerHTML = '<span style="color:#c62828;">Maskin ej hittad.</span>'; infoEl.style.display = ''; return; }
+    infoEl.innerHTML = `<strong>${m.nr}</strong> · ${m.kund||'–'} · ${m.modell||'–'}
+      ${m.hydraulfilter ? `<span style="margin-left:12px;background:#fff;border:1px solid #b0c4de;border-radius:6px;padding:2px 8px;">Filter: ${m.hydraulfilter}</span>` : ''}
+      ${m.hydraulolja   ? `<span style="margin-left:6px;background:#fff;border:1px solid #b0c4de;border-radius:6px;padding:2px 8px;">Olja: ${m.hydraulolja}</span>` : ''}
+      ${m.hydraulslangar? `<span style="margin-left:6px;background:#fff;border:1px solid #b0c4de;border-radius:6px;padding:2px 8px;">Slangar: ${m.hydraulslangar}</span>` : ''}`;
+    infoEl.style.display = '';
+    document.getElementById('admin-hlog-datum').value = new Date().toISOString().split('T')[0];
+    formEl.style.display = '';
+    adminHlogRenderList();
+  } catch(e) {
+    infoEl.innerHTML = '<span style="color:#c62828;">Fel: ' + e.message + '</span>';
+    infoEl.style.display = '';
+  }
+}
+
+async function adminHlogSpara() {
+  const datum   = document.getElementById('admin-hlog-datum').value;
+  const filter  = document.getElementById('admin-hlog-filter').checked;
+  const olja    = document.getElementById('admin-hlog-olja').checked;
+  const slangar = document.getElementById('admin-hlog-slangar').checked;
+  const notering= document.getElementById('admin-hlog-not').value.trim();
+  const msg     = document.getElementById('admin-hlog-msg');
+  if (!datum || (!filter && !olja && !slangar)) {
+    msg.textContent = 'Ange datum och minst ett alternativ.';
+    msg.style.color = '#c62828'; msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 3000); return;
+  }
+  await fetch('/api/hydrauliklogg', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ maskin_nr: _adminHlogNr, datum, filter: filter?1:0, olja: olja?1:0, slangar: slangar?1:0, notering })
+  });
+  ['admin-hlog-filter','admin-hlog-olja','admin-hlog-slangar'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('admin-hlog-not').value = '';
+  msg.textContent = '✓ Sparad'; msg.style.color = 'var(--ok)'; msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
+  adminHlogRenderList();
+}
+
+async function adminHlogRenderList() {
+  const el = document.getElementById('admin-hlog-list');
+  const logs = await fetch('/api/hydrauliklogg/' + encodeURIComponent(_adminHlogNr)).then(r => r.json());
+  if (!logs.length) { el.innerHTML = '<div style="font-size:13px;color:#888;">Inga poster ännu.</div>'; return; }
+  el.innerHTML = logs.map(l => {
+    const chips = [];
+    if (l.filter)  chips.push('Filter');
+    if (l.olja)    chips.push('Olja');
+    if (l.slangar) chips.push('Slangar');
+    return `<div style="background:#f5f7f9;border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <span style="font-weight:700;font-size:13px;">${l.datum}</span>
+        ${chips.map(c=>`<span style="margin-left:6px;background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">${c}</span>`).join('')}
+        ${l.notering ? `<div style="font-size:12px;color:#546e7a;margin-top:4px;">${l.notering}</div>` : ''}
+      </div>
+      <button onclick="adminHlogDelete(${l.id})" style="border:none;background:none;color:#c62828;cursor:pointer;font-size:16px;padding:0;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function adminHlogDelete(id) {
+  await fetch('/api/hydrauliklogg/' + id, { method: 'DELETE' });
+  adminHlogRenderList();
 }
 
 function renderMaskinkortStats(history) {
