@@ -1451,6 +1451,12 @@
       <div class="machine-info-card" id="machine-info-card">
         <div class="machine-info-grid" id="machine-info-grid"></div>
       </div>
+
+      <!-- Hydraulikspec (visas om maskinen har hydraulikinfo) -->
+      <div id="hydraulik-info-card" style="display:none;margin-top:10px;background:#e8f0f8;border:1px solid #b0c4de;border-radius:8px;padding:12px 16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Hydraulikspecifikation</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;" id="hydraulik-info-grid"></div>
+      </div>
     </div>
 
     <div class="history-banner" id="history-banner">
@@ -2656,6 +2662,28 @@ async function lookupMachine(val) {
         motKajField.style.display = '';
       } else {
         motKajField.style.display = 'none';
+      }
+    }
+
+    // Visa hydraulikspec om maskinen har info
+    const hydCard = document.getElementById('hydraulik-info-card');
+    const hydGrid = document.getElementById('hydraulik-info-grid');
+    if (hydCard && hydGrid) {
+      const hydFields = [
+        { label: 'Hydraulfilter (art.nr)', val: m.hydraulfilter, sub: 'Byt var 12 mån' },
+        { label: 'Hydraulolja (typ)', val: m.hydraulolja, sub: 'Byt var 12–24 mån' },
+        { label: 'Hydraulslangar presscylinder', val: m.hydraulslangar, sub: 'Byt var 4–5 år' },
+      ].filter(f => f.val);
+      if (hydFields.length > 0) {
+        hydGrid.innerHTML = hydFields.map(f => `
+          <div>
+            <div style="font-size:11px;color:#546e7a;font-weight:600;">${f.label}</div>
+            <div style="font-size:14px;font-weight:700;color:#1a3a5c;">${f.val}</div>
+            <div style="font-size:11px;color:#78909c;">${f.sub}</div>
+          </div>`).join('');
+        hydCard.style.display = '';
+      } else {
+        hydCard.style.display = 'none';
       }
     }
 
