@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Liljegrens">
 <link rel="apple-touch-icon" href="/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root {
     --brand: #1a3a5c;
@@ -1756,7 +1757,13 @@ async function initAuth() {
     applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
+    _checkMaskinParam();
   }
+}
+
+function _checkMaskinParam() {
+  const nr = new URLSearchParams(window.location.search).get('maskin');
+  if (nr) openMaskinkort(nr);
 }
 
 function applyRoleUI() {
@@ -2121,6 +2128,7 @@ async function doLogin() {
     applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
+    _checkMaskinParam();
   } catch {
     err.textContent = 'Fel namn eller PIN — försök igen.';
     document.getElementById('login-pin').value = '';
@@ -4402,8 +4410,11 @@ function renderMaskinkortInfo(m) {
         <input type="text" id="mk-hydraulslangar" value="${m.hydraulslangar||''}" placeholder="Art.nr – byt var 4–5 år">
       </div>
     </div>
-    <button onclick="saveHydraulik('${m.nr}')" style="margin-top:12px;padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
-    <span id="hydraulik-saved" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <button onclick="saveHydraulik('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
+      <span id="hydraulik-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
+      <button onclick="showQrCode('${m.nr}')" style="padding:6px 16px;font-size:13px;border:1.5px solid var(--brand);background:#fff;color:var(--brand);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;">&#x25A6; QR-kod</button>
+    </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
       <div class="field-group"><label>Datum</label><input type="date" id="hlog-datum"></div>
@@ -4950,6 +4961,52 @@ function sendInstallationEmail() {
   const datum = document.getElementById('inst-datum').value || '';
   window.location.href = `mailto:?subject=${encodeURIComponent('Installationsprotokoll – ' + kund + ' ' + datum)}&body=${body}`;
 }
+</script>
+
+<!-- ═══════════ QR-KOD MODAL ═══════════ -->
+<div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <div style="font-weight:700;font-size:16px;color:var(--brand);margin-bottom:4px;" id="qr-modal-title">QR-kod</div>
+    <div style="font-size:12px;color:#546e7a;margin-bottom:16px;" id="qr-modal-sub"></div>
+    <div id="qr-canvas" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+    <div style="font-size:11px;color:#888;margin-bottom:16px;word-break:break-all;" id="qr-url-text"></div>
+    <button onclick="document.getElementById('qr-modal').style.display='none';"
+      style="padding:10px 24px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">Stäng</button>
+  </div>
+</div>
+
+<style>
+  #qr-modal { display: none; }
+  #qr-modal.open { display: flex; }
+</style>
+
+<script>
+function showQrCode(maskinNr) {
+  const base = window.location.origin + window.location.pathname;
+  const url  = base + '?maskin=' + encodeURIComponent(maskinNr);
+
+  document.getElementById('qr-modal-title').textContent = 'QR-kod – Maskin ' + maskinNr;
+  document.getElementById('qr-modal-sub').textContent   = 'Skanna för att öppna maskinkort';
+  document.getElementById('qr-url-text').textContent    = url;
+
+  const canvas = document.getElementById('qr-canvas');
+  canvas.innerHTML = '';
+  new QRCode(canvas, {
+    text:          url,
+    width:         200,
+    height:        200,
+    colorDark:     '#1a3a5c',
+    colorLight:    '#ffffff',
+    correctLevel:  QRCode.CorrectLevel.M
+  });
+
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+// Stäng modal vid klick utanför
+document.getElementById('qr-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
 </script>
 </body>
 </html>
