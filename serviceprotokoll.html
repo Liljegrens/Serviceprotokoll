@@ -3655,7 +3655,8 @@ async function printRecord(rec) {
   } catch(e) {}
   html = html.replace('HYDRAULIK_PLACEHOLDER', hydraulikHtml);
 
-  const w = window.open('', '_blank');
+  const w = printRecord._preOpenedWindow || window.open('', '_blank');
+  printRecord._preOpenedWindow = null;
   w.document.write(html);
   w.document.close();
 }
@@ -5164,7 +5165,10 @@ function showQrCode(maskinNr) {
 }
 
 function roOpenProtocol() {
-  if (window._roLatestProtocol) printRecord(window._roLatestProtocol);
+  if (!window._roLatestProtocol) return;
+  // Öppna fönstret synkront (före await) så popup-blockers inte stoppar det
+  printRecord._preOpenedWindow = window.open('', '_blank');
+  printRecord(window._roLatestProtocol);
 }
 
 // Stäng modal vid klick utanför
