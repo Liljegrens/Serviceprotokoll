@@ -1888,6 +1888,10 @@ async function openMaskinReadOnly(nr) {
           <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.hydraulslangar || '–'}</div>
           <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastSlangar || 'ej loggat'}</div>
         </div>
+        ${machine.gasdampare ? `<div class="field-group">
+          <label>Gasdämpare inkastlock</label>
+          <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.gasdampare}</div>
+        </div>` : ''}
       </div>`;
   } catch(e) {
     document.getElementById('ro-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
@@ -4517,7 +4521,8 @@ function renderMaskinkortInfo(m) {
     ['Adress', [m.adress, m.stad].filter(Boolean).join(', ')],
     ['Märke', m.fabrikat], ['Modell', m.modell], ['Årsmodell', m.arsmodell],
     ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
-    ['Beskrivning', m.beskrivning], ['Notering', m.notering]
+    ['Beskrivning', m.beskrivning], ['Notering', m.notering],
+    ['Gasdämpare inkastlock', m.gasdampare]
   ].filter(([,v]) => v);
   const kajVal = m.mot_kaj || 'nej';
   document.getElementById('maskinkort-info').innerHTML = `
@@ -4546,6 +4551,13 @@ function renderMaskinkortInfo(m) {
       <div class="field-group">
         <label>Hydraulslangar presscylinder</label>
         <input type="text" id="mk-hydraulslangar" value="${m.hydraulslangar||''}" placeholder="Art.nr – byt var 4–5 år">
+      </div>
+    </div>
+    <h2 style="margin-top:20px;">Inkastlock</h2>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+      <div class="field-group">
+        <label>Gasdämpare (art.nr / beskrivning)</label>
+        <input type="text" id="mk-gasdampare" value="${m.gasdampare||''}" placeholder="T.ex. 2× STABILUS 4321AB">
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;">
@@ -4592,7 +4604,8 @@ async function saveHydraulik(nr) {
   const data = {
     hydraulfilter:  document.getElementById('mk-hydraulfilter').value.trim(),
     hydraulolja:    document.getElementById('mk-hydraulolja').value.trim(),
-    hydraulslangar: document.getElementById('mk-hydraulslangar').value.trim()
+    hydraulslangar: document.getElementById('mk-hydraulslangar').value.trim(),
+    gasdampare:     document.getElementById('mk-gasdampare').value.trim()
   };
   await fetch('/api/machines/' + encodeURIComponent(nr), {
     method: 'PATCH',

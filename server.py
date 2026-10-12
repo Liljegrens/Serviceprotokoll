@@ -91,6 +91,8 @@ def init_db():
             db.execute("ALTER TABLE machines ADD COLUMN hydraulslangar TEXT DEFAULT ''")
         if 'instruktion' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN instruktion TEXT DEFAULT ''")
+        if 'gasdampare' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN gasdampare TEXT DEFAULT ''")
     # Skapa hydrauliklogg-tabell om den saknas
     with get_db() as db:
         db.execute("""
@@ -351,7 +353,7 @@ def get_machine(nr):
 @app.route('/api/machines/<nr>', methods=['PATCH'])
 def patch_machine(nr):
     data = request.get_json(force=True)
-    allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion'}
+    allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({'error': 'Inga giltiga fält'}), 400
