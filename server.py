@@ -855,12 +855,15 @@ def spiris_token():
     req = urllib.request.Request(
         f'https://{SPIRIS_HOST}/v1/Auth/Token',
         method='POST',
-        headers={'Authorization': f'Basic {cred}', 'Content-Length': '0'}
+        headers={'Authorization': f'Basic {cred}', 'Content-Type': 'application/json', 'Content-Length': '0'}
     )
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
             return data.get('accessToken'), None
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')
+        return None, f'HTTP {e.code}: {body}'
     except Exception as e:
         return None, str(e)
 
@@ -878,7 +881,7 @@ def spiris_projekt(projekt_nr):
     if err:
         return jsonify({'error': err}), 500
     try:
-        projekt = spiris_get(token, f'/v1/Projects?projectNumber={urllib.parse.quote(projekt_nr)}')
+        projekt = spiris_get(token, f'/v1/Core/Projects?page=1&filter.query={urllib.parse.quote(projekt_nr)}')
         return jsonify(projekt)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
