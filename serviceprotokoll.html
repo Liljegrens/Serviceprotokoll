@@ -1396,6 +1396,18 @@
   </div>
 </div>
 
+<!-- ═══════════ MASKINKORT READ-ONLY (QR-flöde) ═══════════ -->
+<div id="maskinkort-ro-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1 id="ro-title">Maskininfo</h1>
+  </div>
+  <div style="max-width:680px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;">
+    <div class="header-card" id="ro-info"></div>
+    <div class="header-card" id="ro-hydraulik" style="display:none;"></div>
+  </div>
+</div>
+
 <!-- ═══════════ OVERVIEW PAGE ═══════════ -->
 <div id="overview-page" style="display:none;">
   <div class="top-bar">
@@ -1768,7 +1780,75 @@ async function initAuth() {
 
 function _checkMaskinParam() {
   const nr = new URLSearchParams(window.location.search).get('maskin');
-  if (nr) openMaskinkort(nr);
+  if (nr) openMaskinReadOnly(nr);
+}
+
+async function openMaskinReadOnly(nr) {
+  showPage('maskinkort-ro');
+  document.getElementById('ro-title').textContent = 'Maskin ' + nr;
+  document.getElementById('ro-info').innerHTML = '<div style="color:#888;font-size:13px;">Laddar…</div>';
+  document.getElementById('ro-hydraulik').style.display = 'none';
+
+  try {
+    const [machine, hydlogg] = await Promise.all([
+      apiFetch('/api/machines/' + encodeURIComponent(nr)),
+      apiFetch('/api/hydrauliklogg/' + encodeURIComponent(nr))
+    ]);
+
+    // Maskininfo
+    if (!machine) {
+      document.getElementById('ro-info').innerHTML = '<div style="color:#c62828;">Maskin ej hittad.</div>';
+      return;
+    }
+    const fields = [
+      ['Objektnummer', machine.nr],
+      ['Kund',         machine.kund],
+      ['Anläggning',   machine.anlaggning],
+      ['Adress',       [machine.adress, machine.stad].filter(Boolean).join(', ')],
+      ['Märke',        machine.fabrikat],
+      ['Modell',       machine.modell],
+      ['Årsmodell',    machine.arsmodell],
+      ['Tillv.nr',     machine.tillvnr],
+    ].filter(([,v]) => v);
+    document.getElementById('ro-info').innerHTML = `
+      <h2>Maskinuppgifter</h2>
+      <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:10px;">
+        ${fields.map(([l,v]) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`).join('')}
+      </div>`;
+
+    // Hydraulikstatus
+    const getLastDate = (key) => {
+      const post = (hydlogg || []).filter(p => p[key]).sort((a,b) => b.datum.localeCompare(a.datum))[0];
+      return post ? post.datum : null;
+    };
+    const lastFilter  = getLastDate('filter');
+    const lastOlja    = getLastDate('olja');
+    const lastSlangar = getLastDate('slangar');
+
+    const roHyd = document.getElementById('ro-hydraulik');
+    roHyd.style.display = '';
+    roHyd.innerHTML = `
+      <h2>Hydraulikstatus</h2>
+      <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:10px;">
+        <div class="field-group">
+          <label>Hydraulfilter art.nr</label>
+          <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.hydraulfilter || '–'}</div>
+          <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastFilter || 'ej loggat'}</div>
+        </div>
+        <div class="field-group">
+          <label>Hydraulolja typ</label>
+          <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.hydraulolja || '–'}</div>
+          <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastOlja || 'ej loggat'}</div>
+        </div>
+        <div class="field-group">
+          <label>Hydraulslangar presscylinder</label>
+          <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.hydraulslangar || '–'}</div>
+          <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastSlangar || 'ej loggat'}</div>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('ro-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
+  }
 }
 
 function applyRoleUI() {
@@ -2566,6 +2646,7 @@ function showPage(page) {
     'balp':               ['balp-page',                'block'],
     'maskiner':           ['maskiner-page',            'block'],
     'maskinkort':         ['maskinkort-page',          'block'],
+    'maskinkort-ro':      ['maskinkort-ro-page',       'block'],
     'fordonskontroll':    ['fordonskontroll-page',     'block'],
     'materialkontroll':   ['materialkontroll-page',    'block'],
     'fk-overview':        ['fk-overview-page',         'block'],
