@@ -2665,21 +2665,34 @@ async function lookupMachine(val) {
       }
     }
 
-    // Visa hydraulikspec om maskinen har info
+    // Visa hydraulikspec + senast bytt om maskinen har info
     const hydCard = document.getElementById('hydraulik-info-card');
     const hydGrid = document.getElementById('hydraulik-info-grid');
     if (hydCard && hydGrid) {
-      const hydFields = [
-        { label: 'Hydraulfilter (art.nr)', val: m.hydraulfilter, sub: 'Byt var 12 mån' },
-        { label: 'Hydraulolja (typ)', val: m.hydraulolja, sub: 'Byt var 12–24 mån' },
-        { label: 'Hydraulslangar presscylinder', val: m.hydraulslangar, sub: 'Byt var 4–5 år' },
-      ].filter(f => f.val);
-      if (hydFields.length > 0) {
+      const hasSpec = m.hydraulfilter || m.hydraulolja || m.hydraulslangar;
+      if (hasSpec) {
+        // Hämta logg för senast bytt-datum
+        let filterDatum = '–', oljaDatum = '–', slangarDatum = '–';
+        try {
+          const logs = await fetch('/api/hydrauliklogg/' + encodeURIComponent(m.nr)).then(r => r.json());
+          const senastFilter  = logs.find(l => l.filter);
+          const senastOlja    = logs.find(l => l.olja);
+          const senastSlangar = logs.find(l => l.slangar);
+          if (senastFilter)  filterDatum  = senastFilter.datum;
+          if (senastOlja)    oljaDatum    = senastOlja.datum;
+          if (senastSlangar) slangarDatum = senastSlangar.datum;
+        } catch(e) {}
+        const hydFields = [
+          { label: 'Hydraulfilter', art: m.hydraulfilter, senast: filterDatum, sub: 'Byt var 12 mån' },
+          { label: 'Hydraulolja', art: m.hydraulolja, senast: oljaDatum, sub: 'Byt var 12–24 mån' },
+          { label: 'Hydraulslangar', art: m.hydraulslangar, senast: slangarDatum, sub: 'Byt var 4–5 år' },
+        ].filter(f => f.art);
         hydGrid.innerHTML = hydFields.map(f => `
           <div>
             <div style="font-size:11px;color:#546e7a;font-weight:600;">${f.label}</div>
-            <div style="font-size:14px;font-weight:700;color:#1a3a5c;">${f.val}</div>
+            <div style="font-size:14px;font-weight:700;color:#1a3a5c;">${f.art}</div>
             <div style="font-size:11px;color:#78909c;">${f.sub}</div>
+            <div style="font-size:11px;color:#546e7a;margin-top:2px;">Senast bytt: <strong>${f.senast}</strong></div>
           </div>`).join('');
         hydCard.style.display = '';
       } else {
@@ -4263,6 +4276,10 @@ async function openMaskinkort(nr) {
     renderMaskinkortStats(history);
     renderMaskinkortHistorik(history);
     renderMaskinkortNotes(notes);
+    // Sätt dagens datum i hydrauliklogg-fältet
+    const hlogDatum = document.getElementById('hlog-datum');
+    if (hlogDatum) hlogDatum.value = new Date().toISOString().split('T')[0];
+    loadHydrauliklogg(nr);
   } catch(e) {
     document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
   }
@@ -4307,7 +4324,23 @@ function renderMaskinkortInfo(m) {
       </div>
     </div>
     <button onclick="saveHydraulik('${m.nr}')" style="margin-top:12px;padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
-    <span id="hydraulik-saved" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>`;
+    <span id="hydraulik-saved" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
+    <h2 style="margin-top:20px;">Hydrauliklogg</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
+      <div class="field-group"><label>Datum</label><input type="date" id="hlog-datum"></div>
+      <div class="field-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+        <label style="margin-bottom:6px;">Vad byttes?</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;"><input type="checkbox" id="hlog-filter"> Filter</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;"><input type="checkbox" id="hlog-olja"> Olja</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;"><input type="checkbox" id="hlog-slangar"> Slangar</label>
+        </div>
+      </div>
+      <div class="field-group"><label>Notering</label><input type="text" id="hlog-not" placeholder="Valfri notering"></div>
+    </div>
+    <button onclick="addHydrauliklogg('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--ok);color:#fff;border-radius:6px;cursor:pointer;">+ Lägg till post</button>
+    <span id="hlog-msg" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;"></span>
+    <div id="hlog-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>`;
 }
 
 async function saveMotKaj(nr) {
@@ -4333,6 +4366,57 @@ async function saveHydraulik(nr) {
   const el = document.getElementById('hydraulik-saved');
   el.style.display = 'inline';
   setTimeout(() => el.style.display = 'none', 3000);
+}
+
+async function loadHydrauliklogg(nr) {
+  const r = await fetch('/api/hydrauliklogg/' + encodeURIComponent(nr));
+  const logs = await r.json();
+  const el = document.getElementById('hlog-list');
+  if (!el) return;
+  if (!logs.length) { el.innerHTML = '<div style="font-size:13px;color:#888;">Inga poster ännu.</div>'; return; }
+  el.innerHTML = logs.map(l => {
+    const chips = [];
+    if (l.filter)  chips.push('Filter');
+    if (l.olja)    chips.push('Olja');
+    if (l.slangar) chips.push('Slangar');
+    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${l.datum} &nbsp;${chips.map(c=>`<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">${c}</span>`).join(' ')}</div>
+        ${l.notering ? `<div style="font-size:12px;color:#546e7a;margin-top:4px;">${l.notering}</div>` : ''}
+      </div>
+      <button onclick="deleteHydrauliklogg(${l.id},'${nr}')" style="border:none;background:none;color:#c62828;cursor:pointer;font-size:16px;padding:0;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function addHydrauliklogg(nr) {
+  const datum   = document.getElementById('hlog-datum').value;
+  const filter  = document.getElementById('hlog-filter').checked;
+  const olja    = document.getElementById('hlog-olja').checked;
+  const slangar = document.getElementById('hlog-slangar').checked;
+  const notering= document.getElementById('hlog-not').value.trim();
+  const msg     = document.getElementById('hlog-msg');
+  if (!datum || (!filter && !olja && !slangar)) {
+    msg.textContent = 'Ange datum och minst ett alternativ.';
+    msg.style.color = '#c62828'; msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 3000); return;
+  }
+  await fetch('/api/hydrauliklogg', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ maskin_nr: nr, datum, filter: filter?1:0, olja: olja?1:0, slangar: slangar?1:0, notering })
+  });
+  document.getElementById('hlog-filter').checked = false;
+  document.getElementById('hlog-olja').checked = false;
+  document.getElementById('hlog-slangar').checked = false;
+  document.getElementById('hlog-not').value = '';
+  msg.textContent = '✓ Sparad'; msg.style.color = 'var(--ok)'; msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
+  loadHydrauliklogg(nr);
+}
+
+async function deleteHydrauliklogg(id, nr) {
+  await fetch('/api/hydrauliklogg/' + id, { method: 'DELETE' });
+  loadHydrauliklogg(nr);
 }
 
 function renderMaskinkortStats(history) {

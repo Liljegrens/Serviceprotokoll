@@ -89,6 +89,20 @@ def init_db():
             db.execute("ALTER TABLE machines ADD COLUMN hydraulolja TEXT DEFAULT ''")
         if 'hydraulslangar' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN hydraulslangar TEXT DEFAULT ''")
+    # Skapa hydrauliklogg-tabell om den saknas
+    with get_db() as db:
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS hydrauliklogg (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            maskin_nr TEXT NOT NULL,
+            datum     TEXT NOT NULL,
+            filter    INTEGER DEFAULT 0,
+            olja      INTEGER DEFAULT 0,
+            slangar   INTEGER DEFAULT 0,
+            notering  TEXT DEFAULT '',
+            saved_at  TEXT
+        )""")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_hydlogg_maskin ON hydrauliklogg(maskin_nr)")
 
 init_db()
 
@@ -844,6 +858,31 @@ def upload_photo():
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     return send_from_directory(UPLOADS, filename)
+
+@app.route('/api/hydrauliklogg/<maskin_nr>', methods=['GET'])
+def get_hydrauliklogg(maskin_nr):
+    with get_db() as db:
+        rows = db.execute(
+            'SELECT * FROM hydrauliklogg WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY datum DESC',
+            [maskin_nr]).fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/hydrauliklogg', methods=['POST'])
+def post_hydrauliklogg():
+    d = request.get_json(force=True)
+    with get_db() as db:
+        db.execute(
+            'INSERT INTO hydrauliklogg (maskin_nr,datum,filter,olja,slangar,notering,saved_at) VALUES (?,?,?,?,?,?,?)',
+            [d.get('maskin_nr',''), d.get('datum',''), int(d.get('filter',0)),
+             int(d.get('olja',0)), int(d.get('slangar',0)), d.get('notering',''),
+             datetime.now().isoformat()])
+    return jsonify({'ok': True})
+
+@app.route('/api/hydrauliklogg/<int:log_id>', methods=['DELETE'])
+def delete_hydrauliklogg(log_id):
+    with get_db() as db:
+        db.execute('DELETE FROM hydrauliklogg WHERE id=?', [log_id])
+    return jsonify({'ok': True})
 
 @app.route('/spiris-test.html')
 def serve_spiris_test():
