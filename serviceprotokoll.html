@@ -1367,6 +1367,11 @@
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
 
+    <!-- QR-knapp (visas när maskin är laddad) -->
+    <div id="maskinkort-qr-bar" style="display:none;margin-bottom:8px;">
+      <button id="maskinkort-qr-btn" style="padding:7px 16px;font-size:13px;border:1.5px solid var(--brand);background:#fff;color:var(--brand);border-radius:6px;cursor:pointer;font-weight:600;">&#x25A6; Visa QR-kod</button>
+    </div>
+
     <!-- Maskininfo -->
     <div class="header-card" id="maskinkort-info"></div>
 
@@ -4348,6 +4353,14 @@ async function openMaskinkort(nr) {
   _currentMaskinNr = nr;
   showPage('maskinkort');
   document.getElementById('maskinkort-title').textContent = 'Maskinkort – ' + nr;
+
+  // Koppla QR-knappen till rätt maskinnummer
+  const qrBar = document.getElementById('maskinkort-qr-bar');
+  const qrBtn = document.getElementById('maskinkort-qr-btn');
+  if (qrBar && qrBtn) {
+    qrBar.style.display = 'block';
+    qrBtn.onclick = function() { showQrCode(nr); };
+  }
   document.getElementById('maskinkort-info').innerHTML = '<div style="color:#888;font-size:13px;">Laddar…</div>';
   document.getElementById('maskinkort-historik').innerHTML = '<div style="color:#888;font-size:13px;padding:16px;">Laddar historik…</div>';
   document.getElementById('maskinkort-notes').innerHTML = '';
@@ -4413,7 +4426,6 @@ function renderMaskinkortInfo(m) {
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;">
       <button onclick="saveHydraulik('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
       <span id="hydraulik-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
-      <button onclick="showQrCode('${m.nr}')" style="padding:6px 16px;font-size:13px;border:1.5px solid var(--brand);background:#fff;color:var(--brand);border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;">&#x25A6; QR-kod</button>
     </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
