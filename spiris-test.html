@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiris API – Test</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f7f9; color: #212121; padding: 24px; max-width: 800px; margin: 0 auto; }
+  h1 { color: #1a3a5c; margin-bottom: 24px; }
+  .card { background: #fff; border-radius: 10px; border: 1px solid #cfd8dc; padding: 20px; margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 700; color: #546e7a; text-transform: uppercase; margin-bottom: 4px; }
+  input { width: 100%; padding: 10px; border: 1.5px solid #cfd8dc; border-radius: 7px; font-size: 15px; box-sizing: border-box; }
+  button { background: #1a3a5c; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+  button:hover { opacity: .9; }
+  .status { padding: 10px 14px; border-radius: 7px; font-weight: 700; margin-top: 12px; font-size: 14px; }
+  .ok { background: #e8f5e9; color: #2e7d32; }
+  .err { background: #ffebee; color: #c62828; }
+  pre { background: #f5f7f9; border: 1px solid #cfd8dc; border-radius: 7px; padding: 16px; overflow-x: auto; font-size: 12px; line-height: 1.6; margin-top: 12px; white-space: pre-wrap; word-break: break-all; }
+  .section-title { font-size: 12px; font-weight: 700; color: #1a3a5c; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h1>Spiris API – Test</h1>
+
+<div class="card">
+  <div class="section-title">Steg 1 – Testa anslutning</div>
+  <button onclick="testAuth()">Testa autentisering mot Spiris</button>
+  <div id="auth-status"></div>
+</div>
+
+<div class="card">
+  <div class="section-title">Steg 2 – Hämta projekt</div>
+  <label>Projektnummer</label>
+  <input type="text" id="proj-nr" placeholder="t.ex. P4427" />
+  <button onclick="hamtaProjekt()">Hämta projektinfo</button>
+  <div id="proj-status"></div>
+  <pre id="proj-result" hidden></pre>
+</div>
+
+<script>
+async function testAuth() {
+  const el = document.getElementById('auth-status');
+  el.innerHTML = '<div class="status" style="background:#fff3e0;color:#e65100;">Testar...</div>';
+  try {
+    const r = await fetch('/api/spiris/test');
+    const d = await r.json();
+    if (d.ok) {
+      el.innerHTML = `<div class="status ok">✓ Anslutning OK – token hämtad (längd: ${d.token_length} tecken)</div>`;
+    } else {
+      el.innerHTML = `<div class="status err">✗ Fel: ${d.error}</div>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="status err">✗ Nätverksfel: ${e.message}</div>`;
+  }
+}
+
+async function hamtaProjekt() {
+  const nr = document.getElementById('proj-nr').value.trim();
+  const statusEl = document.getElementById('proj-status');
+  const resultEl = document.getElementById('proj-result');
+  if (!nr) { statusEl.innerHTML = '<div class="status err">Ange ett projektnummer</div>'; return; }
+  statusEl.innerHTML = '<div class="status" style="background:#fff3e0;color:#e65100;">Hämtar...</div>';
+  resultEl.hidden = true;
+  try {
+    const r = await fetch(`/api/spiris/projekt/${encodeURIComponent(nr)}`);
+    const d = await r.json();
+    if (d.error) {
+      statusEl.innerHTML = `<div class="status err">✗ Fel: ${d.error}</div>`;
+    } else {
+      statusEl.innerHTML = '<div class="status ok">✓ Svar mottaget</div>';
+      resultEl.textContent = JSON.stringify(d, null, 2);
+      resultEl.hidden = false;
+    }
+  } catch(e) {
+    statusEl.innerHTML = `<div class="status err">✗ Nätverksfel: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
