@@ -750,6 +750,11 @@
         <h2>Serviceprotokoll Vakuumaggregat</h2>
         <p>Typ 8 · OdourMikko 50-100 luktborttagning</p>
       </div>
+      <div class="start-card" onclick="openInstallation()">
+        <div class="icon">🔧</div>
+        <h2>Installationsprotokoll Komprimator</h2>
+        <p>Typ 9 · Montageprotokoll vid nyinstallation</p>
+      </div>
     </div>
   </div>
 </div>
@@ -946,6 +951,171 @@
         oninput="filterFkOverview(this.value)">
     </div>
     <div id="fk-ov-list"><div class="recent-empty" style="padding:24px;text-align:center;color:#888;">Laddar...</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ INSTALLATIONSPROTOKOLL PAGE ═══════════ -->
+<div id="installation-page" style="display:none;" class="section-page">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('serviceprotokoll')">← Tillbaka</button>
+    <h1>Installationsprotokoll</h1>
+    <span></span>
+  </div>
+  <div style="padding:16px;max-width:720px;margin:0 auto;">
+
+    <!-- 1. Projektinformation -->
+    <div class="header-card">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">1. Projektinformation</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Kund / fastighet</label>
+          <input type="text" id="inst-kund" placeholder="Kundens namn">
+        </div>
+        <div class="field-group">
+          <label>Arbetsordernummer</label>
+          <input type="text" id="inst-arbetsorder" placeholder="t.ex. 12345">
+        </div>
+        <div class="field-group">
+          <label>Datum</label>
+          <input type="date" id="inst-datum">
+        </div>
+        <div class="field-group">
+          <label>Montör</label>
+          <input type="text" id="inst-montör" placeholder="Namn">
+        </div>
+        <div class="field-group">
+          <label>Fabrikat / modell</label>
+          <input type="text" id="inst-fabrikat" placeholder="t.ex. Orwak 5030">
+        </div>
+        <div class="field-group">
+          <label>Serienummer</label>
+          <input type="text" id="inst-serienr" placeholder="Serienr">
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Maskindimensioner -->
+    <div class="header-card" style="margin-top:12px;">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">2. Maskindimensioner</h2>
+      <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
+        <div class="field-group">
+          <label>A – Hjul ytterlängd (mm)</label>
+          <input type="number" id="inst-a" placeholder="mm" min="0">
+        </div>
+        <div class="field-group">
+          <label>C – Höjd, lock stängt (mm)</label>
+          <input type="number" id="inst-c" placeholder="mm" min="0">
+        </div>
+        <div class="field-group">
+          <label>C2 – Höjd, lock öppet (mm)</label>
+          <input type="number" id="inst-c2" placeholder="mm" min="0">
+        </div>
+        <div class="field-group">
+          <label>B – Bakhjul ytterbredd (mm)</label>
+          <input type="number" id="inst-b-bak" placeholder="mm" min="0">
+        </div>
+        <div class="field-group">
+          <label>B – Framhjul ytterbredd (mm)</label>
+          <input type="number" id="inst-b-fram" placeholder="mm" min="0">
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label>Maskinens placering hos kund</label>
+        <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+          <div class="radio-opt"><input type="radio" name="inst-placering" value="Inkast inåt (mot kaj)" id="inst-placering-inåt" checked><label for="inst-placering-inåt" style="width:auto;padding:6px 14px;">Inkast inåt (mot kaj)</label></div>
+          <div class="radio-opt"><input type="radio" name="inst-placering" value="Inkast utåt" id="inst-placering-utåt"><label for="inst-placering-utåt" style="width:auto;padding:6px 14px;">Inkast utåt</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Skenor / Underlag -->
+    <div class="header-card" style="margin-top:12px;">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">3. Skenor / Underlag</h2>
+      <div class="field-group">
+        <label>Underlaget på platsen</label>
+        <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+          <div class="radio-opt"><input type="radio" name="inst-underlag" value="Betong" id="inst-underlag-betong" checked><label for="inst-underlag-betong" style="width:auto;padding:6px 14px;">Betong</label></div>
+          <div class="radio-opt"><input type="radio" name="inst-underlag" value="Asfalt" id="inst-underlag-asfalt"><label for="inst-underlag-asfalt" style="width:auto;padding:6px 14px;">Asfalt</label></div>
+          <div class="radio-opt"><input type="radio" name="inst-underlag" value="Annat" id="inst-underlag-annat"><label for="inst-underlag-annat" style="width:auto;padding:6px 14px;">Annat</label></div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:12px;">
+        <label>Beskriv underlaget / övriga förutsättningar</label>
+        <textarea id="inst-underlag-beskriv" rows="3" placeholder="Fritext…" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;margin-top:4px;"></textarea>
+      </div>
+    </div>
+
+    <!-- 4. Lastinkast / Tömningstilkoppling -->
+    <div class="header-card" style="margin-top:12px;">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">4. Lastinkast / Tömningstilkoppling</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Mått mark till öppning (mm)</label>
+          <input type="number" id="inst-mark-öppning" placeholder="mm" min="0">
+        </div>
+      </div>
+      <div class="field-grid" style="margin-top:12px;">
+        <div class="field-group">
+          <label>Typ</label>
+          <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+            <div class="radio-opt"><input type="radio" name="inst-typ" value="Lastväxlare" id="inst-typ-lastväxlare" checked><label for="inst-typ-lastväxlare" style="width:auto;padding:6px 14px;">Lastväxlare</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-typ" value="Liftdumper" id="inst-typ-liftdumper"><label for="inst-typ-liftdumper" style="width:auto;padding:6px 14px;">Liftdumper</label></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Krokplacering</label>
+          <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+            <div class="radio-opt"><input type="radio" name="inst-krok" value="Fram" id="inst-krok-fram" checked><label for="inst-krok-fram" style="width:auto;padding:6px 14px;">Fram</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-krok" value="Bak" id="inst-krok-bak"><label for="inst-krok-bak" style="width:auto;padding:6px 14px;">Bak</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Manöverpanel & Elanslutning -->
+    <div class="header-card" style="margin-top:12px;">
+      <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">5. Manöverpanel &amp; Elanslutning</h2>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Panelhöjd fr. mark (mm)</label>
+          <input type="number" id="inst-panelhöjd" placeholder="mm" min="0">
+        </div>
+      </div>
+      <div class="field-grid" style="margin-top:12px;">
+        <div class="field-group">
+          <label>Placering (sett från användarens ögon)</label>
+          <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+            <div class="radio-opt"><input type="radio" name="inst-panel" value="Höger" id="inst-panel-höger" checked><label for="inst-panel-höger" style="width:auto;padding:6px 14px;">Höger</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-panel" value="Vänster" id="inst-panel-vänster"><label for="inst-panel-vänster" style="width:auto;padding:6px 14px;">Vänster</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-panel" value="Fjärrdosa" id="inst-panel-fjärr"><label for="inst-panel-fjärr" style="width:auto;padding:6px 14px;">Fjärrdosa</label></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Elintag</label>
+          <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+            <div class="radio-opt"><input type="radio" name="inst-el" value="16A 3-fas" id="inst-el-16a" checked><label for="inst-el-16a" style="width:auto;padding:6px 14px;">16A 3-fas</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-el" value="32A 3-fas" id="inst-el-32a"><label for="inst-el-32a" style="width:auto;padding:6px 14px;">32A 3-fas</label></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Elintaget sitter</label>
+          <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+            <div class="radio-opt"><input type="radio" name="inst-elintag" value="Höger" id="inst-elintag-höger" checked><label for="inst-elintag-höger" style="width:auto;padding:6px 14px;">Höger</label></div>
+            <div class="radio-opt"><input type="radio" name="inst-elintag" value="Vänster" id="inst-elintag-vänster"><label for="inst-elintag-vänster" style="width:auto;padding:6px 14px;">Vänster</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spara / Skicka -->
+    <div class="summary-card" style="margin-top:12px;">
+      <div class="action-btns">
+        <button class="save-btn" onclick="saveInstallation()">💾 Spara protokoll</button>
+        <button class="email-btn" onclick="sendInstallationEmail()">📧 Skicka via e-post</button>
+      </div>
+      <div id="inst-save-confirm" style="text-align:center;margin-top:10px;font-size:14px;font-weight:600;"></div>
+    </div>
+
   </div>
 </div>
 
@@ -2351,6 +2521,7 @@ function showPage(page) {
     'fordonskontroll':    ['fordonskontroll-page',     'block'],
     'materialkontroll':   ['materialkontroll-page',    'block'],
     'fk-overview':        ['fk-overview-page',         'block'],
+    'installation':       ['installation-page',         'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -4381,6 +4552,101 @@ function printFordonskontroll() {
     ${data.summary_notes ? '<p><b>Övrigt:</b> ' + data.summary_notes + '</p>' : ''}
     </body></html>`);
   w.document.close(); w.print();
+}
+
+
+// ═══════════════════════════════════════════════════
+// INSTALLATIONSPROTOKOLL
+// ═══════════════════════════════════════════════════
+
+function openInstallation() {
+  showPage('installation');
+  document.getElementById('inst-datum').value = new Date().toISOString().split('T')[0];
+  document.getElementById('inst-montör').value = currentUser ? currentUser.name : '';
+  document.getElementById('inst-save-confirm').textContent = '';
+  ['inst-kund','inst-arbetsorder','inst-fabrikat','inst-serienr',
+   'inst-a','inst-c','inst-c2','inst-b-bak','inst-b-fram',
+   'inst-underlag-beskriv','inst-mark-öppning','inst-panelhöjd'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['inst-placering-inåt','inst-underlag-betong','inst-typ-lastväxlare',
+   'inst-krok-fram','inst-el-16a','inst-elintag-höger','inst-panel-höger'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = true;
+  });
+}
+
+async function saveInstallation() {
+  const data = {
+    kund:           document.getElementById('inst-kund').value,
+    arbetsorder:    document.getElementById('inst-arbetsorder').value,
+    datum:          document.getElementById('inst-datum').value,
+    'montör':       document.getElementById('inst-montör').value,
+    fabrikat:       document.getElementById('inst-fabrikat').value,
+    serienr:        document.getElementById('inst-serienr').value,
+    dim_a:          document.getElementById('inst-a').value,
+    dim_c:          document.getElementById('inst-c').value,
+    dim_c2:         document.getElementById('inst-c2').value,
+    dim_b_bak:      document.getElementById('inst-b-bak').value,
+    dim_b_fram:     document.getElementById('inst-b-fram').value,
+    placering:      document.querySelector('input[name="inst-placering"]:checked')?.value || '',
+    underlag:       document.querySelector('input[name="inst-underlag"]:checked')?.value || '',
+    underlag_beskriv: document.getElementById('inst-underlag-beskriv').value,
+    mark_öppning:   document.getElementById('inst-mark-öppning').value,
+    typ:            document.querySelector('input[name="inst-typ"]:checked')?.value || '',
+    krok:           document.querySelector('input[name="inst-krok"]:checked')?.value || '',
+    panelhöjd:      document.getElementById('inst-panelhöjd').value,
+    panel_placering: document.querySelector('input[name="inst-panel"]:checked')?.value || '',
+    elintag:        document.querySelector('input[name="inst-el"]:checked')?.value || '',
+    elintag_sida:   document.querySelector('input[name="inst-elintag"]:checked')?.value || '',
+  };
+  const r = await apiFetch('/api/installationsprotokoll', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  const conf = document.getElementById('inst-save-confirm');
+  conf.textContent = r.ok ? '✓ Protokollet är sparat!' : '✗ Kunde inte spara.';
+  conf.style.color = r.ok ? 'var(--ok-dark,#2e7d32)' : '#c62828';
+}
+
+function sendInstallationEmail() {
+  const nl = '%0D%0A';
+  const line = s => { body += s + nl; };
+  let body = '';
+  line('INSTALLATIONSPROTOKOLL – KOMPRIMATOR');
+  line('═'.repeat(48));
+  line(`Kund/fastighet : ${document.getElementById('inst-kund').value}`);
+  line(`Arbetsorder    : ${document.getElementById('inst-arbetsorder').value}`);
+  line(`Datum          : ${document.getElementById('inst-datum').value}`);
+  line(`Montör         : ${document.getElementById('inst-montör').value}`);
+  line(`Fabrikat/modell: ${document.getElementById('inst-fabrikat').value}`);
+  line(`Serienummer    : ${document.getElementById('inst-serienr').value}`);
+  line('');
+  line('MASKINDIMENSIONER');
+  line(`A – Hjul ytterlängd       : ${document.getElementById('inst-a').value} mm`);
+  line(`C – Höjd (lock stängt)    : ${document.getElementById('inst-c').value} mm`);
+  line(`C2 – Höjd (lock öppet)   : ${document.getElementById('inst-c2').value} mm`);
+  line(`B – Bakhjul ytterbredd    : ${document.getElementById('inst-b-bak').value} mm`);
+  line(`B – Framhjul ytterbredd   : ${document.getElementById('inst-b-fram').value} mm`);
+  line(`Placering                 : ${document.querySelector('input[name="inst-placering"]:checked')?.value || '–'}`);
+  line('');
+  line('SKENOR / UNDERLAG');
+  line(`Underlag  : ${document.querySelector('input[name="inst-underlag"]:checked')?.value || '–'}`);
+  line(`Beskrivning: ${document.getElementById('inst-underlag-beskriv').value}`);
+  line('');
+  line('LASTINKAST / TÖMNINGSTILKOPPLING');
+  line(`Mått mark till öppning : ${document.getElementById('inst-mark-öppning').value} mm`);
+  line(`Typ                    : ${document.querySelector('input[name="inst-typ"]:checked')?.value || '–'}`);
+  line(`Krokplacering          : ${document.querySelector('input[name="inst-krok"]:checked')?.value || '–'}`);
+  line('');
+  line('MANÖVERPANEL & ELANSLUTNING');
+  line(`Panelhöjd fr. mark  : ${document.getElementById('inst-panelhöjd').value} mm`);
+  line(`Panelplacering      : ${document.querySelector('input[name="inst-panel"]:checked')?.value || '–'}`);
+  line(`Elintag             : ${document.querySelector('input[name="inst-el"]:checked')?.value || '–'}`);
+  line(`Elintaget sitter    : ${document.querySelector('input[name="inst-elintag"]:checked')?.value || '–'}`);
+  const kund = document.getElementById('inst-kund').value || 'kund';
+  const datum = document.getElementById('inst-datum').value || '';
+  window.location.href = `mailto:?subject=${encodeURIComponent('Installationsprotokoll – ' + kund + ' ' + datum)}&body=${body}`;
 }
 </script>
 </body>

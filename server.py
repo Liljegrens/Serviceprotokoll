@@ -613,6 +613,33 @@ def list_materialkontroll():
         rows = db.execute('SELECT id, saved_at, regnr, ansvarig, datum, data_json FROM materialkontroll ORDER BY saved_at DESC').fetchall()
     return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
 
+@app.route('/api/installationsprotokoll', methods=['POST'])
+def save_installationsprotokoll():
+    data = request.get_json()
+    with get_db() as db:
+        db.execute('''CREATE TABLE IF NOT EXISTS installationsprotokoll (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_at TEXT, montör TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
+        db.execute('INSERT INTO installationsprotokoll (saved_at, montör, kund, datum, data_json) VALUES (?,?,?,?,?)',
+                   (datetime.now().isoformat(), data.get('montör',''), data.get('kund',''),
+                    data.get('datum',''), json.dumps(data, ensure_ascii=False)))
+    return jsonify({'ok': True})
+
+@app.route('/api/installationsprotokoll', methods=['GET'])
+def list_installationsprotokoll():
+    with get_db() as db:
+        db.execute('''CREATE TABLE IF NOT EXISTS installationsprotokoll (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_at TEXT, montör TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
+        rows = db.execute('SELECT id, saved_at, montör, kund, datum FROM installationsprotokoll ORDER BY saved_at DESC').fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/installationsprotokoll/<int:rec_id>', methods=['DELETE'])
+def delete_installationsprotokoll(rec_id):
+    with get_db() as db:
+        db.execute('DELETE FROM installationsprotokoll WHERE id=?', (rec_id,))
+    return jsonify({'ok': True})
+
 @app.route('/api/leverans', methods=['POST'])
 def save_leverans():
     data = request.get_json()
