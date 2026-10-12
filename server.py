@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, send_from_directory, session, send_file
+from functools import wraps
 import sqlite3, json, os, secrets, uuid, io
 from datetime import datetime
 import openpyxl
@@ -210,6 +211,18 @@ def logout():
 @app.route('/api/me')
 def me():
     return jsonify(session.get('user'))
+
+# ── Auth guard ───────────────────────────────────────────────
+
+PUBLIC_API = {'/api/login', '/api/logout', '/api/me', '/api/users'}
+
+@app.before_request
+def require_login():
+    if request.path.startswith('/api/'):
+        if request.path in PUBLIC_API:
+            return
+        if not session.get('user'):
+            return jsonify({'error': 'Ej inloggad'}), 401
 
 # ── Machines ─────────────────────────────────────────────────
 
