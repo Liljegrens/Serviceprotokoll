@@ -203,6 +203,18 @@ def login():
     session['user'] = dict(user)
     return jsonify(dict(user))
 
+@app.route('/api/pin-login', methods=['POST'])
+def pin_login():
+    pin = (request.get_json().get('pin') or '').strip()
+    with get_db() as db:
+        user = db.execute(
+            'SELECT id, name, role FROM users WHERE pin=?', (pin,)
+        ).fetchone()
+    if not user:
+        return jsonify({'error': 'Fel kod'}), 401
+    session['user'] = dict(user)
+    return jsonify({'ok': True})
+
 @app.route('/api/logout', methods=['POST'])
 def logout():
     session.pop('user', None)
@@ -214,7 +226,7 @@ def me():
 
 # ── Auth guard ───────────────────────────────────────────────
 
-PUBLIC_API = {'/api/login', '/api/logout', '/api/me', '/api/users'}
+PUBLIC_API = {'/api/login', '/api/pin-login', '/api/logout', '/api/me', '/api/users'}
 
 @app.before_request
 def require_login():

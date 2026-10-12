@@ -647,6 +647,23 @@
   </div>
 </div>
 
+<!-- ═══════════ QR LOGIN PAGE ═══════════ -->
+<div id="qr-login-page" style="display:none">
+  <div class="logo-area">
+    <h1>Liljegrens i Tyresö AB</h1>
+    <p>Maskininfo</p>
+  </div>
+  <div class="login-card">
+    <h2>Ange din kod</h2>
+    <div class="login-field">
+      <input type="password" id="qr-pin" placeholder="••••" maxlength="20"
+        onkeydown="if(event.key==='Enter')doQrLogin()">
+    </div>
+    <div class="login-error" id="qr-login-error"></div>
+    <button class="login-btn" onclick="doQrLogin()">Fortsätt</button>
+  </div>
+</div>
+
 <!-- ═══════════ START PAGE ═══════════ -->
 <!-- ═══════════ HOME PAGE ═══════════ -->
 <div id="home-page" style="display:none;">
@@ -1765,8 +1782,13 @@ async function initAuth() {
   } catch { currentUser = null; }
 
   if (!currentUser) {
-    await loadUserList();
-    showPage('login');
+    const maskinParam = new URLSearchParams(window.location.search).get('maskin');
+    if (maskinParam) {
+      showPage('qr-login');
+    } else {
+      await loadUserList();
+      showPage('login');
+    }
   } else {
     showPage('home');
     updateUserGreeting();
@@ -1774,6 +1796,25 @@ async function initAuth() {
     checkRegisterStatus();
     loadRecentProtocols();
     _checkMaskinParam();
+  }
+}
+
+async function doQrLogin() {
+  const pin = document.getElementById('qr-pin').value.trim();
+  const err = document.getElementById('qr-login-error');
+  err.textContent = '';
+  if (!pin) { err.textContent = 'Ange din kod.'; return; }
+  try {
+    await apiFetch('/api/pin-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    currentUser = await apiFetch('/api/me');
+    _checkMaskinParam();
+  } catch {
+    err.textContent = 'Fel kod — försök igen.';
+    document.getElementById('qr-pin').value = '';
   }
 }
 
@@ -2694,6 +2735,7 @@ function showPage(page) {
     'maskiner':           ['maskiner-page',            'block'],
     'maskinkort':         ['maskinkort-page',          'block'],
     'maskinkort-ro':      ['maskinkort-ro-page',       'block'],
+    'qr-login':           ['qr-login-page',            'flex'],
     'fordonskontroll':    ['fordonskontroll-page',     'block'],
     'materialkontroll':   ['materialkontroll-page',    'block'],
     'fk-overview':        ['fk-overview-page',         'block'],
