@@ -5000,12 +5000,12 @@ function showQrCode(maskinNr) {
     correctLevel:  QRCode.CorrectLevel.M
   });
 
-  document.getElementById('qr-modal').classList.add('open');
+  document.getElementById('qr-modal').style.display = 'flex';
 }
 
 // Stäng modal vid klick utanför
 document.getElementById('qr-modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
+  if (e.target === this) this.style.display = 'none';
 });
 </script>
 </body>
