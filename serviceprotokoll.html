@@ -4991,16 +4991,22 @@ function showQrCode(maskinNr) {
 
   const canvas = document.getElementById('qr-canvas');
   canvas.innerHTML = '';
-  new QRCode(canvas, {
-    text:          url,
-    width:         200,
-    height:        200,
-    colorDark:     '#1a3a5c',
-    colorLight:    '#ffffff',
-    correctLevel:  QRCode.CorrectLevel.M
-  });
 
+  // Öppna modalen oavsett
   document.getElementById('qr-modal').style.display = 'flex';
+
+  try {
+    new QRCode(canvas, {
+      text:         url,
+      width:        200,
+      height:       200,
+      colorDark:    '#1a3a5c',
+      colorLight:   '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    canvas.innerHTML = '<div style="color:#c62828;font-size:12px;padding:12px;">Kunde inte generera QR-kod: ' + e.message + '</div>';
+  }
 }
 
 // Stäng modal vid klick utanför
