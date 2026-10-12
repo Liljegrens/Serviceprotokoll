@@ -117,6 +117,19 @@ ensure_admin()
 def index():
     return send_from_directory(BASE, 'serviceprotokoll.html')
 
+@app.route('/debug')
+def debug():
+    import os
+    data_exists = os.path.isdir('/data')
+    data_files = os.listdir('/data') if data_exists else []
+    return jsonify({
+        'DATA_DIR': DATA_DIR,
+        '/data exists': data_exists,
+        '/data contents': data_files,
+        'DB path': DB,
+        'DB exists': os.path.exists(DB),
+    })
+
 @app.route('/manifest.json')
 def manifest():
     return send_from_directory(BASE, 'manifest.json')
