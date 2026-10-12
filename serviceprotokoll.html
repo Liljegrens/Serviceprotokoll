@@ -1367,10 +1367,11 @@
     <h1>Maskinregister</h1>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
-    <div class="header-card">
+    <div class="header-card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <input type="text" id="maskin-search" placeholder="Sök på objektnummer, kund eller anläggning…"
-        style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-family:Arial,sans-serif;"
+        style="flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-family:Arial,sans-serif;"
         oninput="filterMaskiner(this.value)">
+      <button onclick="printAllaQrDekaler()" style="white-space:nowrap;padding:10px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">&#x25A6; Skriv ut alla QR</button>
     </div>
     <div id="maskin-list"></div>
   </div>
@@ -5194,33 +5195,36 @@ function sendInstallationEmail() {
   #qr-modal { display: none; }
   #qr-modal.open { display: flex; }
 
-  /* Dold dekal — visas bara vid utskrift */
+  /* Dold dekal-yta — visas bara vid utskrift */
   #print-dekal { display: none; }
   @media print {
     body > *:not(#print-dekal) { display: none !important; }
     #print-dekal {
       display: flex !important;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 0;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    .pd-item {
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       width: 30mm;
       height: 30mm;
       padding: 1mm;
-      font-family: Arial, sans-serif;
       box-sizing: border-box;
     }
-    #print-dekal img { width: 24mm; height: 24mm; display: block; }
-    #print-dekal .pd-brand { font-size: 4.5pt; color: #546e7a; text-align: center; margin-bottom: 0.5mm; }
-    #print-dekal .pd-nr { font-size: 6pt; font-weight: 700; color: #1a3a5c; text-align: center; margin-top: 1mm; }
-    @page { size: 30mm 30mm; margin: 0; }
+    .pd-item img { width: 24mm; height: 24mm; display: block; }
+    .pd-brand { font-size: 4.5pt; color: #546e7a; text-align: center; margin-bottom: 0.5mm; }
+    .pd-nr { font-size: 6pt; font-weight: 700; color: #1a3a5c; text-align: center; margin-top: 1mm; }
+    @page { size: A4; margin: 5mm; }
   }
 </style>
 
-<div id="print-dekal">
-  <div class="pd-brand">Liljegrens i Tyresö</div>
-  <img id="print-dekal-img" src="" alt="">
-  <div class="pd-nr" id="print-dekal-nr"></div>
-</div>
+<div id="print-dekal"></div>
 
 <script>
 function showQrCode(maskinNr) {
@@ -5251,29 +5255,58 @@ function showQrCode(maskinNr) {
   }
 }
 
-function printQrDekal() {
-  const url   = document.getElementById('qr-url-text').textContent.trim();
-  const title = document.getElementById('qr-modal-title').textContent.replace('QR-kod – ', '').replace('Maskin ', '');
-  if (!url) return;
-
-  // Generera QR i temporär div och kopiera src till print-dekalen
-  const tmp = document.createElement('div');
-  tmp.style.cssText = 'position:absolute;left:-9999px;';
-  document.body.appendChild(tmp);
-  new QRCode(tmp, {
-    text: url, width: 400, height: 400,
-    colorDark: '#1a3a5c', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
+function _buildDekalItem(url, nr) {
+  return new Promise(resolve => {
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(tmp);
+    new QRCode(tmp, { text: url, width: 400, height: 400,
+      colorDark: '#1a3a5c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    setTimeout(() => {
+      const el = tmp.querySelector('img') || tmp.querySelector('canvas');
+      const src = el ? (el.toDataURL ? el.toDataURL() : el.src) : '';
+      document.body.removeChild(tmp);
+      resolve({ src, nr });
+    }, 200);
   });
-  setTimeout(() => {
-    const el = tmp.querySelector('img') || tmp.querySelector('canvas');
-    const src = el ? (el.toDataURL ? el.toDataURL() : el.src) : '';
-    document.body.removeChild(tmp);
+}
 
-    document.getElementById('print-dekal-img').src = src;
-    document.getElementById('print-dekal-nr').textContent = title;
+function printQrDekal() {
+  const url = document.getElementById('qr-url-text').textContent.trim();
+  const nr  = document.getElementById('qr-modal-title').textContent.replace('QR-kod – Maskin ', '');
+  if (!url) return;
+  _buildDekalItem(url, nr).then(({ src, nr }) => {
+    const container = document.getElementById('print-dekal');
+    container.innerHTML = `<div class="pd-item">
+      <div class="pd-brand">Liljegrens i Tyresö</div>
+      <img src="${src}" alt="">
+      <div class="pd-nr">${nr}</div>
+    </div>`;
     window.print();
-  }, 200);
+  });
+}
+
+async function printAllaQrDekaler() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Genererar…';
+  try {
+    const maskiner = await apiFetch('/api/machines');
+    const base = window.location.origin + window.location.pathname;
+    const items = await Promise.all(maskiner.map(m =>
+      _buildDekalItem(base + '?maskin=' + encodeURIComponent(m.nr), m.nr)
+    ));
+    const container = document.getElementById('print-dekal');
+    container.innerHTML = items.map(({ src, nr }) => `<div class="pd-item">
+      <div class="pd-brand">Liljegrens i Tyresö</div>
+      <img src="${src}" alt="">
+      <div class="pd-nr">${nr}</div>
+    </div>`).join('');
+    window.print();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⊞ Skriv ut alla QR';
+  }
 }
 
 function roOpenProtocol() {
