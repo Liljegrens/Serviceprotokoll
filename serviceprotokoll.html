@@ -1790,31 +1790,48 @@ async function openMaskinReadOnly(nr) {
   document.getElementById('ro-hydraulik').style.display = 'none';
 
   try {
-    const [machine, hydlogg] = await Promise.all([
+    const [machine, hydlogg, history] = await Promise.all([
       apiFetch('/api/machines/' + encodeURIComponent(nr)),
-      apiFetch('/api/hydrauliklogg/' + encodeURIComponent(nr))
+      apiFetch('/api/hydrauliklogg/' + encodeURIComponent(nr)),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/history').catch(() => [])
     ]);
 
-    // Maskininfo
     if (!machine) {
       document.getElementById('ro-info').innerHTML = '<div style="color:#c62828;">Maskin ej hittad.</div>';
       return;
     }
-    const fields = [
+
+    // Senast service från protokollhistorik
+    const lastService = (history || []).length > 0
+      ? history.slice().sort((a,b) => (b.datum||'').localeCompare(a.datum||''))[0].datum
+      : null;
+
+    // Maskinuppgifter
+    const maskinFields = [
       ['Objektnummer', machine.nr],
-      ['Kund',         machine.kund],
-      ['Anläggning',   machine.anlaggning],
-      ['Adress',       [machine.adress, machine.stad].filter(Boolean).join(', ')],
       ['Märke',        machine.fabrikat],
       ['Modell',       machine.modell],
       ['Årsmodell',    machine.arsmodell],
       ['Tillv.nr',     machine.tillvnr],
+      ['Senast service', lastService],
     ].filter(([,v]) => v);
+
+    const kontaktFields = [
+      ['Kund',       machine.kund],
+      ['Anläggning', machine.anlaggning],
+      ['Adress',     [machine.adress, machine.stad].filter(Boolean).join(', ')],
+      ['Kontakt',    machine.kontakt],
+      ['Telefon',    machine.telefon],
+    ].filter(([,v]) => v);
+
+    const fv = (l, v) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`;
+    const grid = (fields) => `<div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:10px;">${fields.map(([l,v]) => fv(l,v)).join('')}</div>`;
+
     document.getElementById('ro-info').innerHTML = `
-      <h2>Maskinuppgifter</h2>
-      <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:10px;">
-        ${fields.map(([l,v]) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`).join('')}
-      </div>`;
+      <h2>Maskinuppgifter</h2>${grid(maskinFields)}
+      ${kontaktFields.length ? `<h2 style="margin-top:16px;">Kontaktinformation</h2>${grid(kontaktFields)}` : ''}
+      ${machine.instruktion ? `<h2 style="margin-top:16px;">Manöverinstruktion</h2>
+        <div style="margin-top:8px;padding:12px;background:#f5f7f9;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${machine.instruktion}</div>` : ''}`;
 
     // Hydraulikstatus
     const getLastDate = (key) => {
@@ -4508,6 +4525,15 @@ function renderMaskinkortInfo(m) {
       <button onclick="saveHydraulik('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
       <span id="hydraulik-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
+    <h2 style="margin-top:20px;">Manöverinstruktion</h2>
+    <div style="margin-top:8px;">
+      <textarea id="mk-instruktion" rows="4" placeholder="Beskriv hur maskinen manövreras, viktiga moment, varningar…"
+        style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:10px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;">${m.instruktion||''}</textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <button onclick="saveInstruktion('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara instruktion</button>
+        <span id="instruktion-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
+      </div>
+    </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
       <div class="field-group"><label>Datum</label><input type="date" id="hlog-datum"></div>
@@ -4547,6 +4573,18 @@ async function saveHydraulik(nr) {
     body: JSON.stringify(data)
   });
   const el = document.getElementById('hydraulik-saved');
+  el.style.display = 'inline';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+async function saveInstruktion(nr) {
+  const text = document.getElementById('mk-instruktion').value;
+  await fetch('/api/machines/' + encodeURIComponent(nr), {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ instruktion: text })
+  });
+  const el = document.getElementById('instruktion-saved');
   el.style.display = 'inline';
   setTimeout(() => el.style.display = 'none', 3000);
 }
