@@ -1825,22 +1825,25 @@ async function openMaskinReadOnly(nr) {
     const fv = (l, v) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`;
     const grid = (fields) => `<div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-top:10px;">${fields.map(([l,v]) => fv(l,v)).join('')}</div>`;
 
-    // Senaste protokoll-kort med öppna-knapp
+    // Senaste protokoll — visa bevaka/akut direkt
     const latestProtocolHtml = latestProtocol ? (() => {
-      const typeLabel = latestProtocol.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
-      const statusAkut   = (latestProtocol.items||[]).filter(i=>i.status==='3').length;
-      const statusBevaka = (latestProtocol.items||[]).filter(i=>i.status==='2').length;
-      const statusText   = statusAkut   ? `⚠ ${statusAkut} akuta` :
-                           statusBevaka ? `● ${statusBevaka} bevaka` : '✓ Allt godkänt';
-      const statusColor  = statusAkut ? '#c62828' : statusBevaka ? '#f57f17' : '#2e7d32';
+      const typeLabel  = latestProtocol.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+      const akut       = (latestProtocol.items||[]).filter(i=>i.status==='3');
+      const bevaka     = (latestProtocol.items||[]).filter(i=>i.status==='2');
+      const statusText = akut.length   ? `⚠ ${akut.length} akuta anmärkningar` :
+                         bevaka.length ? `● ${bevaka.length} bevakningspunkter` : '✓ Allt godkänt';
+      const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
+      const anmHtml = [...akut, ...bevaka].map(i => `
+        <div style="padding:8px 10px;border-radius:6px;background:${i.status==='3'?'#ffebee':'#fff8e1'};border-left:3px solid ${i.status==='3'?'#c62828':'#f57f17'};font-size:13px;">
+          <span style="font-weight:700;">${i.status==='3'?'⚠ Akut':'● Bevaka'}</span> – Nr ${i.nr}: ${i.label}
+          ${i.comment ? `<div style="font-size:12px;color:#546e7a;margin-top:3px;">→ ${i.comment}</div>` : ''}
+        </div>`).join('');
       return `<h2 style="margin-top:16px;">Senaste service</h2>
-        <div style="margin-top:8px;padding:14px;background:#f5f7f9;border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div>
-            <div style="font-weight:700;font-size:14px;">${latestProtocol.datum} · ${typeLabel}</div>
-            <div style="font-size:12px;color:#546e7a;margin-top:2px;">Tekniker: ${latestProtocol.tekniker||'–'}</div>
-            <div style="font-size:12px;font-weight:700;color:${statusColor};margin-top:4px;">${statusText}</div>
-          </div>
-          <button onclick="roOpenProtocol()" style="padding:7px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;white-space:nowrap;">Öppna protokoll</button>
+        <div style="margin-top:8px;padding:14px;background:#f5f7f9;border-radius:8px;">
+          <div style="font-weight:700;font-size:14px;">${latestProtocol.datum} · ${typeLabel}</div>
+          <div style="font-size:12px;color:#546e7a;margin-top:2px;">Tekniker: ${latestProtocol.tekniker||'–'}</div>
+          <div style="font-size:13px;font-weight:700;color:${statusColor};margin-top:6px;">${statusText}</div>
+          ${anmHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">${anmHtml}</div>` : ''}
         </div>`;
     })() : '';
 
