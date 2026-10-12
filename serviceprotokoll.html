@@ -4258,7 +4258,24 @@ function renderMaskinkortInfo(m) {
         </div>
         <button onclick="saveMotKaj('${m.nr}')" style="margin-top:8px;padding:4px 12px;font-size:12px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara</button>
       </div>
-    </div>`;
+    </div>
+    <h2 style="margin-top:16px;">Hydraulikspecifikation</h2>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+      <div class="field-group">
+        <label>Hydraulfilter (art.nr)</label>
+        <input type="text" id="mk-hydraulfilter" value="${m.hydraulfilter||''}" placeholder="Art.nr – byt var 12 mån">
+      </div>
+      <div class="field-group">
+        <label>Hydraulolja (typ)</label>
+        <input type="text" id="mk-hydraulolja" value="${m.hydraulolja||''}" placeholder="T.ex. VG46 – byt var 12–24 mån">
+      </div>
+      <div class="field-group">
+        <label>Hydraulslangar presscylinder</label>
+        <input type="text" id="mk-hydraulslangar" value="${m.hydraulslangar||''}" placeholder="Art.nr – byt var 4–5 år">
+      </div>
+    </div>
+    <button onclick="saveHydraulik('${m.nr}')" style="margin-top:12px;padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
+    <span id="hydraulik-saved" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>`;
 }
 
 async function saveMotKaj(nr) {
@@ -4268,6 +4285,22 @@ async function saveMotKaj(nr) {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ mot_kaj: val })
   });
+}
+
+async function saveHydraulik(nr) {
+  const data = {
+    hydraulfilter:  document.getElementById('mk-hydraulfilter').value.trim(),
+    hydraulolja:    document.getElementById('mk-hydraulolja').value.trim(),
+    hydraulslangar: document.getElementById('mk-hydraulslangar').value.trim()
+  };
+  await fetch('/api/machines/' + encodeURIComponent(nr), {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  const el = document.getElementById('hydraulik-saved');
+  el.style.display = 'inline';
+  setTimeout(() => el.style.display = 'none', 3000);
 }
 
 function renderMaskinkortStats(history) {

@@ -78,11 +78,17 @@ def init_db():
             role     TEXT DEFAULT 'tekniker'
         );
         """)
-    # Migration: lägg till mot_kaj om kolumnen saknas
+    # Migration: lägg till kolumner om de saknas
     with get_db() as db:
         cols = [r[1] for r in db.execute("PRAGMA table_info(machines)").fetchall()]
         if 'mot_kaj' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN mot_kaj TEXT DEFAULT ''")
+        if 'hydraulfilter' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN hydraulfilter TEXT DEFAULT ''")
+        if 'hydraulolja' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN hydraulolja TEXT DEFAULT ''")
+        if 'hydraulslangar' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN hydraulslangar TEXT DEFAULT ''")
 
 init_db()
 
@@ -329,7 +335,7 @@ def get_machine(nr):
 @app.route('/api/machines/<nr>', methods=['PATCH'])
 def patch_machine(nr):
     data = request.get_json(force=True)
-    allowed = {'mot_kaj', 'notering'}
+    allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({'error': 'Inga giltiga fält'}), 400
