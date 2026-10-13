@@ -1892,8 +1892,10 @@ async function openMaskinReadOnly(nr) {
     document.getElementById('ro-info').innerHTML = `
       <h2>Maskinuppgifter</h2>${grid(maskinFields)}
       ${kontaktFields.length ? `<h2 style="margin-top:16px;">Kontaktinformation</h2>${grid(kontaktFields)}` : ''}
-      ${(machine.beskrivning||machine.notering) ? `<h2 style="margin-top:16px;">Beskrivning</h2>
-        <div style="margin-top:8px;padding:12px;background:#f5f7f9;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${machine.beskrivning||machine.notering}</div>` : ''}
+      ${machine.beskrivning ? `<h2 style="margin-top:16px;">Beskrivning</h2>
+        <div style="margin-top:8px;padding:12px;background:#f5f7f9;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${machine.beskrivning}</div>` : ''}
+      ${machine.notering ? `<h2 style="margin-top:16px;">Anteckning</h2>
+        <div style="margin-top:8px;padding:12px;background:#fff8e1;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;border-left:3px solid #f9a825;">${machine.notering}</div>` : ''}
       ${machine.instruktion ? `<h2 style="margin-top:16px;">Manöverinstruktion</h2>
         <div style="margin-top:8px;padding:12px;background:#f5f7f9;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${machine.instruktion}</div>` : ''}
       ${latestProtocolHtml}`;
