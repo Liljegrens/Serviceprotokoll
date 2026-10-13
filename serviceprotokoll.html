@@ -1831,10 +1831,11 @@ async function openMaskinReadOnly(nr) {
   document.getElementById('ro-hydraulik').style.display = 'none';
 
   try {
-    const [machine, hydlogg, protocols] = await Promise.all([
+    const [machine, hydlogg, protocols, notes] = await Promise.all([
       apiFetch('/api/machines/' + encodeURIComponent(nr)),
       apiFetch('/api/hydrauliklogg/' + encodeURIComponent(nr)),
-      apiFetch('/api/protocols/' + encodeURIComponent(nr)).catch(() => [])
+      apiFetch('/api/protocols/' + encodeURIComponent(nr)).catch(() => []),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes').catch(() => [])
     ]);
 
     if (!machine) {
@@ -1898,7 +1899,14 @@ async function openMaskinReadOnly(nr) {
         <div style="margin-top:8px;padding:12px;background:#fff8e1;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;border-left:3px solid #f9a825;">${machine.notering}</div>` : ''}
       ${machine.instruktion ? `<h2 style="margin-top:16px;">Manöverinstruktion</h2>
         <div style="margin-top:8px;padding:12px;background:#f5f7f9;border-radius:8px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${machine.instruktion}</div>` : ''}
-      ${latestProtocolHtml}`;
+      ${latestProtocolHtml}
+      ${notes && notes.length ? `<h2 style="margin-top:16px;">Anteckningar</h2>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;">
+          ${notes.map(n => `<div style="border-left:3px solid var(--brand);padding:8px 12px;background:#f5f7f9;border-radius:0 6px 6px 0;">
+            <div style="font-size:11px;color:#546e7a;margin-bottom:3px;">${(n.saved_at||'').slice(0,16).replace('T',' ')}${n.author ? ' · ' + n.author : ''}</div>
+            <div style="font-size:14px;color:#212121;">${n.note}</div>
+          </div>`).join('')}
+        </div>` : ''}`;
 
     // Spara senaste protokoll för öppna-knappen
     window._roLatestProtocol = latestProtocol;
