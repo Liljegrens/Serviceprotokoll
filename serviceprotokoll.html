@@ -1477,8 +1477,12 @@
       <div class="field-grid">
         <div class="field-group">
           <label>Objektnummer <span style="font-size:10px;font-weight:400;color:#888;">(lämna tomt = tillfälligt nr)</span></label>
-          <input type="text" id="f-maskin" placeholder="t.ex. 500100 eller lämna tomt" oninput="onMaskinInput(this.value)">
+          <input type="text" id="f-maskin" placeholder="t.ex. 500100" oninput="onMaskinInput(this.value)">
           <div class="machine-lookup-badge" id="machine-badge"></div>
+          <label style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#e65100;cursor:pointer;font-weight:600;">
+            <input type="checkbox" id="temp-toggle" onchange="toggleTempBlock(this.checked)" style="accent-color:#e65100;">
+            Tillfälligt nummer (maskin ej i register)
+          </label>
         </div>
         <div class="field-group">
           <label>Kund</label>
@@ -3335,6 +3339,10 @@ function closeModal(event, force) {
 // ═══════════════════════════════════════════════════
 // SAVE PROTOCOL
 // ═══════════════════════════════════════════════════
+function toggleTempBlock(checked) {
+  document.getElementById('temp-info-block').style.display = checked ? 'block' : 'none';
+}
+
 function _genTempNr() {
   const d = new Date();
   const yy = String(d.getFullYear()).slice(2);
@@ -3346,10 +3354,11 @@ function _genTempNr() {
 
 async function saveProtocol() {
   let maskin = document.getElementById('f-maskin').value.trim();
-  if (!maskin) {
+  const isTempToggled = document.getElementById('temp-toggle').checked;
+  if (!maskin && !isTempToggled) { alert('Fyll i maskinnummer eller markera "Tillfälligt nummer".'); return; }
+  if (isTempToggled && !maskin) {
     maskin = _genTempNr();
     document.getElementById('f-maskin').value = maskin;
-    document.getElementById('temp-info-block').style.display = 'block';
   }
 
   const items = [];
@@ -3438,6 +3447,7 @@ function openProtocol(type) {
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   ['f-maskin','f-modell','f-kund'].forEach(id => document.getElementById(id).value='');
   document.getElementById('temp-info-block').style.display = 'none';
+  document.getElementById('temp-toggle').checked = false;
   ['temp-maskin-ref','temp-modell','temp-kund','temp-kontakt','temp-telefon','temp-adress'].forEach(id => document.getElementById(id).value='');
   // Auto-fill tekniker från inloggad användare
   document.getElementById('f-tekniker').value = currentUser ? currentUser.name : '';
