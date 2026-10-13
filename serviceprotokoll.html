@@ -1476,8 +1476,8 @@
       <h2>Protokolluppgifter</h2>
       <div class="field-grid">
         <div class="field-group">
-          <label>Objektnummer</label>
-          <input type="text" id="f-maskin" placeholder="t.ex. 500100" oninput="onMaskinInput(this.value)">
+          <label>Objektnummer <span style="font-size:10px;font-weight:400;color:#888;">(lämna tomt = tillfälligt nr)</span></label>
+          <input type="text" id="f-maskin" placeholder="t.ex. 500100 eller lämna tomt" oninput="onMaskinInput(this.value)">
           <div class="machine-lookup-badge" id="machine-badge"></div>
         </div>
         <div class="field-group">
@@ -1495,6 +1495,37 @@
         <div class="field-group">
           <label>Fabrikat / Modell</label>
           <input type="text" id="f-modell" placeholder="Fylls i automatiskt">
+        </div>
+      </div>
+
+      <!-- Fritext-info vid TEMP-nummer -->
+      <div id="temp-info-block" style="display:none;margin-top:14px;padding:12px 14px;background:#fff8e1;border-radius:8px;border-left:3px solid #f9a825;">
+        <div style="font-size:12px;font-weight:700;color:#e65100;margin-bottom:10px;">⚠ Tillfälligt nummer – fyll i känd information</div>
+        <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
+          <div class="field-group">
+            <label>Maskinnr / Serienr</label>
+            <input type="text" id="temp-maskin-ref" placeholder="Om känt">
+          </div>
+          <div class="field-group">
+            <label>Fabrikat / Modell</label>
+            <input type="text" id="temp-modell" placeholder="t.ex. Hussman LDK">
+          </div>
+          <div class="field-group">
+            <label>Kund / Företag</label>
+            <input type="text" id="temp-kund" placeholder="Kundnamn">
+          </div>
+          <div class="field-group">
+            <label>Kontaktperson</label>
+            <input type="text" id="temp-kontakt" placeholder="Namn">
+          </div>
+          <div class="field-group">
+            <label>Telefon</label>
+            <input type="tel" id="temp-telefon" placeholder="070-000 00 00">
+          </div>
+          <div class="field-group">
+            <label>Anläggning / Adress</label>
+            <input type="text" id="temp-adress" placeholder="Gatuadress">
+          </div>
         </div>
       </div>
 
@@ -2426,11 +2457,12 @@ async function loadRecentProtocols() {
       } else {
         const s = summarizeStatus(rec.items);
         const icon = rec.type === 'flygande' ? '🚗' : '🔧';
+        const isTemp = (rec.maskin_nr||'').startsWith('TEMP-');
         div.innerHTML = `
           <span class="recent-icon">${icon}</span>
           <div class="recent-main">
             <div class="recent-top">
-              <span class="recent-maskin">${rec.maskin_nr}</span>
+              <span class="recent-maskin">${rec.maskin_nr}${isTemp ? ' <span style="font-size:10px;background:#fff3e0;color:#e65100;border-radius:4px;padding:1px 5px;font-weight:700;">EJ KOPPLAD</span>' : ''}</span>
               <span class="recent-kund">${rec.kund || ''}</span>
             </div>
             <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
@@ -2862,6 +2894,13 @@ async function lookupMachine(val) {
   if (!key) {
     badge.className = 'machine-lookup-badge';
     infoCard.classList.remove('visible');
+    document.getElementById('temp-info-block').style.display = 'none';
+    return;
+  }
+  if (key.startsWith('TEMP-')) {
+    badge.textContent = 'Tillfälligt nummer';
+    badge.className = 'machine-lookup-badge error visible';
+    document.getElementById('temp-info-block').style.display = 'block';
     return;
   }
   try {
@@ -3296,9 +3335,22 @@ function closeModal(event, force) {
 // ═══════════════════════════════════════════════════
 // SAVE PROTOCOL
 // ═══════════════════════════════════════════════════
+function _genTempNr() {
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const seq = String(Math.floor(Math.random()*900)+100);
+  return `TEMP-${yy}${mm}${dd}-${seq}`;
+}
+
 async function saveProtocol() {
-  const maskin = document.getElementById('f-maskin').value.trim();
-  if (!maskin) { alert('Fyll i maskinnummer innan du sparar.'); return; }
+  let maskin = document.getElementById('f-maskin').value.trim();
+  if (!maskin) {
+    maskin = _genTempNr();
+    document.getElementById('f-maskin').value = maskin;
+    document.getElementById('temp-info-block').style.display = 'block';
+  }
 
   const items = [];
   document.querySelectorAll('.check-item').forEach(div => {
@@ -3334,10 +3386,18 @@ async function saveProtocol() {
         datum:        document.getElementById('f-datum').value,
         type:         currentType,
         machine_type: currentMachineType || '',
-        kund:       document.getElementById('f-kund').value.trim() || infoFields['Kund'] || '',
-        anlaggning: infoFields.anlaggning || '',
+        kund:       document.getElementById('f-kund').value.trim() || document.getElementById('temp-kund').value.trim() || infoFields['Kund'] || '',
+        anlaggning: infoFields.anlaggning || document.getElementById('temp-adress').value.trim() || '',
         tekniker:   document.getElementById('f-tekniker').value,
-        modell:     document.getElementById('f-modell').value,
+        modell:     document.getElementById('f-modell').value.trim() || document.getElementById('temp-modell').value.trim() || '',
+        temp_info: maskin.startsWith('TEMP-') ? {
+          maskin_ref: document.getElementById('temp-maskin-ref').value.trim(),
+          modell:     document.getElementById('temp-modell').value.trim(),
+          kund:       document.getElementById('temp-kund').value.trim(),
+          kontakt:    document.getElementById('temp-kontakt').value.trim(),
+          telefon:    document.getElementById('temp-telefon').value.trim(),
+          adress:     document.getElementById('temp-adress').value.trim(),
+        } : null,
         items,
         ...(['komprimator','vandare','vandare-kaly'].includes(currentType) ? {
           gangtid: document.getElementById('f-gangtid')?.value || '',
@@ -3377,6 +3437,8 @@ function openProtocol(type) {
   buildChecklist(getChecklistItems());
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   ['f-maskin','f-modell','f-kund'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('temp-info-block').style.display = 'none';
+  ['temp-maskin-ref','temp-modell','temp-kund','temp-kontakt','temp-telefon','temp-adress'].forEach(id => document.getElementById(id).value='');
   // Auto-fill tekniker från inloggad användare
   document.getElementById('f-tekniker').value = currentUser ? currentUser.name : '';
   document.getElementById('machine-badge').className = 'machine-lookup-badge';
