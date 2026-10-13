@@ -778,6 +778,11 @@
         <h2>Installationsprotokoll Komprimator</h2>
         <p>Typ 9 · Montageprotokoll vid nyinstallation</p>
       </div>
+      <div class="start-card" onclick="openProtocol('lyftbord')">
+        <div style="font-size:48px;margin-bottom:12px;">⬆️</div>
+        <h2>Serviceprotokoll Lyftbord</h2>
+        <p>Typ 10 · Hydrauliskt saxbord – hydraulik, mekanik, el och säkerhet</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1759,6 +1764,53 @@ const ODOURMIKKO_ITEMS = [
   { nr:'4.3', label:'Kolutbyte utfört vid behov' },
   { section: '5. FUNKTIONSKONTROLL' },
   { nr:'5.1', label:'Driftkontroll vid normaldrift' },
+];
+
+const LYFTBORD_ITEMS = [
+  { section: 'HYDRAULSYSTEM' },
+  { sub: 'Hydraulaggregat' },
+  { nr:'H1', label:'Hydraulenhet – tank, pump och ventilblock' },
+  { nr:'H2', label:'Hydraulolja – nivå, färg och kvalitet' },
+  { nr:'H3', label:'Oljefilter – skick, byt vid behov' },
+  { sub: 'Slangar & cylinder' },
+  { nr:'H4', label:'Hydraulslangar och kopplingar – slitage, sprickor, täthet' },
+  { nr:'H5', label:'Lyftcylinder(ar) – läckage, kolvstång och tätningar' },
+  { nr:'H6', label:'Rörledningar och kopplingar – åtdragning och täthet' },
+  { section: 'MEKANIK' },
+  { sub: 'Saxmekanism' },
+  { nr:'M1', label:'Saxarmar – sprickor, deformationer och slitage' },
+  { nr:'M2', label:'Leder och tappar – slitage, spel och smörjning' },
+  { nr:'M3', label:'Infästningsbultar saxarmar – åtdragning' },
+  { nr:'M4', label:'Rullor och glidytor – skick och smörjning' },
+  { sub: 'Bord och ram' },
+  { nr:'M5', label:'Bordsskiva – skick, infästning och deformation' },
+  { nr:'M6', label:'Underram – skador, korrosion och infästning i golv' },
+  { nr:'M7', label:'Stoppbyglar och mekanisk säkerhetslåsning – funktion' },
+  { sub: 'Smörjning' },
+  { nr:'M8', label:'Smörjnipplar och smörjpunkter – smörjning utförd' },
+  { nr:'M9', label:'Bultar och infästningar – åtdragning generellt' },
+  { section: 'EL OCH MANÖVER' },
+  { sub: 'El & kablage' },
+  { nr:'E1', label:'Kablage och anslutningar – skador, lösa kontakter' },
+  { nr:'E2', label:'Styrenhet och komponenter – indikeringar och larm' },
+  { sub: 'Manöver & säkerhet' },
+  { nr:'E3', label:'Manöverpanel/knappdosa – funktion och skick' },
+  { nr:'E4', label:'Nödstopp – funktionstest' },
+  { nr:'E5', label:'Säkerhetsbrytare och gränslägesgivare – funktion' },
+  { nr:'E6', label:'Elmotor – ljud, temperatur och vibrationer' },
+  { section: 'SÄKERHET' },
+  { nr:'S1', label:'Mekanisk säkerhetslåsning (underhållsstöd) – finns och fungerar' },
+  { nr:'S2', label:'Skyddskåpor och täckplåtar – på plats och åtskruvade' },
+  { nr:'S3', label:'Varnings- och informationsdekaler – på plats och läsliga' },
+  { nr:'S4', label:'Lastkapacitet-skylt – synlig och korrekt' },
+  { section: 'YTSKIKT' },
+  { nr:'Y1', label:'Lackering och korrosionsskydd – skador och roststatus' },
+  { nr:'Y2', label:'Städning och rengöring av lyftbordet' },
+  { section: 'FUNKTIONSKONTROLL' },
+  { nr:'F1', label:'Provkörning upp/ned – rörelse jämn och utan onormalt ljud' },
+  { nr:'F2', label:'Kontroll av slutlägen upp och ned' },
+  { nr:'F3', label:'Täthetsprovning under last – håller position' },
+  { nr:'F4', label:'Driftkontroll – komplett genomgång efter service' },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -2782,6 +2834,7 @@ function getChecklistItems() {
   if (currentType === 'vandare') return [...VANDARE_ITEMS];
   if (currentType === 'vandare-kaly') return [...VANDARE_KALY_ITEMS];
   if (currentType === 'odourmikko') return [...ODOURMIKKO_ITEMS];
+  if (currentType === 'lyftbord') return [...LYFTBORD_ITEMS];
   return currentType === 'flygande' ? [...SHARED_ITEMS, ...FLYGANDE_EXTRA] : [...SHARED_ITEMS];
 }
 
@@ -2976,7 +3029,7 @@ function showMachineTypeNotice(detectedType, beskrivning) {
   }
   const label = getMachineTypeLabel(beskrivning);
   // Typer som har en egen protokollmall
-  const TYPES_WITH_TEMPLATE = ['verkstad', 'flygande', 'kaly'];
+  const TYPES_WITH_TEMPLATE = ['verkstad', 'flygande', 'kaly', 'lyftbord'];
   const hasTemplate = TYPES_WITH_TEMPLATE.includes(detectedType);
   notice.innerHTML = hasTemplate
     ? `<span>ℹ️ Kärlvändarprotokoll laddat för <strong>${label}</strong></span>`
@@ -3334,7 +3387,7 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100' };
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
   // Visa/dölj fält beroende på protokolltyp
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
@@ -4831,7 +4884,7 @@ function renderMaskinkortHistorik(history) {
     return;
   }
   const typeIcon  = { service:'🔧', leverans:'📦', balp:'🗜️' };
-  const typeLabel = { service:'Service', leverans:'Leverans', balp:'Balpressar' };
+  const typeLabel = { service:'Service', leverans:'Leverans', balp:'Balpressar', lyftbord:'Lyftbord' };
   const typeBadge = { service:'background:#e8eef3;color:var(--brand)', leverans:'background:#e3f2fd;color:#1565c0', balp:'background:#f3e5f5;color:#6a1b9a' };
   el.innerHTML = history.map(h => {
     const datum = h.datum || h.saved_at?.slice(0,10) || '–';
