@@ -1928,7 +1928,7 @@ async function openMaskinReadOnly(nr) {
           <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastOlja || 'ej loggat'}</div>
         </div>
         <div class="field-group">
-          <label>Hydraulslangar presscylinder</label>
+          <label>Hydraulslangar <span style="font-size:10px;font-weight:400;">(presscylinder) faktura/art.nr</span></label>
           <div style="font-size:14px;padding:6px 0;color:#212121;">${machine.hydraulslangar || '–'}</div>
           <div style="font-size:12px;color:#546e7a;">Senast bytt: ${lastSlangar || 'ej loggat'}</div>
         </div>
@@ -4594,7 +4594,7 @@ function renderMaskinkortInfo(m) {
         <input type="text" id="mk-hydraulolja" value="${m.hydraulolja||''}" placeholder="T.ex. VG46 – byt var 12–24 mån">
       </div>
       <div class="field-group">
-        <label>Hydraulslangar presscylinder</label>
+        <label>Hydraulslangar <span style="font-size:10px;font-weight:400;">(presscylinder) faktura/art.nr</span></label>
         <input type="text" id="mk-hydraulslangar" value="${m.hydraulslangar||''}" placeholder="Art.nr – byt var 4–5 år">
       </div>
     </div>
