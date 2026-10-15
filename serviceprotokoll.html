@@ -3170,6 +3170,7 @@ function renderModalBody(rec) {
     <div class="modal-field"><div class="mf-label">Anläggning</div><div class="mf-val">${rec.anlaggning||'–'}</div></div>
     <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'–'}</div></div>
     <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'–'}</div></div>
+    ${rec.saved_at && (window.currentUser?.role === 'admin') ? `<div class="modal-field" style="opacity:0.6;"><div class="mf-label">Sparad i systemet</div><div class="mf-val" style="font-size:12px;">${rec.saved_at.slice(0,16).replace('T',' ')}</div></div>` : ''}
   </div></div>`;
 
   const flagged = (rec.items||[]).filter(i=>i.status==='2'||i.status==='3');
@@ -3756,6 +3757,7 @@ async function printRecord(rec) {
     <div class="mf"><label>Kund</label><br><span>${rec.kund||'–'}</span></div>
     <div class="mf"><label>Adress</label><br><span>${rec.anlaggning||'–'}</span></div>
     <div class="mf"><label>Objektnummer</label><br><span>${rec.maskin_nr}</span></div>
+    ${rec.saved_at ? `<div class="mf" style="color:#888;font-size:7pt;grid-column:1/-1;border-top:0.4pt solid #ccc;padding-top:4pt;margin-top:2pt;"><label style="color:#b0bec5;">Sparad i systemet</label><br><span>${rec.saved_at.slice(0,16).replace('T',' ')}</span></div>` : ''}
   </div>
   <div class="status-bar">${statusText}</div>
   <div class="counts">
