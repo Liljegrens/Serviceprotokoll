@@ -1405,6 +1405,17 @@
     <div class="section-header" style="margin-top:20px;">Protokollhistorik</div>
     <div class="checklist-card" id="maskinkort-historik" style="padding:8px 0;"></div>
 
+    <!-- Typskylt -->
+    <div class="section-header" style="margin-top:20px;">Typskylt</div>
+    <div class="checklist-card" style="padding:16px;">
+      <div id="typskylt-preview" style="margin-bottom:12px;"></div>
+      <label style="display:inline-block;padding:8px 16px;background:var(--brand);color:#fff;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">
+        📷 Ladda upp bild på typskylt
+        <input type="file" id="typskylt-input" accept="image/*" capture="environment" style="display:none;" onchange="uploadTypskylt(this)">
+      </label>
+      <div id="typskylt-status" style="font-size:12px;color:#546e7a;margin-top:6px;"></div>
+    </div>
+
     <!-- Anteckningar -->
     <div class="section-header" style="margin-top:20px;">Anteckningar</div>
     <div class="checklist-card" style="padding:16px;">
@@ -1550,6 +1561,12 @@
       <!-- Machine info card (visas efter uppslag) -->
       <div class="machine-info-card" id="machine-info-card">
         <div class="machine-info-grid" id="machine-info-grid"></div>
+      </div>
+
+      <!-- Typskylt (visas om bild finns) -->
+      <div id="protocol-typskylt-card" style="display:none;margin-top:10px;background:#f5f7f9;border:1px solid var(--border);border-radius:8px;padding:12px 16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Typskylt</div>
+        <img id="protocol-typskylt-img" src="" alt="Typskylt" style="max-width:100%;max-height:200px;border-radius:6px;">
       </div>
 
       <!-- Hydraulikspec (visas om maskinen har hydraulikinfo) -->
@@ -1893,11 +1910,12 @@ async function openMaskinReadOnly(nr) {
   document.getElementById('ro-hydraulik').style.display = 'none';
 
   try {
-    const [machine, hydlogg, protocols, notes] = await Promise.all([
+    const [machine, hydlogg, protocols, notes, typskylt] = await Promise.all([
       apiFetch('/api/machines/' + encodeURIComponent(nr)),
       apiFetch('/api/hydrauliklogg/' + encodeURIComponent(nr)),
       apiFetch('/api/protocols/' + encodeURIComponent(nr)).catch(() => []),
-      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes').catch(() => [])
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes').catch(() => []),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/typskylt').catch(() => null)
     ]);
 
     if (!machine) {
@@ -1968,7 +1986,9 @@ async function openMaskinReadOnly(nr) {
             <div style="font-size:11px;color:#546e7a;margin-bottom:3px;">${(n.saved_at||'').slice(0,16).replace('T',' ')}${n.author ? ' · ' + n.author : ''}</div>
             <div style="font-size:14px;color:#212121;">${n.note}</div>
           </div>`).join('')}
-        </div>` : ''}`;
+        </div>` : ''}
+      ${typskylt?.filename ? `<h2 style="margin-top:16px;">Typskylt</h2>
+        <div style="margin-top:8px;"><img src="/uploads/${typskylt.filename}" alt="Typskylt" style="max-width:100%;border-radius:8px;border:1px solid #dde2ea;"></div>` : ''}`;
 
     // Spara senaste protokoll för öppna-knappen
     window._roLatestProtocol = latestProtocol;
@@ -2987,6 +3007,21 @@ async function lookupMachine(val) {
       } else {
         hydCard.style.display = 'none';
       }
+    }
+
+    // Typskylt
+    const tsCard = document.getElementById('protocol-typskylt-card');
+    const tsImg  = document.getElementById('protocol-typskylt-img');
+    if (tsCard && tsImg) {
+      try {
+        const ts = await apiFetch('/api/machines/' + encodeURIComponent(key) + '/typskylt');
+        if (ts?.filename) {
+          tsImg.src = '/uploads/' + ts.filename;
+          tsCard.style.display = 'block';
+        } else {
+          tsCard.style.display = 'none';
+        }
+      } catch { tsCard.style.display = 'none'; }
     }
 
     badge.textContent = '✓ ' + m.kund;
@@ -4648,17 +4683,21 @@ async function openMaskinkort(nr) {
   document.getElementById('maskinkort-historik').innerHTML = '<div style="color:#888;font-size:13px;padding:16px;">Laddar historik…</div>';
   document.getElementById('maskinkort-notes').innerHTML = '';
   document.getElementById('maskinkort-note-input').value = '';
+  document.getElementById('typskylt-preview').innerHTML = '';
+  document.getElementById('typskylt-status').textContent = '';
 
   try {
-    const [machine, history, notes] = await Promise.all([
+    const [machine, history, notes, typskylt] = await Promise.all([
       apiFetch('/api/machines/' + encodeURIComponent(nr)),
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/history'),
-      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes')
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes'),
+      apiFetch('/api/machines/' + encodeURIComponent(nr) + '/typskylt').catch(() => null)
     ]);
     renderMaskinkortInfo(machine);
     renderMaskinkortStats(history);
     renderMaskinkortHistorik(history);
     renderMaskinkortNotes(notes);
+    renderTypskylt(typskylt?.filename, nr);
     // Sätt dagens datum i hydrauliklogg-fältet
     const hlogDatum = document.getElementById('hlog-datum');
     if (hlogDatum) hlogDatum.value = new Date().toISOString().split('T')[0];
@@ -4953,6 +4992,42 @@ function openHistorikPost(h) {
   if (h._type === 'leverans') openLeveransModal(h);
   else if (h._type === 'balp') openBalpModal(h);
   else openHistoryModal(h);
+}
+
+function renderTypskylt(filename, nr) {
+  const preview = document.getElementById('typskylt-preview');
+  const status  = document.getElementById('typskylt-status');
+  if (!preview) return;
+  if (filename) {
+    preview.innerHTML = `<img src="/uploads/${filename}" alt="Typskylt" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="this.requestFullscreen&&this.requestFullscreen()">`;
+    if (status) status.textContent = 'Bild uppladdad — ladda upp ny för att ersätta';
+  } else {
+    preview.innerHTML = '<div style="color:#888;font-size:13px;margin-bottom:8px;">Ingen bild uppladdad ännu.</div>';
+    if (status) status.textContent = '';
+  }
+}
+
+async function uploadTypskylt(input) {
+  const nr = _currentMaskinNr;
+  if (!nr || !input.files[0]) return;
+  const status = document.getElementById('typskylt-status');
+  status.textContent = 'Laddar upp…';
+  const fd = new FormData();
+  fd.append('photo', input.files[0]);
+  try {
+    const res = await fetch('/api/machines/' + encodeURIComponent(nr) + '/typskylt', {
+      method: 'POST', body: fd
+    });
+    const data = await res.json();
+    if (data.filename) {
+      renderTypskylt(data.filename, nr);
+    } else {
+      status.textContent = 'Fel vid uppladdning.';
+    }
+  } catch {
+    status.textContent = 'Fel vid uppladdning.';
+  }
+  input.value = '';
 }
 
 function renderMaskinkortNotes(notes) {

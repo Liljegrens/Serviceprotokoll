@@ -94,6 +94,8 @@ def init_db():
             db.execute("ALTER TABLE machines ADD COLUMN instruktion TEXT DEFAULT ''")
         if 'gasdampare' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN gasdampare TEXT DEFAULT ''")
+        if 'typskylt' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN typskylt TEXT DEFAULT ''")
     # Skapa hydrauliklogg-tabell om den saknas
     with get_db() as db:
         db.execute("""
@@ -887,6 +889,29 @@ def upload_photo():
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     return send_from_directory(UPLOADS, filename)
+
+@app.route('/api/machines/<maskin_nr>/typskylt', methods=['POST'])
+def upload_typskylt(maskin_nr):
+    if 'photo' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['photo']
+    ext = os.path.splitext(f.filename)[1].lower()
+    if ext not in ALLOWED_EXT:
+        return jsonify({'error': 'Otillåtet filformat'}), 400
+    safe_nr = ''.join(c for c in maskin_nr if c.isalnum() or c in '-_')
+    filename = f'typskylt_{safe_nr}{ext}'
+    f.save(os.path.join(UPLOADS, filename))
+    with get_db() as db:
+        db.execute("UPDATE machines SET typskylt=? WHERE UPPER(nr)=UPPER(?)", (filename, maskin_nr))
+    return jsonify({'filename': filename}), 201
+
+@app.route('/api/machines/<maskin_nr>/typskylt', methods=['GET'])
+def get_typskylt(maskin_nr):
+    with get_db() as db:
+        row = db.execute("SELECT typskylt FROM machines WHERE UPPER(nr)=UPPER(?)", (maskin_nr,)).fetchone()
+    if not row or not row['typskylt']:
+        return jsonify({'filename': None})
+    return jsonify({'filename': row['typskylt']})
 
 @app.route('/api/hydrauliklogg/<maskin_nr>', methods=['GET'])
 def get_hydrauliklogg(maskin_nr):
