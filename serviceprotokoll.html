@@ -1378,6 +1378,7 @@
         style="flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-family:Arial,sans-serif;"
         oninput="filterMaskiner(this.value)">
       <button onclick="printAllaQrDekaler()" style="white-space:nowrap;padding:10px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">&#x25A6; Skriv ut alla QR</button>
+      <button id="ny-maskin-btn" onclick="openNyMaskin()" style="display:none;white-space:nowrap;padding:10px 16px;background:var(--ok);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">＋ Ny maskin</button>
     </div>
     <div id="maskin-list"></div>
   </div>
@@ -1610,6 +1611,38 @@
       <button class="modal-close" onclick="closeModal(null,true)">×</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══ NY MASKIN MODAL ═══ -->
+<div id="ny-maskin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)closeNyMaskin()">
+  <div style="background:var(--card);border-radius:12px;max-width:640px;margin:0 auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:18px;color:var(--brand);">＋ Ny maskin</h2>
+      <button onclick="closeNyMaskin()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);">×</button>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:16px;padding:10px 12px;background:#f0f4f8;border-radius:8px;">
+      Lämna maskinnummer tomt för att automatiskt generera ett nummer (LIL-YYYYMMDD-NNN).
+    </div>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+      <div class="field-group"><label>Maskinnummer</label><input id="nm-nr" type="text" placeholder="Lämna tomt = auto"></div>
+      <div class="field-group"><label>Kund *</label><input id="nm-kund" type="text" placeholder="Kundnamn"></div>
+      <div class="field-group"><label>Anläggning / Adress</label><input id="nm-anlaggning" type="text" placeholder="Gatuadress, ort"></div>
+      <div class="field-group"><label>Fabrikat</label><input id="nm-fabrikat" type="text" placeholder="t.ex. Hussman"></div>
+      <div class="field-group"><label>Modell / Typ</label><input id="nm-modell" type="text" placeholder="t.ex. LDK-180"></div>
+      <div class="field-group"><label>Tillverkningsnr</label><input id="nm-tillvnr" type="text" placeholder="Serienummer"></div>
+      <div class="field-group"><label>Årsmodell</label><input id="nm-arsmodell" type="text" placeholder="t.ex. 2019"></div>
+      <div class="field-group"><label>Kontaktperson</label><input id="nm-kontakt" type="text" placeholder="Namn"></div>
+      <div class="field-group"><label>Telefon</label><input id="nm-telefon" type="tel" placeholder="070-000 00 00"></div>
+      <div class="field-group"><label>Ägare / Fakturakund</label><input id="nm-agare" type="text" placeholder="Företag"></div>
+    </div>
+    <div class="field-group" style="margin-top:12px;"><label>Beskrivning / Placering</label><input id="nm-beskrivning" type="text" placeholder="Fri text"></div>
+    <div class="field-group" style="margin-top:8px;"><label>Notering (intern)</label><textarea id="nm-notering" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;" placeholder="Interna noteringar"></textarea></div>
+    <div id="nm-error" style="display:none;color:#c62828;font-size:13px;margin-top:10px;padding:8px 12px;background:#ffebee;border-radius:6px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button onclick="closeNyMaskin()" style="padding:10px 20px;border:1.5px solid var(--border);background:none;border-radius:8px;font-size:14px;cursor:pointer;">Avbryt</button>
+      <button onclick="saveNyMaskin()" style="padding:10px 24px;background:var(--ok);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Spara maskin</button>
+    </div>
   </div>
 </div>
 
@@ -2040,6 +2073,8 @@ function applyRoleUI() {
   if (regBtn) regBtn.style.display = isAdmin ? 'inline-block' : 'none';
   const regExportBtn = document.getElementById('reg-export-btn');
   if (regExportBtn) regExportBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  const nyMaskinBtn = document.getElementById('ny-maskin-btn');
+  if (nyMaskinBtn) nyMaskinBtn.style.display = isAdmin ? 'inline-block' : 'none';
   const fordonBtn = document.getElementById('fordon-upload-btn');
   if (fordonBtn) fordonBtn.style.display = isAdmin ? 'inline-block' : 'none';
 }
@@ -2905,6 +2940,50 @@ async function exportMaskinregister() {
   } finally {
     btn.disabled = false;
     btn.textContent = '⬇ Exportera till Excel';
+  }
+}
+
+function openNyMaskin() {
+  ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell','kontakt','telefon','agare','beskrivning'].forEach(f => {
+    const el = document.getElementById('nm-' + f);
+    if (el) el.value = '';
+  });
+  document.getElementById('nm-notering').value = '';
+  document.getElementById('nm-error').style.display = 'none';
+  document.getElementById('ny-maskin-overlay').style.display = 'block';
+}
+
+function closeNyMaskin() {
+  document.getElementById('ny-maskin-overlay').style.display = 'none';
+}
+
+async function saveNyMaskin() {
+  const errEl = document.getElementById('nm-error');
+  errEl.style.display = 'none';
+  const kund = document.getElementById('nm-kund').value.trim();
+  if (!kund) { errEl.textContent = 'Kund är obligatoriskt.'; errEl.style.display = 'block'; return; }
+  const payload = {
+    nr:          document.getElementById('nm-nr').value.trim(),
+    kund,
+    anlaggning:  document.getElementById('nm-anlaggning').value.trim(),
+    fabrikat:    document.getElementById('nm-fabrikat').value.trim(),
+    modell:      document.getElementById('nm-modell').value.trim(),
+    tillvnr:     document.getElementById('nm-tillvnr').value.trim(),
+    arsmodell:   document.getElementById('nm-arsmodell').value.trim(),
+    kontakt:     document.getElementById('nm-kontakt').value.trim(),
+    telefon:     document.getElementById('nm-telefon').value.trim(),
+    agare:       document.getElementById('nm-agare').value.trim(),
+    beskrivning: document.getElementById('nm-beskrivning').value.trim(),
+    notering:    document.getElementById('nm-notering').value.trim(),
+  };
+  try {
+    const res  = await apiFetch('/api/machines', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    closeNyMaskin();
+    await loadMaskiner();
+    openMaskinkort(res.nr);
+  } catch (e) {
+    errEl.textContent = e.message || 'Kunde inte spara maskinen.';
+    errEl.style.display = 'block';
   }
 }
 

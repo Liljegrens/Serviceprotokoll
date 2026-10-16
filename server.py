@@ -246,6 +246,34 @@ def list_machines():
         rows = db.execute('SELECT * FROM machines ORDER BY nr').fetchall()
     return jsonify([dict(r) for r in rows])
 
+@app.route('/api/machines', methods=['POST'])
+def create_machine():
+    data = request.get_json(force=True)
+    nr = (data.get('nr') or '').strip()
+    if not nr:
+        # Auto-generate: LIL-YYYYMMDD-NNN (unique)
+        base = 'LIL-' + datetime.now().strftime('%Y%m%d')
+        with get_db() as db:
+            existing = [r[0] for r in db.execute("SELECT nr FROM machines WHERE nr LIKE ?", (base + '%',)).fetchall()]
+        seq = 1
+        while f'{base}-{seq:03d}' in existing:
+            seq += 1
+        nr = f'{base}-{seq:03d}'
+    with get_db() as db:
+        existing = db.execute('SELECT nr FROM machines WHERE UPPER(nr)=UPPER(?)', (nr,)).fetchone()
+        if existing:
+            return jsonify({'error': f'Maskinnummer {nr} finns redan'}), 409
+        db.execute("""INSERT INTO machines
+            (nr,kund,anlaggning,fabrikat,modell,tillvnr,arsmodell,adress,stad,kontakt,telefon,agare,inkopar,beskrivning,notering,hydraulfilter,hydraulolja,hydraulslangar)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (nr, data.get('kund',''), data.get('anlaggning',''), data.get('fabrikat',''),
+             data.get('modell',''), data.get('tillvnr',''), data.get('arsmodell',''),
+             data.get('adress',''), data.get('stad',''), data.get('kontakt',''),
+             data.get('telefon',''), data.get('agare',''), data.get('inkopar',''),
+             data.get('beskrivning',''), data.get('notering',''),
+             data.get('hydraulfilter',''), data.get('hydraulolja',''), data.get('hydraulslangar','')))
+    return jsonify({'nr': nr}), 201
+
 @app.route('/api/machines/upload', methods=['POST'])
 def upload_machines():
     if 'file' not in request.files:
@@ -380,7 +408,9 @@ def get_machine(nr):
 @app.route('/api/machines/<nr>', methods=['PATCH'])
 def patch_machine(nr):
     data = request.get_json(force=True)
-    allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare'}
+    allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare',
+               'kund', 'anlaggning', 'fabrikat', 'modell', 'tillvnr', 'arsmodell',
+               'adress', 'stad', 'kontakt', 'telefon', 'agare', 'inkopar', 'beskrivning'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({'error': 'Inga giltiga fält'}), 400
