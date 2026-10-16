@@ -1614,6 +1614,29 @@
   </div>
 </div>
 
+<!-- ═══ LÄGG TILL ANVÄNDARE MODAL ═══ -->
+<div id="add-user-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeAddUser()">
+  <div style="background:var(--card);border-radius:12px;width:100%;max-width:380px;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:18px;color:var(--brand);">Lägg till användare</h2>
+      <button onclick="closeAddUser()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);">×</button>
+    </div>
+    <div class="field-group"><label>Namn</label><input id="add-user-name" type="text" placeholder="Förnamn Efternamn"></div>
+    <div class="field-group" style="margin-top:10px;"><label>PIN-kod</label><input id="add-user-pin" type="password" placeholder="Välj en PIN" maxlength="20"></div>
+    <div class="field-group" style="margin-top:10px;"><label>Roll</label>
+      <select id="add-user-role" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:Arial,sans-serif;">
+        <option value="tekniker">Tekniker</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div id="add-user-error" style="display:none;color:#c62828;font-size:13px;margin-top:10px;padding:8px 12px;background:#ffebee;border-radius:6px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button onclick="closeAddUser()" style="padding:10px 20px;border:1.5px solid var(--border);background:none;border-radius:8px;font-size:14px;cursor:pointer;">Avbryt</button>
+      <button onclick="saveAddUser()" style="padding:10px 24px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Lägg till</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ NY MASKIN MODAL ═══ -->
 <div id="ny-maskin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)closeNyMaskin()">
   <div style="background:var(--card);border-radius:12px;max-width:640px;margin:0 auto;padding:24px;">
@@ -2367,27 +2390,82 @@ async function loadUsersAdmin() {
   const list = document.getElementById('users-list');
   try {
     const users = await apiFetch('/api/users');
-    list.innerHTML = users.map(u => `
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <span style="flex:1;color:#212121;font-weight:600;">${u.name}</span>
-        <span style="color:var(--gray);font-size:12px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</span>
-        ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:var(--akut);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : ''}
-      </div>`).join('');
+    list.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border);">
+            <th style="text-align:left;padding:8px 6px;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Namn</th>
+            <th style="text-align:left;padding:8px 6px;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Roll</th>
+            <th style="text-align:left;padding:8px 6px;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.05em;">PIN</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users.map(u => `
+          <tr style="border-bottom:1px solid var(--border);" id="user-row-${u.id}">
+            <td style="padding:10px 6px;font-weight:600;">${u.name}</td>
+            <td style="padding:10px 6px;color:var(--gray);font-size:13px;">${u.role === 'admin' ? 'Admin' : 'Tekniker'}</td>
+            <td style="padding:10px 6px;">
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input type="password" id="pin-input-${u.id}" placeholder="Ny PIN" maxlength="20"
+                  style="width:90px;border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px;">
+                <button class="load-btn" style="font-size:11px;padding:4px 10px;" onclick="changePin(${u.id})">Spara</button>
+              </div>
+            </td>
+            <td style="padding:10px 6px;text-align:right;">
+              ${u.name !== currentUser.name ? `<button class="load-btn" style="font-size:11px;padding:4px 10px;background:var(--akut);" onclick="deleteUser(${u.id},'${u.name}')">Ta bort</button>` : '<span style="font-size:11px;color:var(--gray);">(du)</span>'}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
   } catch { list.textContent = 'Kunde inte ladda användare.'; }
 }
 
+async function changePin(uid) {
+  const input = document.getElementById('pin-input-' + uid);
+  const pin = input.value.trim();
+  if (!pin) { input.focus(); return; }
+  try {
+    await apiFetch(`/api/users/${uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    input.value = '';
+    input.placeholder = '✓ Sparat';
+    setTimeout(() => { input.placeholder = 'Ny PIN'; }, 2000);
+  } catch { alert('Kunde inte ändra PIN.'); }
+}
+
 function openAddUser() {
-  const name = prompt('Namn:');
-  if (!name) return;
-  const pin = prompt('PIN-kod:');
-  if (!pin) return;
-  const role = confirm('Admin? (Avbryt = Tekniker)') ? 'admin' : 'tekniker';
-  apiFetch('/api/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: name.trim(), pin, role })
-  }).then(() => { loadUsersAdmin(); loadUserList(); })
-    .catch(() => alert('Kunde inte lägga till användare.'));
+  document.getElementById('add-user-name').value = '';
+  document.getElementById('add-user-pin').value = '';
+  document.getElementById('add-user-role').value = 'tekniker';
+  document.getElementById('add-user-error').style.display = 'none';
+  document.getElementById('add-user-overlay').style.display = 'flex';
+}
+
+function closeAddUser() {
+  document.getElementById('add-user-overlay').style.display = 'none';
+}
+
+async function saveAddUser() {
+  const name = document.getElementById('add-user-name').value.trim();
+  const pin  = document.getElementById('add-user-pin').value.trim();
+  const role = document.getElementById('add-user-role').value;
+  const err  = document.getElementById('add-user-error');
+  err.style.display = 'none';
+  if (!name || !pin) { err.textContent = 'Namn och PIN är obligatoriska.'; err.style.display = 'block'; return; }
+  try {
+    await apiFetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, pin, role })
+    });
+    closeAddUser();
+    loadUsersAdmin();
+    loadUserList();
+  } catch (e) { err.textContent = e.message || 'Kunde inte lägga till användare.'; err.style.display = 'block'; }
 }
 
 async function deleteUser(id, name) {

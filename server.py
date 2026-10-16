@@ -185,6 +185,21 @@ def create_user():
         db.execute('INSERT INTO users (name, pin, role) VALUES (?,?,?)', (name, pin, role))
     return jsonify({'ok': True}), 201
 
+@app.route('/api/users/<int:uid>', methods=['PATCH'])
+def patch_user(uid):
+    data = request.get_json(force=True)
+    fields = {}
+    if 'pin' in data and str(data['pin']).strip():
+        fields['pin'] = str(data['pin']).strip()
+    if 'role' in data and data['role'] in ('admin', 'tekniker'):
+        fields['role'] = data['role']
+    if not fields:
+        return jsonify({'error': 'Inga giltiga fält'}), 400
+    set_clause = ', '.join(f'{k}=?' for k in fields)
+    with get_db() as db:
+        db.execute(f'UPDATE users SET {set_clause} WHERE id=?', list(fields.values()) + [uid])
+    return jsonify({'ok': True})
+
 @app.route('/api/users/<int:uid>', methods=['DELETE'])
 def delete_user(uid):
     with get_db() as db:
