@@ -897,6 +897,7 @@
       <span>📋 Maskinregister (kunder)</span>
       <span class="reg-status" id="reg-status">Kontrollerar...</span>
       <button class="load-btn" id="reg-upload-btn" style="display:none;" onclick="document.getElementById('reg-file-input').click()">Uppdatera från Excel</button>
+      <button class="load-btn" id="reg-export-btn" style="display:none;" onclick="exportMaskinregister()">⬇ Exportera till Excel</button>
       <input type="file" id="reg-file-input" accept=".xlsx,.xls" onchange="uploadRegister(event)">
     </div>
     <div class="register-bar" style="margin-bottom:20px;border-radius:10px;">
@@ -2037,6 +2038,8 @@ function applyRoleUI() {
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
   const regBtn = document.getElementById('reg-upload-btn');
   if (regBtn) regBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  const regExportBtn = document.getElementById('reg-export-btn');
+  if (regExportBtn) regExportBtn.style.display = isAdmin ? 'inline-block' : 'none';
   const fordonBtn = document.getElementById('fordon-upload-btn');
   if (fordonBtn) fordonBtn.style.display = isAdmin ? 'inline-block' : 'none';
 }
@@ -2882,6 +2885,28 @@ async function checkRegisterStatus() {
   }
 }
 initAuth();
+
+async function exportMaskinregister() {
+  const btn = document.getElementById('reg-export-btn');
+  btn.disabled = true;
+  btn.textContent = 'Exporterar…';
+  try {
+    const res = await fetch(API + '/api/machines/export', { credentials: 'include' });
+    if (!res.ok) throw new Error('Fel vid export');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `maskinregister_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Kunde inte exportera: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇ Exportera till Excel';
+  }
+}
 
 async function uploadRegister(event) {
   const file = event.target.files[0];

@@ -890,6 +890,44 @@ def upload_photo():
 def serve_upload(filename):
     return send_from_directory(UPLOADS, filename)
 
+@app.route('/api/machines/export', methods=['GET'])
+def export_machines():
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    import io as _io
+    with get_db() as db:
+        rows = db.execute('SELECT * FROM machines ORDER BY nr').fetchall()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Maskinregister'
+    headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
+               'Adress','Stad','Kontakt','Telefon','Ägare','Inköp','Beskrivning','Notering']
+    cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
+               'adress','stad','kontakt','telefon','agare','inkopar','beskrivning','notering']
+    header_fill = PatternFill('solid', fgColor='1A3A5C')
+    header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
+    for ci, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=ci, value=h)
+        cell.fill  = header_fill
+        cell.font  = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[1].height = 30
+    for ri, row in enumerate(rows, 2):
+        d = dict(row)
+        for ci, col in enumerate(cols, 1):
+            ws.cell(row=ri, column=ci, value=d.get(col) or '')
+    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,20,35,35]
+    for ci, w in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
+    buf = _io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    from flask import Response
+    fname = f"maskinregister_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return Response(buf.read(),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename="{fname}"'})
+
 @app.route('/api/machines/<maskin_nr>/typskylt', methods=['POST'])
 def upload_typskylt(maskin_nr):
     if 'photo' not in request.files:
