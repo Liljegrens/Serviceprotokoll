@@ -110,6 +110,9 @@ def init_db():
             saved_at  TEXT
         )""")
         db.execute("CREATE INDEX IF NOT EXISTS idx_hydlogg_maskin ON hydrauliklogg(maskin_nr)")
+        cols_hlog = [r[1] for r in db.execute("PRAGMA table_info(hydrauliklogg)").fetchall()]
+        if 'typ' not in cols_hlog:
+            db.execute("ALTER TABLE hydrauliklogg ADD COLUMN typ TEXT DEFAULT 'byte'")
 
 init_db()
 
@@ -1011,10 +1014,10 @@ def post_hydrauliklogg():
     d = request.get_json(force=True)
     with get_db() as db:
         db.execute(
-            'INSERT INTO hydrauliklogg (maskin_nr,datum,filter,olja,slangar,notering,saved_at) VALUES (?,?,?,?,?,?,?)',
+            'INSERT INTO hydrauliklogg (maskin_nr,datum,filter,olja,slangar,notering,saved_at,typ) VALUES (?,?,?,?,?,?,?,?)',
             [d.get('maskin_nr',''), d.get('datum',''), int(d.get('filter',0)),
              int(d.get('olja',0)), int(d.get('slangar',0)), d.get('notering',''),
-             datetime.now().isoformat()])
+             datetime.now().isoformat(), d.get('typ','byte')])
     return jsonify({'ok': True})
 
 @app.route('/api/hydrauliklogg/<int:log_id>', methods=['DELETE'])

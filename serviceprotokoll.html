@@ -4949,10 +4949,16 @@ function renderMaskinkortInfo(m) {
       </div>
     </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
+    <div id="hlog-status" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
       <div class="field-group"><label>Datum</label><input type="date" id="hlog-datum"></div>
       <div class="field-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
-        <label style="margin-bottom:6px;">Vad byttes?</label>
+        <label style="margin-bottom:6px;">Åtgärd</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="radio" name="hlog-typ" id="hlog-typ-byte" value="byte" checked> Bytt</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="radio" name="hlog-typ" id="hlog-typ-kontroll" value="kontroll"> Kontrollerat OK</label>
+        </div>
+        <label style="margin-bottom:6px;margin-top:4px;">Komponent</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;"><input type="checkbox" id="hlog-filter"> Filter</label>
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;"><input type="checkbox" id="hlog-olja"> Olja</label>
@@ -5004,10 +5010,38 @@ async function saveInstruktion(nr) {
   setTimeout(() => el.style.display = 'none', 3000);
 }
 
+function _hlogStatusCard(label, logs, key, monthsWarning) {
+  const sorted = logs.filter(l => l[key]).sort((a,b) => b.datum.localeCompare(a.datum));
+  if (!sorted.length) return `<div style="background:#f5f7f9;border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+    <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;">${label}</div>
+    <div style="font-size:12px;color:#aaa;margin-top:4px;">Ej loggat</div>
+  </div>`;
+  const last   = sorted[0];
+  const lastD  = new Date(last.datum);
+  const today  = new Date();
+  const daysSince = Math.floor((today - lastD) / 86400000);
+  const daysLeft  = monthsWarning * 30 - daysSince;
+  const isKontroll = last.typ === 'kontroll';
+  let color = '#2e7d32', bg = '#e8f5e9', label2 = `${daysLeft} dagar kvar`;
+  if (daysLeft < 0)       { color = '#c62828'; bg = '#ffebee'; label2 = `${Math.abs(daysLeft)} dagar sedan förfallodatum`; }
+  else if (daysLeft < 60) { color = '#e65100'; bg = '#fff3e0'; }
+  return `<div style="background:${bg};border:1px solid ${color}40;border-radius:8px;padding:10px 14px;">
+    <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.05em;">${label}</div>
+    <div style="font-size:13px;font-weight:700;color:#212121;margin-top:4px;">${last.datum} <span style="font-size:11px;font-weight:400;color:#546e7a;">${isKontroll ? '(kontroll)' : '(bytt)'}</span></div>
+    <div style="font-size:11px;color:${color};margin-top:2px;">${label2}</div>
+  </div>`;
+}
+
 async function loadHydrauliklogg(nr) {
   const r = await fetch('/api/hydrauliklogg/' + encodeURIComponent(nr));
   const logs = await r.json();
   const el = document.getElementById('hlog-list');
+  const statusEl = document.getElementById('hlog-status');
+  if (statusEl) {
+    statusEl.innerHTML = _hlogStatusCard('Filter', logs, 'filter', 12)
+      + _hlogStatusCard('Olja', logs, 'olja', 24)
+      + _hlogStatusCard('Slangar', logs, 'slangar', 48);
+  }
   if (!el) return;
   if (!logs.length) { el.innerHTML = '<div style="font-size:13px;color:#888;">Inga poster ännu.</div>'; return; }
   el.innerHTML = logs.map(l => {
@@ -5015,9 +5049,12 @@ async function loadHydrauliklogg(nr) {
     if (l.filter)  chips.push('Filter');
     if (l.olja)    chips.push('Olja');
     if (l.slangar) chips.push('Slangar');
+    const typLabel = l.typ === 'kontroll'
+      ? '<span style="background:#e8f5e9;color:#2e7d32;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Kontroll</span>'
+      : '<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Byte</span>';
     return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div>
-        <div style="font-weight:700;font-size:13px;">${l.datum} &nbsp;${chips.map(c=>`<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">${c}</span>`).join(' ')}</div>
+        <div style="font-weight:700;font-size:13px;">${l.datum} &nbsp;${typLabel} &nbsp;${chips.map(c=>`<span style="background:#f0f4f8;color:#546e7a;border-radius:10px;padding:2px 8px;font-size:11px;">${c}</span>`).join(' ')}</div>
         ${l.notering ? `<div style="font-size:12px;color:#546e7a;margin-top:4px;">${l.notering}</div>` : ''}
       </div>
       <button onclick="deleteHydrauliklogg(${l.id},'${nr}')" style="border:none;background:none;color:#c62828;cursor:pointer;font-size:16px;padding:0;">✕</button>
@@ -5031,6 +5068,7 @@ async function addHydrauliklogg(nr) {
   const olja    = document.getElementById('hlog-olja').checked;
   const slangar = document.getElementById('hlog-slangar').checked;
   const notering= document.getElementById('hlog-not').value.trim();
+  const typ     = document.querySelector('input[name="hlog-typ"]:checked')?.value || 'byte';
   const msg     = document.getElementById('hlog-msg');
   if (!datum || (!filter && !olja && !slangar)) {
     msg.textContent = 'Ange datum och minst ett alternativ.';
@@ -5039,7 +5077,7 @@ async function addHydrauliklogg(nr) {
   }
   await fetch('/api/hydrauliklogg', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ maskin_nr: nr, datum, filter: filter?1:0, olja: olja?1:0, slangar: slangar?1:0, notering })
+    body: JSON.stringify({ maskin_nr: nr, datum, filter: filter?1:0, olja: olja?1:0, slangar: slangar?1:0, notering, typ })
   });
   document.getElementById('hlog-filter').checked = false;
   document.getElementById('hlog-olja').checked = false;
