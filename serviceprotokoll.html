@@ -3162,29 +3162,35 @@ async function lookupMachine(val) {
     if (hydCard && hydGrid) {
       const hasSpec = m.hydraulfilter || m.hydraulolja || m.hydraulslangar;
       if (hasSpec) {
-        // Hämta logg för senast bytt-datum
-        let filterDatum = '–', oljaDatum = '–', slangarDatum = '–';
+        // Hämta logg för status
+        let logs = [];
         try {
-          const logs = await fetch('/api/hydrauliklogg/' + encodeURIComponent(m.nr)).then(r => r.json());
-          const senastFilter  = logs.find(l => l.filter);
-          const senastOlja    = logs.find(l => l.olja);
-          const senastSlangar = logs.find(l => l.slangar);
-          if (senastFilter)  filterDatum  = senastFilter.datum;
-          if (senastOlja)    oljaDatum    = senastOlja.datum;
-          if (senastSlangar) slangarDatum = senastSlangar.datum;
+          logs = await fetch('/api/hydrauliklogg/' + encodeURIComponent(m.nr)).then(r => r.json());
         } catch(e) {}
         const hydFields = [
-          { label: 'Hydraulfilter', art: m.hydraulfilter, senast: filterDatum, sub: 'Byt var 12 mån' },
-          { label: 'Hydraulolja', art: m.hydraulolja, senast: oljaDatum, sub: 'Byt var 12–24 mån' },
-          { label: 'Hydraulslangar', art: m.hydraulslangar, senast: slangarDatum, sub: 'Byt var 4–5 år' },
+          { label: 'Hydraulfilter', art: m.hydraulfilter, key: 'filter', months: 12 },
+          { label: 'Hydraulolja',   art: m.hydraulolja,   key: 'olja',   months: 24 },
+          { label: 'Hydraulslangar',art: m.hydraulslangar,key: 'slangar',months: 48 },
         ].filter(f => f.art);
-        hydGrid.innerHTML = hydFields.map(f => `
-          <div>
+        hydGrid.innerHTML = hydFields.map(f => {
+          const sorted = (logs||[]).filter(l => l[f.key]).sort((a,b) => b.datum.localeCompare(a.datum));
+          const last = sorted[0];
+          let statusHtml = '<div style="font-size:11px;color:#aaa;margin-top:4px;">Ej loggat</div>';
+          if (last) {
+            const daysSince = Math.floor((new Date() - new Date(last.datum)) / 86400000);
+            const daysLeft  = f.months * 30 - daysSince;
+            const color = daysLeft < 0 ? '#c62828' : daysLeft < 60 ? '#e65100' : '#2e7d32';
+            const txt   = daysLeft < 0 ? `${Math.abs(daysLeft)} dagar sedan förfall` : `${daysLeft} dagar kvar`;
+            const typTxt = last.typ === 'kontroll' ? 'kontroll' : 'bytt';
+            statusHtml = `<div style="font-size:11px;color:#546e7a;margin-top:4px;">Senast ${typTxt}: <strong>${last.datum}</strong></div>
+              <div style="font-size:11px;font-weight:700;color:${color};margin-top:2px;">${txt}</div>`;
+          }
+          return `<div>
             <div style="font-size:11px;color:#546e7a;font-weight:600;">${f.label}</div>
             <div style="font-size:14px;font-weight:700;color:#1a3a5c;">${f.art}</div>
-            <div style="font-size:11px;color:#78909c;">${f.sub}</div>
-            <div style="font-size:11px;color:#546e7a;margin-top:2px;">Senast bytt: <strong>${f.senast}</strong></div>
-          </div>`).join('');
+            ${statusHtml}
+          </div>`;
+        }).join('');
         hydCard.style.display = '';
       } else {
         hydCard.style.display = 'none';
