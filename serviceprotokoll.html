@@ -3160,18 +3160,17 @@ async function lookupMachine(val) {
     const hydCard = document.getElementById('hydraulik-info-card');
     const hydGrid = document.getElementById('hydraulik-info-grid');
     if (hydCard && hydGrid) {
-      const hasSpec = m.hydraulfilter || m.hydraulolja || m.hydraulslangar;
-      if (hasSpec) {
-        // Hämta logg för status
-        let logs = [];
+      let logs = [];
         try {
           logs = await fetch('/api/hydrauliklogg/' + encodeURIComponent(m.nr)).then(r => r.json());
         } catch(e) {}
+      const hasSpec = m.hydraulfilter || m.hydraulolja || m.hydraulslangar || logs.length > 0;
+      if (hasSpec) {
         const hydFields = [
           { label: 'Hydraulfilter', art: m.hydraulfilter, key: 'filter', months: 12 },
           { label: 'Hydraulolja',   art: m.hydraulolja,   key: 'olja',   months: 24 },
           { label: 'Hydraulslangar',art: m.hydraulslangar,key: 'slangar',months: 48 },
-        ].filter(f => f.art);
+        ].filter(f => f.art || logs.some(l => l[f.key]));
         hydGrid.innerHTML = hydFields.map(f => {
           const sorted = (logs||[]).filter(l => l[f.key]).sort((a,b) => b.datum.localeCompare(a.datum));
           const last = sorted[0];
