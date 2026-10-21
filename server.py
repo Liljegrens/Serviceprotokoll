@@ -72,6 +72,19 @@ def init_db():
             author    TEXT,
             note      TEXT
         );
+        CREATE TABLE IF NOT EXISTS offers (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            protocol_id  INTEGER,
+            maskin_nr    TEXT,
+            kund         TEXT,
+            anlaggning   TEXT,
+            modell       TEXT,
+            datum        TEXT,
+            tekniker     TEXT,
+            items_json   TEXT,
+            saved_at     TEXT,
+            status       TEXT DEFAULT 'utkast'
+        );
         CREATE TABLE IF NOT EXISTS users (
             id       INTEGER PRIMARY KEY AUTOINCREMENT,
             name     TEXT NOT NULL,
@@ -1024,6 +1037,53 @@ def post_hydrauliklogg():
 def delete_hydrauliklogg(log_id):
     with get_db() as db:
         db.execute('DELETE FROM hydrauliklogg WHERE id=?', [log_id])
+    return jsonify({'ok': True})
+
+@app.route('/api/offers', methods=['POST'])
+def create_offer():
+    d = request.get_json(force=True)
+    with get_db() as db:
+        cur = db.execute(
+            'INSERT INTO offers (protocol_id,maskin_nr,kund,anlaggning,modell,datum,tekniker,items_json,saved_at,status) VALUES (?,?,?,?,?,?,?,?,?,?)',
+            [d.get('protocol_id'), d.get('maskin_nr',''), d.get('kund',''), d.get('anlaggning',''),
+             d.get('modell',''), d.get('datum',''), d.get('tekniker',''),
+             json.dumps(d.get('items', []), ensure_ascii=False),
+             datetime.now().isoformat(), d.get('status','utkast')])
+        offer_id = cur.lastrowid
+    return jsonify({'id': offer_id}), 201
+
+@app.route('/api/offers', methods=['GET'])
+def list_offers():
+    with get_db() as db:
+        rows = db.execute('SELECT id,protocol_id,maskin_nr,kund,datum,tekniker,status,saved_at FROM offers ORDER BY saved_at DESC').fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/offers/<int:offer_id>', methods=['GET'])
+def get_offer(offer_id):
+    with get_db() as db:
+        row = db.execute('SELECT * FROM offers WHERE id=?', [offer_id]).fetchone()
+    if not row: return jsonify(None), 404
+    d = dict(row)
+    d['items'] = json.loads(d.pop('items_json') or '[]')
+    return jsonify(d)
+
+@app.route('/api/offers/<int:offer_id>', methods=['PATCH'])
+def patch_offer(offer_id):
+    d = request.get_json(force=True)
+    allowed = {'status', 'items_json'}
+    if 'items' in d:
+        d['items_json'] = json.dumps(d.pop('items'), ensure_ascii=False)
+    updates = {k: v for k, v in d.items() if k in allowed}
+    if not updates: return jsonify({'error': 'Inga fält'}), 400
+    set_clause = ', '.join(f'{k}=?' for k in updates)
+    with get_db() as db:
+        db.execute(f'UPDATE offers SET {set_clause} WHERE id=?', list(updates.values()) + [offer_id])
+    return jsonify({'ok': True})
+
+@app.route('/api/offers/<int:offer_id>', methods=['DELETE'])
+def delete_offer(offer_id):
+    with get_db() as db:
+        db.execute('DELETE FROM offers WHERE id=?', [offer_id])
     return jsonify({'ok': True})
 
 @app.route('/spiris-test.html')
