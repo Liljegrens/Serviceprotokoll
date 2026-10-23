@@ -3084,7 +3084,18 @@ function renderOfferPage(rec, items) {
     </div>
 
     <div style="background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;">
-      <h2 style="font-size:15px;color:var(--brand);margin:0 0 14px;">Rekommenderade åtgärder</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <h2 style="font-size:15px;color:var(--brand);margin:0;">Rekommenderade åtgärder</h2>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);">
+          <span>Prisspann ±</span>
+          <select id="offert-spread" onchange="updateOfferTotal()" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;background:var(--card);color:var(--fg);">
+            <option value="10">10 %</option>
+            <option value="15" selected>15 %</option>
+            <option value="20">20 %</option>
+            <option value="25">25 %</option>
+          </select>
+        </div>
+      </div>
       <div id="offert-items">
         ${items.map((it, idx) => `
           <div class="offert-item" data-idx="${idx}" style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;">
@@ -3103,13 +3114,11 @@ function renderOfferPage(rec, items) {
                     style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;margin-top:4px;">
                 </div>
               </div>
-              <div style="display:flex;flex-direction:column;gap:6px;min-width:160px;">
-                <label style="font-size:11px;font-weight:700;color:var(--gray);">Pris från (kr)</label>
-                <input type="number" class="offert-pris-min" data-idx="${idx}" placeholder="t.ex. 4000"
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:140px;">
+                <label style="font-size:11px;font-weight:700;color:var(--gray);">Pris (kr)</label>
+                <input type="number" class="offert-pris-base" data-idx="${idx}" placeholder="t.ex. 5000"
                   style="border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;" oninput="updateOfferTotal()">
-                <label style="font-size:11px;font-weight:700;color:var(--gray);">Pris till (kr)</label>
-                <input type="number" class="offert-pris-max" data-idx="${idx}" placeholder="t.ex. 6000"
-                  style="border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;" oninput="updateOfferTotal()">
+                <div class="offert-range-display" data-idx="${idx}" style="font-size:11px;color:var(--gray);min-height:16px;"></div>
               </div>
             </div>
           </div>`).join('')}
@@ -3133,18 +3142,32 @@ function renderOfferPage(rec, items) {
   window._offerItems = items;
 }
 
+function getSpread() {
+  return (parseFloat(document.getElementById('offert-spread')?.value) || 15) / 100;
+}
+
 function updateOfferTotal() {
+  const spread = getSpread();
   let minSum = 0, maxSum = 0, hasAny = false;
-  document.querySelectorAll('.offert-pris-min').forEach((el, i) => {
-    const maxEl = document.querySelectorAll('.offert-pris-max')[i];
-    const mn = parseFloat(el.value) || 0;
-    const mx = parseFloat(maxEl?.value) || 0;
-    if (mn || mx) { hasAny = true; minSum += mn; maxSum += mx || mn; }
+  document.querySelectorAll('.offert-pris-base').forEach((el, i) => {
+    const base = parseFloat(el.value) || 0;
+    if (base) {
+      hasAny = true;
+      const mn = base;
+      const mx = Math.round(base * (1 + spread));
+      minSum += mn;
+      maxSum += mx;
+      const disp = document.querySelectorAll('.offert-range-display')[i];
+      if (disp) disp.textContent = `${mn.toLocaleString('sv')} – ${mx.toLocaleString('sv')} kr`;
+    } else {
+      const disp = document.querySelectorAll('.offert-range-display')[i];
+      if (disp) disp.textContent = '';
+    }
   });
   const el = document.getElementById('offert-total');
   if (!hasAny) { el.textContent = '–'; return; }
   const fmt = n => n.toLocaleString('sv-SE') + ' kr';
-  el.textContent = maxSum > minSum ? `${fmt(minSum)} – ${fmt(maxSum)}` : fmt(minSum);
+  el.textContent = `${fmt(minSum)} – ${fmt(maxSum)}`;
 }
 
 async function loadOfferterList() {
@@ -3203,8 +3226,12 @@ async function openSavedOffer(offerId) {
         const minEl = document.querySelectorAll('.offert-pris-min')[idx];
         const maxEl = document.querySelectorAll('.offert-pris-max')[idx];
         if (atgEl) atgEl.value = it.atgard || it.label || '';
-        if (minEl) minEl.value = it.pris_min || '';
-        if (maxEl) maxEl.value = it.pris_max || '';
+        const baseEl = document.querySelectorAll('.offert-pris-base')[idx];
+        if (baseEl) baseEl.value = it.pris_base || it.pris_min || '';
+        if (it.spread) {
+          const spreadSel = document.getElementById('offert-spread');
+          if (spreadSel) spreadSel.value = Math.round(it.spread * 100);
+        }
       });
       updateOfferTotal();
     }, 50);
@@ -3225,12 +3252,18 @@ async function saveOffer(protocolId, maskinNr, kund, anlaggning, modell, datum, 
 }
 
 function collectOfferItems() {
-  return (window._offerItems || []).map((it, idx) => ({
-    ...it,
-    atgard:   document.querySelectorAll('.offert-atgard')[idx]?.value || it.label,
-    pris_min: parseFloat(document.querySelectorAll('.offert-pris-min')[idx]?.value) || 0,
-    pris_max: parseFloat(document.querySelectorAll('.offert-pris-max')[idx]?.value) || 0,
-  }));
+  const spread = getSpread();
+  return (window._offerItems || []).map((it, idx) => {
+    const base = parseFloat(document.querySelectorAll('.offert-pris-base')[idx]?.value) || 0;
+    return {
+      ...it,
+      atgard:   document.querySelectorAll('.offert-atgard')[idx]?.value || it.label,
+      pris_base: base,
+      pris_min:  base,
+      pris_max:  base ? Math.round(base * (1 + spread)) : 0,
+      spread:    spread,
+    };
+  });
 }
 
 function printOffer(protocolId) {
