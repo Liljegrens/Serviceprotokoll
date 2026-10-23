@@ -3039,7 +3039,7 @@ async function exportMaskinregister() {
 
 function openCreateOffer(rec) {
   closeModal(null, true);
-  const anmarkningar = rec.items.filter(i => i.status === 'akut' || i.status === 'bevaka');
+  const anmarkningar = rec.items.filter(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
   renderOfferPage(rec, anmarkningar);
   showPage('offert');
   document.getElementById('offert-back-btn').onclick = () => showPage('overview');
@@ -3637,7 +3637,7 @@ function renderModalBody(rec) {
   html += renderWorkflowPanel(rec);
   const isAdmin = currentUser && currentUser.role === 'admin';
   if (isAdmin) {
-    const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka');
+    const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
     html += `<div class="modal-actions">
       <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
       <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
