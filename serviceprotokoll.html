@@ -3865,7 +3865,11 @@ async function setWorkflow(protocolId, status) {
     });
     _currentModalRec.workflow_status = res.workflow_status;
     _currentModalRec.workflow_log    = res.workflow_log;
-    renderModalBody(_currentModalRec);
+    if (status === 'hanterad') {
+      closeModal(null, true);
+    } else {
+      renderModalBody(_currentModalRec);
+    }
     loadRecentProtocols();
   } catch(e) {
     alert('Kunde inte uppdatera: ' + e.message);
