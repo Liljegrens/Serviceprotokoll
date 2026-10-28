@@ -388,33 +388,56 @@ def upload_machines():
         cFab  = col('fabrikat')
         cMod  = col('modell')
         cInk  = col('inköp') or col('inkop')
-        cNot  = col('anteckn')
+        cNot  = col('anteckn') or col('notering')
         cBesk = col('beskrivning')
+        cHydf = col('hydraulfilter')
+        cHydo = col('hydraulolja')
+        cHyds = col('hydraulslangar')
+        cGas  = col('gasdämpare') or col('gasdampare')
+        cAdr  = col('adress')
+        cSta  = col('stad')
+        cKont = col('kontakt')
+        cTel  = col('telefon')
+        cTill = col('tillvnr')
+        cArs  = col('årsmodell') or col('arsmodell')
+        cAgar = col('ägare') or col('agare')
 
         machines = []
         for row in rows[header_row + 1:]:
             nr = cell(row, cMask)
             if not nr: continue
             machines.append({
-                'nr':          nr,
-                'kund':        cell(row, cKund),
-                'anlaggning':  cell(row, cAnl),
-                'fabrikat':    cell(row, cFab),
-                'modell':      cell(row, cMod),
-                'inkopar':     cell(row, cInk),
-                'notering':    cell(row, cNot),
-                'beskrivning': cell(row, cBesk),
-                'adress': '', 'stad': '', 'kontakt': '', 'telefon': '', 'tillvnr': '', 'arsmodell': '', 'agare': '',
+                'nr':            nr,
+                'kund':          cell(row, cKund),
+                'anlaggning':    cell(row, cAnl),
+                'fabrikat':      cell(row, cFab),
+                'modell':        cell(row, cMod),
+                'inkopar':       cell(row, cInk),
+                'notering':      cell(row, cNot),
+                'beskrivning':   cell(row, cBesk),
+                'hydraulfilter': cell(row, cHydf),
+                'hydraulolja':   cell(row, cHydo),
+                'hydraulslangar':cell(row, cHyds),
+                'gasdampare':    cell(row, cGas),
+                'adress':        cell(row, cAdr),
+                'stad':          cell(row, cSta),
+                'kontakt':       cell(row, cKont),
+                'telefon':       cell(row, cTel),
+                'tillvnr':       cell(row, cTill),
+                'arsmodell':     cell(row, cArs),
+                'agare':         cell(row, cAgar),
             })
 
     with get_db() as db:
         db.executemany("""
             INSERT INTO machines
                 (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning,
-                 adress, stad, kontakt, telefon, tillvnr, arsmodell, agare)
+                 adress, stad, kontakt, telefon, tillvnr, arsmodell, agare,
+                 hydraulfilter, hydraulolja, hydraulslangar, gasdampare)
             VALUES
                 (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning,
-                 :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell, :agare)
+                 :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell, :agare,
+                 :hydraulfilter, :hydraulolja, :hydraulslangar, :gasdampare)
             ON CONFLICT(nr) DO UPDATE SET
                 kund=excluded.kund, anlaggning=excluded.anlaggning,
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
@@ -423,7 +446,11 @@ def upload_machines():
                 adress=excluded.adress, stad=excluded.stad,
                 kontakt=excluded.kontakt, telefon=excluded.telefon,
                 tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
-                agare=excluded.agare
+                agare=excluded.agare,
+                hydraulfilter=excluded.hydraulfilter,
+                hydraulolja=excluded.hydraulolja,
+                hydraulslangar=excluded.hydraulslangar,
+                gasdampare=excluded.gasdampare
         """, machines)
 
     return jsonify({'imported': len(machines)})
@@ -963,10 +990,10 @@ def export_machines():
     ws.title = 'Maskinregister'
     headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
                'Adress','Stad','Kontakt','Telefon','Ägare','Inköp','Beskrivning','Notering',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar']
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
     cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
                'adress','stad','kontakt','telefon','agare','inkopar','beskrivning','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar']
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
     for ci, h in enumerate(headers, 1):
@@ -979,7 +1006,7 @@ def export_machines():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,20,35,35,25,25,25]
+    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,20,35,35,25,25,25,25]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()
