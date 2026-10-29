@@ -387,7 +387,6 @@ def upload_machines():
         cAnl  = col('anläggning') or col('anlaggning')
         cFab  = col('fabrikat')
         cMod  = col('modell')
-        cInk  = col('inköp') or col('inkop')
         cNot  = col('anteckn') or col('notering')
         cBesk = col('beskrivning')
         cHydf = col('hydraulfilter')
@@ -412,7 +411,7 @@ def upload_machines():
                 'anlaggning':    cell(row, cAnl),
                 'fabrikat':      cell(row, cFab),
                 'modell':        cell(row, cMod),
-                'inkopar':       cell(row, cInk),
+                'inkopar':       '',
                 'notering':      cell(row, cNot),
                 'beskrivning':   cell(row, cBesk),
                 'hydraulfilter': cell(row, cHydf),
@@ -989,10 +988,10 @@ def export_machines():
     ws = wb.active
     ws.title = 'Maskinregister'
     headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
-               'Adress','Stad','Kontakt','Telefon','Ägare','Inköp','Beskrivning','Notering',
+               'Adress','Stad','Kontakt','Telefon','Ägare','Beskrivning','Notering',
                'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
     cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
-               'adress','stad','kontakt','telefon','agare','inkopar','beskrivning','notering',
+               'adress','stad','kontakt','telefon','agare','beskrivning','notering',
                'hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
@@ -1006,7 +1005,7 @@ def export_machines():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,20,35,35,25,25,25,25]
+    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,35,35,25,25,25,25]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()
