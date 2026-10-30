@@ -3756,7 +3756,7 @@ function renderModalBody(rec) {
     const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
     html += `<div class="modal-actions">
       <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
-      <button class="modal-action-btn secondary" onclick="printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
+      <button class="modal-action-btn secondary" onclick="printRecord._preOpenedWindow=window.open('','_blank');printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
       ${hasAnmarkningar ? `<button class="modal-action-btn" style="background:#1b5e20;color:#fff;border-color:#1b5e20;" onclick="openCreateOffer(_currentModalRec)">📋 Skapa kostnadsförslag</button>` : ''}
       <button class="modal-action-btn" style="background:#fdecea;color:#c62828;border-color:#ef9a9a;" onclick="deleteProtocol(${rec.id})">🗑 Radera protokoll</button>
     </div>`;
