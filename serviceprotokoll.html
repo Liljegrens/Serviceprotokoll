@@ -4359,11 +4359,12 @@ async function printRecord(rec) {
       </div>`;
     }
   } catch(e) {}
-  html = html.replace('HYDRAULIK_PLACEHOLDER', hydraulikHtml);
+  const finalHtml = html.replace('HYDRAULIK_PLACEHOLDER', hydraulikHtml);
 
   const w = printRecord._preOpenedWindow || window.open('', '_blank');
   printRecord._preOpenedWindow = null;
-  w.document.write(html);
+  if (!w) { alert('Tillåt popup-fönster i webbläsaren för att skriva ut.'); return; }
+  w.document.write(finalHtml);
   w.document.close();
 }
 
