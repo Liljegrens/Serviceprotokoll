@@ -91,6 +91,30 @@ def init_db():
             pin      TEXT NOT NULL,
             role     TEXT DEFAULT 'tekniker'
         );
+        CREATE TABLE IF NOT EXISTS egna_maskiner (
+            nr           TEXT PRIMARY KEY,
+            fabrikat     TEXT DEFAULT '',
+            modell       TEXT DEFAULT '',
+            tillvnr      TEXT DEFAULT '',
+            arsmodell    TEXT DEFAULT '',
+            beskrivning  TEXT DEFAULT '',
+            notering     TEXT DEFAULT '',
+            hydraulfilter  TEXT DEFAULT '',
+            hydraulolja    TEXT DEFAULT '',
+            hydraulslangar TEXT DEFAULT '',
+            gasdampare     TEXT DEFAULT '',
+            status         TEXT DEFAULT 'ledig',
+            uthyrd_till    TEXT DEFAULT '',
+            uthyrd_datum   TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS uthyrningslogg (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            maskin_nr  TEXT NOT NULL,
+            kund       TEXT DEFAULT '',
+            datum_ut   TEXT,
+            datum_in   TEXT,
+            notering   TEXT DEFAULT ''
+        );
         """)
     # Migration: lägg till kolumner om de saknas
     with get_db() as db:
@@ -1110,6 +1134,92 @@ def patch_offer(offer_id):
 def delete_offer(offer_id):
     with get_db() as db:
         db.execute('DELETE FROM offers WHERE id=?', [offer_id])
+    return jsonify({'ok': True})
+
+# ═══════════ EGNA MASKINER ═══════════
+
+@app.route('/api/egna-maskiner', methods=['GET'])
+def get_egna_maskiner():
+    with get_db() as db:
+        rows = db.execute('SELECT * FROM egna_maskiner ORDER BY nr').fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/egna-maskiner', methods=['POST'])
+def create_egen_maskin():
+    data = request.get_json(force=True)
+    nr = (data.get('nr') or '').strip()
+    if not nr:
+        with get_db() as db:
+            existing = [r[0] for r in db.execute("SELECT nr FROM egna_maskiner WHERE nr LIKE 'LIL%'").fetchall()]
+        nums = []
+        for e in existing:
+            try: nums.append(int(e.replace('LIL','')))
+            except: pass
+        seq = max(nums) + 1 if nums else 1
+        nr = f'LIL{seq:02d}'
+    with get_db() as db:
+        db.execute("""INSERT INTO egna_maskiner
+            (nr,fabrikat,modell,tillvnr,arsmodell,beskrivning,notering,
+             hydraulfilter,hydraulolja,hydraulslangar,gasdampare,status)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,'ledig')""",
+            (nr, data.get('fabrikat',''), data.get('modell',''), data.get('tillvnr',''),
+             data.get('arsmodell',''), data.get('beskrivning',''), data.get('notering',''),
+             data.get('hydraulfilter',''), data.get('hydraulolja',''),
+             data.get('hydraulslangar',''), data.get('gasdampare','')))
+    return jsonify({'nr': nr}), 201
+
+@app.route('/api/egna-maskiner/<nr>', methods=['GET'])
+def get_egen_maskin(nr):
+    with get_db() as db:
+        row = db.execute('SELECT * FROM egna_maskiner WHERE nr=?', (nr,)).fetchone()
+        logs = db.execute('SELECT * FROM uthyrningslogg WHERE maskin_nr=? ORDER BY datum_ut DESC', (nr,)).fetchall()
+    if not row: return jsonify({'error': 'Hittades inte'}), 404
+    m = dict(row)
+    m['uthyrningslogg'] = [dict(l) for l in logs]
+    return jsonify(m)
+
+@app.route('/api/egna-maskiner/<nr>', methods=['PATCH'])
+def patch_egen_maskin(nr):
+    data = request.get_json(force=True)
+    allowed = {'fabrikat','modell','tillvnr','arsmodell','beskrivning','notering',
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare'}
+    fields = {k: v for k, v in data.items() if k in allowed}
+    if fields:
+        set_clause = ', '.join(f'{k}=?' for k in fields)
+        with get_db() as db:
+            db.execute(f'UPDATE egna_maskiner SET {set_clause} WHERE nr=?', list(fields.values()) + [nr])
+    return jsonify({'ok': True})
+
+@app.route('/api/egna-maskiner/<nr>', methods=['DELETE'])
+def delete_egen_maskin(nr):
+    with get_db() as db:
+        db.execute('DELETE FROM egna_maskiner WHERE nr=?', (nr,))
+        db.execute('DELETE FROM uthyrningslogg WHERE maskin_nr=?', (nr,))
+    return jsonify({'ok': True})
+
+@app.route('/api/egna-maskiner/<nr>/hyra-ut', methods=['POST'])
+def hyra_ut(nr):
+    data = request.get_json(force=True)
+    kund = data.get('kund','').strip()
+    datum_ut = data.get('datum_ut') or datetime.now().strftime('%Y-%m-%d')
+    notering = data.get('notering','')
+    if not kund:
+        return jsonify({'error': 'Kund krävs'}), 400
+    with get_db() as db:
+        db.execute("UPDATE egna_maskiner SET status='uthyrd', uthyrd_till=?, uthyrd_datum=? WHERE nr=?",
+                   (kund, datum_ut, nr))
+        db.execute("INSERT INTO uthyrningslogg (maskin_nr,kund,datum_ut,notering) VALUES (?,?,?,?)",
+                   (nr, kund, datum_ut, notering))
+    return jsonify({'ok': True})
+
+@app.route('/api/egna-maskiner/<nr>/aterlämnad', methods=['POST'])
+def aterlamnad(nr):
+    datum_in = datetime.now().strftime('%Y-%m-%d')
+    with get_db() as db:
+        db.execute("UPDATE egna_maskiner SET status='ledig', uthyrd_till='', uthyrd_datum='' WHERE nr=?", (nr,))
+        db.execute("""UPDATE uthyrningslogg SET datum_in=?
+                      WHERE maskin_nr=? AND datum_in IS NULL
+                      ORDER BY id DESC LIMIT 1""", (datum_in, nr))
     return jsonify({'ok': True})
 
 @app.route('/spiris-test.html')

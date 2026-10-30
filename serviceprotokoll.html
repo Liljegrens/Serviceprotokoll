@@ -705,6 +705,11 @@
       <div class="tile-label">Kostnadsförslag</div>
       <div class="tile-sub">Uppskattade kostnader</div>
     </div>
+    <div class="home-tile admin-only" onclick="showPage('egna-maskiner')">
+      <div class="tile-icon">🏗️</div>
+      <div class="tile-label">Egna maskiner</div>
+      <div class="tile-sub">Uthyrning & status</div>
+    </div>
     <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
       <div class="tile-icon">⚙️</div>
       <div class="tile-label">Admin</div>
@@ -1643,6 +1648,77 @@
 </div>
 
 <!-- ═══════════ OFFERTER LIST PAGE ═══════════ -->
+<!-- ═══════════ EGNA MASKINER PAGE ═══════════ -->
+<div id="egna-maskiner-page" style="display:none;">
+  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1 style="margin:0;font-size:18px;flex:1;">Egna maskiner</h1>
+    <button onclick="openNyEgenMaskin()" style="background:#fff;color:var(--brand);border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">＋ Ny maskin</button>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <div id="egna-maskiner-list">Laddar…</div>
+  </div>
+</div>
+
+<!-- ═══ NY EGEN MASKIN MODAL ═══ -->
+<div id="ny-egen-maskin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)closeNyEgenMaskin()">
+  <div style="background:var(--card);border-radius:12px;max-width:600px;margin:0 auto;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:18px;color:var(--brand);" id="ny-egen-maskin-title">＋ Ny maskin</h2>
+      <button onclick="closeNyEgenMaskin()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);">×</button>
+    </div>
+    <input type="hidden" id="egen-maskin-edit-nr">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Maskinnummer</label>
+        <input id="em-nr" placeholder="t.ex. LIL03 (auto om tomt)" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Fabrikat</label>
+        <input id="em-fabrikat" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Modell</label>
+        <input id="em-modell" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Tillv.nr</label>
+        <input id="em-tillvnr" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Årsmodell</label>
+        <input id="em-arsmodell" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Hydraulfilter</label>
+        <input id="em-hydraulfilter" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Hydraulolja</label>
+        <input id="em-hydraulolja" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Hydraulslangar</label>
+        <input id="em-hydraulslangar" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Gasdämpare</label>
+        <input id="em-gasdampare" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Beskrivning</label>
+        <input id="em-beskrivning" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Notering</label>
+        <textarea id="em-notering" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);resize:vertical;"></textarea></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="saveEgenMaskin()" style="flex:1;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;">Spara</button>
+      <button onclick="closeNyEgenMaskin()" style="padding:12px 20px;border:1.5px solid var(--border);background:none;color:var(--fg);border-radius:8px;font-weight:600;cursor:pointer;">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HYR UT MODAL ═══ -->
+<div id="hyra-ut-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;display:none;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border-radius:12px;width:100%;max-width:420px;padding:24px;">
+    <h2 style="margin:0 0 16px;font-size:16px;color:var(--brand);">Hyr ut maskin</h2>
+    <input type="hidden" id="hyra-ut-nr">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Hyrs ut till (kund)</label>
+        <input id="hyra-kund" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);" placeholder="Kundnamn"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Datum ut</label>
+        <input id="hyra-datum" type="date" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Notering</label>
+        <input id="hyra-notering" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);" placeholder="Valfri notering"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="bekraftaHyraUt()" style="flex:1;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Hyr ut</button>
+      <button onclick="document.getElementById('hyra-ut-overlay').style.display='none'" style="padding:12px 20px;border:1.5px solid var(--border);background:none;color:var(--fg);border-radius:8px;font-weight:600;cursor:pointer;">Avbryt</button>
+    </div>
+  </div>
+</div>
+
 <div id="offerter-page" style="display:none;">
   <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
     <button class="back-btn" onclick="showPage('home')">← Hem</button>
@@ -2979,6 +3055,7 @@ function showPage(page) {
     'installation':       ['installation-page',         'block'],
     'offert':             ['offert-page',               'block'],
     'offerter':           ['offerter-page',             'block'],
+    'egna-maskiner':      ['egna-maskiner-page',        'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -2988,6 +3065,7 @@ function showPage(page) {
   if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); }
   if (page === 'fk-overview') loadFkOverview();
   if (page === 'offerter') loadOfferterList();
+  if (page === 'egna-maskiner') loadEgnaMaskiner();
   if (page === 'fordonskontroll') openFordonskontroll();
   if (page === 'materialkontroll') openMaterialkontroll();
 }
@@ -3168,6 +3246,160 @@ function updateOfferTotal() {
   if (!hasAny) { el.textContent = '–'; return; }
   const fmt = n => n.toLocaleString('sv-SE') + ' kr';
   el.textContent = `${fmt(minSum)} – ${fmt(maxSum)}`;
+}
+
+// ═══════════ EGNA MASKINER JS ═══════════
+
+async function loadEgnaMaskiner() {
+  const el = document.getElementById('egna-maskiner-list');
+  el.innerHTML = 'Laddar…';
+  try {
+    const maskiner = await apiFetch('/api/egna-maskiner');
+    if (!maskiner.length) {
+      el.innerHTML = '<p style="color:var(--gray);text-align:center;padding:40px 0;">Inga maskiner registrerade än.</p>';
+      return;
+    }
+    el.innerHTML = maskiner.map(m => {
+      const uthyrd = m.status === 'uthyrd';
+      const statusBadge = uthyrd
+        ? `<span style="background:#fff8e1;color:#f57f17;border:1px solid #f57f17;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">● Uthyrd – ${m.uthyrd_till||''}</span>`
+        : `<span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d32;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">✓ Ledig</span>`;
+      return `<div class="checklist-card" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="font-weight:700;font-size:15px;">${m.nr} ${m.fabrikat ? '· '+m.fabrikat : ''} ${m.modell ? m.modell : ''}</div>
+            ${m.beskrivning ? `<div style="font-size:13px;color:var(--gray);margin-top:2px;">${m.beskrivning}</div>` : ''}
+            ${uthyrd && m.uthyrd_datum ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">Ut: ${m.uthyrd_datum}</div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+            ${statusBadge}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              ${uthyrd
+                ? `<button onclick="aterlamnadMaskin('${m.nr}')" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">✓ Återlämnad</button>`
+                : `<button onclick="openHyraUt('${m.nr}')" style="background:var(--brand);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Hyr ut</button>`}
+              <button onclick="editEgenMaskin('${m.nr}')" style="background:none;border:1.5px solid var(--border);color:var(--fg);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">✏ Redigera</button>
+              <button onclick="visaUthyrningslogg('${m.nr}')" style="background:none;border:1.5px solid var(--border);color:var(--gray);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">📋 Logg</button>
+            </div>
+          </div>
+        </div>
+        <div id="logg-${m.nr.replace(/[^a-z0-9]/gi,'_')}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"></div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda maskiner.</p>'; }
+}
+
+function openNyEgenMaskin() {
+  document.getElementById('ny-egen-maskin-title').textContent = '＋ Ny maskin';
+  document.getElementById('egen-maskin-edit-nr').value = '';
+  ['nr','fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning'].forEach(f => {
+    const el = document.getElementById('em-' + f);
+    if (el) el.value = '';
+  });
+  document.getElementById('em-notering').value = '';
+  document.getElementById('em-nr').disabled = false;
+  document.getElementById('ny-egen-maskin-overlay').style.display = 'block';
+}
+
+async function editEgenMaskin(nr) {
+  try {
+    const m = await apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr));
+    document.getElementById('ny-egen-maskin-title').textContent = '✏ Redigera ' + nr;
+    document.getElementById('egen-maskin-edit-nr').value = nr;
+    document.getElementById('em-nr').value = nr;
+    document.getElementById('em-nr').disabled = true;
+    ['fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning'].forEach(f => {
+      const el = document.getElementById('em-' + f);
+      if (el) el.value = m[f] || '';
+    });
+    document.getElementById('em-notering').value = m.notering || '';
+    document.getElementById('ny-egen-maskin-overlay').style.display = 'block';
+  } catch(e) { alert('Kunde inte hämta maskin.'); }
+}
+
+function closeNyEgenMaskin() {
+  document.getElementById('ny-egen-maskin-overlay').style.display = 'none';
+}
+
+async function saveEgenMaskin() {
+  const editNr = document.getElementById('egen-maskin-edit-nr').value;
+  const data = {
+    nr: document.getElementById('em-nr').value.trim(),
+    fabrikat: document.getElementById('em-fabrikat').value,
+    modell: document.getElementById('em-modell').value,
+    tillvnr: document.getElementById('em-tillvnr').value,
+    arsmodell: document.getElementById('em-arsmodell').value,
+    hydraulfilter: document.getElementById('em-hydraulfilter').value,
+    hydraulolja: document.getElementById('em-hydraulolja').value,
+    hydraulslangar: document.getElementById('em-hydraulslangar').value,
+    gasdampare: document.getElementById('em-gasdampare').value,
+    beskrivning: document.getElementById('em-beskrivning').value,
+    notering: document.getElementById('em-notering').value,
+  };
+  try {
+    if (editNr) {
+      await apiFetch('/api/egna-maskiner/' + encodeURIComponent(editNr), {
+        method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+      });
+    } else {
+      await apiFetch('/api/egna-maskiner', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+      });
+    }
+    closeNyEgenMaskin();
+    loadEgnaMaskiner();
+  } catch(e) { alert('Kunde inte spara: ' + e.message); }
+}
+
+function openHyraUt(nr) {
+  document.getElementById('hyra-ut-nr').value = nr;
+  document.getElementById('hyra-kund').value = '';
+  document.getElementById('hyra-datum').value = new Date().toISOString().slice(0,10);
+  document.getElementById('hyra-notering').value = '';
+  document.getElementById('hyra-ut-overlay').style.display = 'flex';
+}
+
+async function bekraftaHyraUt() {
+  const nr = document.getElementById('hyra-ut-nr').value;
+  const kund = document.getElementById('hyra-kund').value.trim();
+  if (!kund) { alert('Ange kund.'); return; }
+  try {
+    await apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr) + '/hyra-ut', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ kund, datum_ut: document.getElementById('hyra-datum').value, notering: document.getElementById('hyra-notering').value })
+    });
+    document.getElementById('hyra-ut-overlay').style.display = 'none';
+    loadEgnaMaskiner();
+  } catch(e) { alert('Kunde inte registrera uthyrning.'); }
+}
+
+async function aterlamnadMaskin(nr) {
+  if (!confirm(`Markera ${nr} som återlämnad?`)) return;
+  try {
+    await apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr) + '/aterlamnad', { method: 'POST' });
+    loadEgnaMaskiner();
+  } catch(e) { alert('Kunde inte uppdatera.'); }
+}
+
+async function visaUthyrningslogg(nr) {
+  const safeId = 'logg-' + nr.replace(/[^a-z0-9]/gi,'_');
+  const el = document.getElementById(safeId);
+  if (!el) return;
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  try {
+    const m = await apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr));
+    const log = m.uthyrningslogg || [];
+    if (!log.length) { el.innerHTML = '<p style="font-size:13px;color:var(--gray);">Ingen uthyrningshistorik.</p>'; }
+    else {
+      el.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px;">Uthyrningshistorik</div>` +
+        log.map(l => `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-weight:600;">${l.kund}</span>
+          <span style="color:var(--gray);">Ut: ${l.datum_ut||'–'}</span>
+          <span style="color:var(--gray);">In: ${l.datum_in||'–'}</span>
+          ${l.notering ? `<span style="font-style:italic;color:var(--gray);">${l.notering}</span>` : ''}
+        </div>`).join('');
+    }
+    el.style.display = 'block';
+  } catch(e) { el.innerHTML = '<p style="color:var(--akut);font-size:13px;">Kunde inte ladda logg.</p>'; el.style.display = 'block'; }
 }
 
 async function loadOfferterList() {
