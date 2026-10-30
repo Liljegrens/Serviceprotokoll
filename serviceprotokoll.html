@@ -1693,8 +1693,12 @@
         <input id="em-hydraulslangar" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
       <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Gasdämpare</label>
         <input id="em-gasdampare" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
-      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Beskrivning</label>
+      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Beskrivning / Maskintyp</label>
         <input id="em-beskrivning" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Adress (var maskinen står)</label>
+        <input id="em-adress" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Kontakt</label>
+        <input id="em-kontakt" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
       <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Notering</label>
         <textarea id="em-notering" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);resize:vertical;"></textarea></div>
     </div>
@@ -3275,6 +3279,8 @@ async function loadEgnaMaskiner() {
           <div style="flex:1;min-width:200px;">
             <div style="font-weight:700;font-size:15px;">${m.nr} ${m.fabrikat ? '· '+m.fabrikat : ''} ${m.modell ? m.modell : ''}</div>
             ${m.beskrivning ? `<div style="font-size:13px;color:var(--gray);margin-top:2px;">${m.beskrivning}</div>` : ''}
+            ${m.adress ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">📍 ${m.adress}</div>` : ''}
+            ${m.kontakt ? `<div style="font-size:12px;color:var(--gray);margin-top:1px;">👤 ${m.kontakt}</div>` : ''}
             ${uthyrd && m.uthyrd_datum ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">Ut: ${m.uthyrd_datum}</div>` : ''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
@@ -3297,7 +3303,7 @@ async function loadEgnaMaskiner() {
 function openNyEgenMaskin() {
   document.getElementById('ny-egen-maskin-title').textContent = '＋ Ny maskin';
   document.getElementById('egen-maskin-edit-nr').value = '';
-  ['nr','fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning'].forEach(f => {
+  ['nr','fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt'].forEach(f => {
     const el = document.getElementById('em-' + f);
     if (el) el.value = '';
   });
@@ -3313,7 +3319,7 @@ async function editEgenMaskin(nr) {
     document.getElementById('egen-maskin-edit-nr').value = nr;
     document.getElementById('em-nr').value = nr;
     document.getElementById('em-nr').disabled = true;
-    ['fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning'].forEach(f => {
+    ['fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt'].forEach(f => {
       const el = document.getElementById('em-' + f);
       if (el) el.value = m[f] || '';
     });
@@ -3339,6 +3345,8 @@ async function saveEgenMaskin() {
     hydraulslangar: document.getElementById('em-hydraulslangar').value,
     gasdampare: document.getElementById('em-gasdampare').value,
     beskrivning: document.getElementById('em-beskrivning').value,
+    adress: document.getElementById('em-adress').value,
+    kontakt: document.getElementById('em-kontakt').value,
     notering: document.getElementById('em-notering').value,
   };
   try {

@@ -105,7 +105,9 @@ def init_db():
             gasdampare     TEXT DEFAULT '',
             status         TEXT DEFAULT 'ledig',
             uthyrd_till    TEXT DEFAULT '',
-            uthyrd_datum   TEXT DEFAULT ''
+            uthyrd_datum   TEXT DEFAULT '',
+            adress         TEXT DEFAULT '',
+            kontakt        TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS uthyrningslogg (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,6 +152,12 @@ def init_db():
         cols_hlog = [r[1] for r in db.execute("PRAGMA table_info(hydrauliklogg)").fetchall()]
         if 'typ' not in cols_hlog:
             db.execute("ALTER TABLE hydrauliklogg ADD COLUMN typ TEXT DEFAULT 'byte'")
+    with get_db() as db:
+        cols_em = [r[1] for r in db.execute("PRAGMA table_info(egna_maskiner)").fetchall()]
+        if 'adress' not in cols_em:
+            db.execute("ALTER TABLE egna_maskiner ADD COLUMN adress TEXT DEFAULT ''")
+        if 'kontakt' not in cols_em:
+            db.execute("ALTER TABLE egna_maskiner ADD COLUMN kontakt TEXT DEFAULT ''")
 
 init_db()
 
@@ -1182,7 +1190,7 @@ def get_egen_maskin(nr):
 def patch_egen_maskin(nr):
     data = request.get_json(force=True)
     allowed = {'fabrikat','modell','tillvnr','arsmodell','beskrivning','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare'}
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','adress','kontakt'}
     fields = {k: v for k, v in data.items() if k in allowed}
     if fields:
         set_clause = ', '.join(f'{k}=?' for k in fields)
@@ -1208,9 +1216,11 @@ def export_egna_maskiner():
     ws = wb.active
     ws.title = 'Egna maskiner'
     headers = ['Maskinnummer','Fabrikat','Modell','Tillvnr','Årsmodell',
-               'Beskrivning','Notering','Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
+               'Beskrivning','Adress','Kontakt','Notering',
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
     cols    = ['nr','fabrikat','modell','tillvnr','arsmodell',
-               'beskrivning','notering','hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
+               'beskrivning','adress','kontakt','notering',
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
     for ci, h in enumerate(headers, 1):
@@ -1223,7 +1233,7 @@ def export_egna_maskiner():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [14,20,20,18,12,35,35,25,25,25,25]
+    col_widths = [14,20,20,18,12,35,40,30,35,25,25,25,25]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()
@@ -1256,44 +1266,75 @@ def import_egna_maskiner():
         if idx is None or idx >= len(row): return ''
         v = row[idx]
         return str(v).strip() if v is not None else ''
-    cNr   = col('maskinnummer')
-    cFab  = col('fabrikat')
-    cMod  = col('modell')
-    cTill = col('tillvnr')
-    cArs  = col('årsmodell') or col('arsmodell')
-    cBesk = col('beskrivning')
-    cNot  = col('notering')
-    cHydf = col('hydraulfilter')
-    cHydo = col('hydraulolja')
-    cHyds = col('hydraulslangar')
-    cGas  = col('gasdämpare') or col('gasdampare')
+    cNr   = col('maskinnummer') if col('maskinnummer') is not None else (0 if rows[0][0] and str(rows[0][0]).upper().startswith('LIL') else None)
+    # Gammalt format (Maskin-kolumn istf Maskinnummer)
+    is_legacy = col('maskinnummer') is None and col('maskin') is not None
+    if is_legacy:
+        cNr   = 0
+        cBesk = col('maskin') if col('maskin') is not None else 1
+        cKund = col('kund') if col('kund') is not None else 3
+        cKont = 4
+        cAdr  = col('företagsnamn') or col('adress') or 6
+        cFab=cMod=cTill=cArs=cNot=cHydf=cHydo=cHyds=cGas = None
+    else:
+        cFab  = col('fabrikat')
+        cMod  = col('modell')
+        cTill = col('tillvnr')
+        cArs  = col('årsmodell') or col('arsmodell')
+        cBesk = col('beskrivning')
+        cNot  = col('notering')
+        cAdr  = col('adress')
+        cKont = col('kontakt')
+        cKund = None
+        cHydf = col('hydraulfilter')
+        cHydo = col('hydraulolja')
+        cHyds = col('hydraulslangar')
+        cGas  = col('gasdämpare') or col('gasdampare')
     if cNr is None:
         return jsonify({'error': 'Kolumnen Maskinnummer saknas'}), 400
+    LILJEGRENS_KUNDER = {'liljegrens', 'liljegrens i tyresö ab', ''}
     machines = []
     for row in rows[header_row + 1:]:
         nr = cell(row, cNr)
-        if not nr or nr.lower() == 'none': continue
+        if not nr or nr.lower() in ('none', 'maskinnummer'): continue
+        kund = cell(row, cKund) if cKund is not None else ''
+        kund_lower = kund.lower().strip()
+        is_uthyrd = bool(kund) and not any(k in kund_lower for k in LILJEGRENS_KUNDER) and '?' not in kund
         machines.append({
-            'nr': nr, 'fabrikat': cell(row, cFab), 'modell': cell(row, cMod),
-            'tillvnr': cell(row, cTill), 'arsmodell': cell(row, cArs),
-            'beskrivning': cell(row, cBesk), 'notering': cell(row, cNot),
-            'hydraulfilter': cell(row, cHydf), 'hydraulolja': cell(row, cHydo),
-            'hydraulslangar': cell(row, cHyds), 'gasdampare': cell(row, cGas),
+            'nr': nr,
+            'fabrikat': cell(row, cFab) if cFab is not None else '',
+            'modell': cell(row, cMod) if cMod is not None else '',
+            'tillvnr': cell(row, cTill) if cTill is not None else '',
+            'arsmodell': cell(row, cArs) if cArs is not None else '',
+            'beskrivning': cell(row, cBesk) if cBesk is not None else '',
+            'notering': cell(row, cNot) if cNot is not None else '',
+            'adress': cell(row, cAdr) if cAdr is not None else '',
+            'kontakt': cell(row, cKont) if cKont is not None else '',
+            'hydraulfilter': cell(row, cHydf) if cHydf is not None else '',
+            'hydraulolja': cell(row, cHydo) if cHydo is not None else '',
+            'hydraulslangar': cell(row, cHyds) if cHyds is not None else '',
+            'gasdampare': cell(row, cGas) if cGas is not None else '',
+            'status': 'uthyrd' if is_uthyrd else 'ledig',
+            'uthyrd_till': kund if is_uthyrd else '',
         })
     with get_db() as db:
         db.executemany("""
             INSERT INTO egna_maskiner
                 (nr,fabrikat,modell,tillvnr,arsmodell,beskrivning,notering,
-                 hydraulfilter,hydraulolja,hydraulslangar,gasdampare)
+                 adress,kontakt,hydraulfilter,hydraulolja,hydraulslangar,gasdampare,
+                 status,uthyrd_till)
             VALUES
                 (:nr,:fabrikat,:modell,:tillvnr,:arsmodell,:beskrivning,:notering,
-                 :hydraulfilter,:hydraulolja,:hydraulslangar,:gasdampare)
+                 :adress,:kontakt,:hydraulfilter,:hydraulolja,:hydraulslangar,:gasdampare,
+                 :status,:uthyrd_till)
             ON CONFLICT(nr) DO UPDATE SET
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
                 tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
                 beskrivning=excluded.beskrivning, notering=excluded.notering,
+                adress=excluded.adress, kontakt=excluded.kontakt,
                 hydraulfilter=excluded.hydraulfilter, hydraulolja=excluded.hydraulolja,
-                hydraulslangar=excluded.hydraulslangar, gasdampare=excluded.gasdampare
+                hydraulslangar=excluded.hydraulslangar, gasdampare=excluded.gasdampare,
+                status=excluded.status, uthyrd_till=excluded.uthyrd_till
         """, machines)
     return jsonify({'imported': len(machines)})
 
