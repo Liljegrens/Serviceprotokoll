@@ -1197,6 +1197,106 @@ def delete_egen_maskin(nr):
         db.execute('DELETE FROM uthyrningslogg WHERE maskin_nr=?', (nr,))
     return jsonify({'ok': True})
 
+@app.route('/api/egna-maskiner/export', methods=['GET'])
+def export_egna_maskiner():
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    import io as _io
+    with get_db() as db:
+        rows = db.execute('SELECT * FROM egna_maskiner ORDER BY nr').fetchall()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Egna maskiner'
+    headers = ['Maskinnummer','Fabrikat','Modell','Tillvnr','Årsmodell',
+               'Beskrivning','Notering','Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
+    cols    = ['nr','fabrikat','modell','tillvnr','arsmodell',
+               'beskrivning','notering','hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
+    header_fill = PatternFill('solid', fgColor='1A3A5C')
+    header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
+    for ci, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=ci, value=h)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[1].height = 30
+    for ri, row in enumerate(rows, 2):
+        d = dict(row)
+        for ci, col in enumerate(cols, 1):
+            ws.cell(row=ri, column=ci, value=d.get(col) or '')
+    col_widths = [14,20,20,18,12,35,35,25,25,25,25]
+    for ci, w in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
+    buf = _io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    from flask import Response
+    fname = f"egna_maskiner_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    return Response(buf.read(),
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename="{fname}"'})
+
+@app.route('/api/egna-maskiner/import', methods=['POST'])
+def import_egna_maskiner():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['file']
+    import openpyxl, io as _io
+    wb = openpyxl.load_workbook(_io.BytesIO(f.read()), data_only=True)
+    ws = wb.active
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        return jsonify({'error': 'Tom fil'}), 400
+    header_row = 0
+    headers_lower = [str(c).lower().strip() if c else '' for c in rows[0]]
+    def col(name):
+        for i, h in enumerate(headers_lower):
+            if name in h: return i
+        return None
+    def cell(row, idx):
+        if idx is None or idx >= len(row): return ''
+        v = row[idx]
+        return str(v).strip() if v is not None else ''
+    cNr   = col('maskinnummer')
+    cFab  = col('fabrikat')
+    cMod  = col('modell')
+    cTill = col('tillvnr')
+    cArs  = col('årsmodell') or col('arsmodell')
+    cBesk = col('beskrivning')
+    cNot  = col('notering')
+    cHydf = col('hydraulfilter')
+    cHydo = col('hydraulolja')
+    cHyds = col('hydraulslangar')
+    cGas  = col('gasdämpare') or col('gasdampare')
+    if cNr is None:
+        return jsonify({'error': 'Kolumnen Maskinnummer saknas'}), 400
+    machines = []
+    for row in rows[header_row + 1:]:
+        nr = cell(row, cNr)
+        if not nr or nr.lower() == 'none': continue
+        machines.append({
+            'nr': nr, 'fabrikat': cell(row, cFab), 'modell': cell(row, cMod),
+            'tillvnr': cell(row, cTill), 'arsmodell': cell(row, cArs),
+            'beskrivning': cell(row, cBesk), 'notering': cell(row, cNot),
+            'hydraulfilter': cell(row, cHydf), 'hydraulolja': cell(row, cHydo),
+            'hydraulslangar': cell(row, cHyds), 'gasdampare': cell(row, cGas),
+        })
+    with get_db() as db:
+        db.executemany("""
+            INSERT INTO egna_maskiner
+                (nr,fabrikat,modell,tillvnr,arsmodell,beskrivning,notering,
+                 hydraulfilter,hydraulolja,hydraulslangar,gasdampare)
+            VALUES
+                (:nr,:fabrikat,:modell,:tillvnr,:arsmodell,:beskrivning,:notering,
+                 :hydraulfilter,:hydraulolja,:hydraulslangar,:gasdampare)
+            ON CONFLICT(nr) DO UPDATE SET
+                fabrikat=excluded.fabrikat, modell=excluded.modell,
+                tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
+                beskrivning=excluded.beskrivning, notering=excluded.notering,
+                hydraulfilter=excluded.hydraulfilter, hydraulolja=excluded.hydraulolja,
+                hydraulslangar=excluded.hydraulslangar, gasdampare=excluded.gasdampare
+        """, machines)
+    return jsonify({'imported': len(machines)})
+
 @app.route('/api/egna-maskiner/<nr>/hyra-ut', methods=['POST'])
 def hyra_ut(nr):
     data = request.get_json(force=True)

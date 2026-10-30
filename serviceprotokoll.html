@@ -1654,8 +1654,14 @@
     <button class="back-btn" onclick="showPage('home')">← Hem</button>
     <h1 style="margin:0;font-size:18px;flex:1;">Egna maskiner</h1>
     <button onclick="openNyEgenMaskin()" style="background:#fff;color:var(--brand);border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">＋ Ny maskin</button>
+    <a href="/api/egna-maskiner/export" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;">↓ Excel</a>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--card);border-radius:10px;border:1.5px dashed var(--border);">
+      <span style="font-size:13px;color:var(--gray);flex:1;">Importera från Excel:</span>
+      <input type="file" id="egna-maskiner-import-file" accept=".xlsx" style="font-size:13px;">
+      <button onclick="importEgnaMaskiner()" style="background:var(--brand);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;">Importera</button>
+    </div>
     <div id="egna-maskiner-list">Laddar…</div>
   </div>
 </div>
@@ -3378,6 +3384,21 @@ async function aterlamnadMaskin(nr) {
     await apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr) + '/aterlamnad', { method: 'POST' });
     loadEgnaMaskiner();
   } catch(e) { alert('Kunde inte uppdatera.'); }
+}
+
+async function importEgnaMaskiner() {
+  const fileEl = document.getElementById('egna-maskiner-import-file');
+  if (!fileEl.files.length) { alert('Välj en Excel-fil först.'); return; }
+  const fd = new FormData();
+  fd.append('file', fileEl.files[0]);
+  try {
+    const res = await fetch('/api/egna-maskiner/import', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Fel');
+    alert(`Importerade ${data.imported} maskiner.`);
+    fileEl.value = '';
+    loadEgnaMaskiner();
+  } catch(e) { alert('Import misslyckades: ' + e.message); }
 }
 
 async function visaUthyrningslogg(nr) {
