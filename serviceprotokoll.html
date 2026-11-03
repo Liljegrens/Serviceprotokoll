@@ -710,12 +710,7 @@
       <div class="tile-label">Egna maskiner</div>
       <div class="tile-sub">Uthyrning & status</div>
     </div>
-    <div class="home-tile" onclick="showPage('open-items')">
-      <div class="tile-icon">🔧</div>
-      <div class="tile-label">Öppna anmärkningar</div>
-      <div class="tile-sub" id="open-items-tile-sub">Punkter att åtgärda</div>
-    </div>
-    <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
+<div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
       <div class="tile-icon">⚙️</div>
       <div class="tile-label">Admin</div>
       <div class="tile-sub">Register & användare</div>
@@ -1682,17 +1677,6 @@
 </div>
 
 <!-- ═══════════ ÖPPNA ANMÄRKNINGAR PAGE ═══════════ -->
-<div id="open-items-page" style="display:none;">
-  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
-    <button class="back-btn" onclick="showPage('home')">← Hem</button>
-    <h1 style="margin:0;font-size:18px;flex:1;">Öppna anmärkningar</h1>
-    <button onclick="loadOpenItems()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;">↻ Uppdatera</button>
-  </div>
-  <div style="max-width:900px;margin:0 auto;padding:16px;">
-    <div id="open-items-list">Laddar…</div>
-  </div>
-</div>
-
 <!-- ═══ NY EGEN MASKIN MODAL ═══ -->
 <div id="ny-egen-maskin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)closeNyEgenMaskin()">
   <div style="background:var(--card);border-radius:12px;max-width:600px;margin:0 auto;padding:24px;">
