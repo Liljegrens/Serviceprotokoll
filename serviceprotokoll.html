@@ -3374,11 +3374,10 @@ async function loadOpenItems() {
           </div>
         </div>
         ${p.items.map(item => `
-          <div id="oi-row-${p.id}-${item.nr}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);flex-wrap:wrap;">
             <span style="background:${statusBg(item.status)};color:${statusColor(item.status)};border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0;">${statusLabel(item.status)}</span>
             <span style="flex:1;font-size:13px;">${item.namn||item.name||item.nr}</span>
             ${item.notering ? `<span style="font-size:12px;color:var(--gray);font-style:italic;">${item.notering}</span>` : ''}
-            <button onclick="resolveOpenItem(${p.id},'${item.nr}',this)" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">✓ Åtgärdat</button>
           </div>`).join('')}
       </div>`;
     }).join('');
