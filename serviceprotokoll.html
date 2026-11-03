@@ -3367,9 +3367,9 @@ async function loadOpenItems() {
       const statusLabel = s => s==='3'||s==='akut' ? 'Akut' : 'Bevaka';
       const statusBg = s => s==='3'||s==='akut' ? 'var(--akut-bg,#fdecea)' : '#fff8e1';
       return `<div class="checklist-card" style="margin-bottom:14px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;cursor:pointer;" onclick="openProtocolFromId(${p.id})">
           <div style="flex:1;min-width:160px;">
-            <div style="font-weight:700;font-size:15px;">${p.maskin_nr}</div>
+            <div style="font-weight:700;font-size:15px;">${p.maskin_nr} <span style="font-size:12px;font-weight:400;color:var(--brand);">Öppna protokoll →</span></div>
             <div style="font-size:12px;color:var(--gray);">${p.datum||''} · ${p.tekniker||''} · ${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</div>
           </div>
         </div>
@@ -3383,6 +3383,14 @@ async function loadOpenItems() {
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda anmärkningar.</p>'; }
+}
+
+async function openProtocolFromId(protocolId) {
+  try {
+    const rec = await apiFetch('/api/protocols/by-id/' + protocolId);
+    if (!rec) { alert('Protokollet hittades inte.'); return; }
+    openHistoryModal(rec);
+  } catch(e) { alert('Kunde inte öppna protokollet.'); }
 }
 
 async function resolveOpenItem(protocolId, itemNr, btn) {

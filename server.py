@@ -899,6 +899,21 @@ def get_protocols(maskin_nr):
         result.append(d)
     return jsonify(result)
 
+@app.route('/api/protocols/by-id/<int:protocol_id>', methods=['GET'])
+def get_protocol_by_id(protocol_id):
+    with get_db() as db:
+        r = db.execute('SELECT * FROM protocols WHERE id=?', (protocol_id,)).fetchone()
+    if not r:
+        return jsonify({'error': 'Hittades inte'}), 404
+    d = dict(r)
+    d['items']        = json.loads(d['items_json'] or '[]')
+    d['resolved']     = json.loads(d.get('resolved_json') or '{}')
+    d['workflow_log'] = json.loads(d.get('workflow_log') or '[]')
+    if not d.get('workflow_status'):
+        d['workflow_status'] = 'inkommen'
+    del d['items_json'], d['resolved_json']
+    return jsonify(d)
+
 @app.route('/api/protocols/<int:protocol_id>', methods=['DELETE'])
 def delete_protocol(protocol_id):
     with get_db() as db:
