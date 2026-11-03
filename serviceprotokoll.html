@@ -1708,6 +1708,14 @@
         <input id="em-hydraulslangar" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
       <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Gasdämpare</label>
         <input id="em-gasdampare" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
+      <div><label style="font-size:11px;font-weight:700;color:var(--gray);">Serviceavtal (ggr/år)</label>
+        <select id="em-serviceavtal" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);">
+          <option value="">– Inget –</option>
+          <option value="1">1 gång/år</option>
+          <option value="2">2 gånger/år</option>
+          <option value="4">4 gånger/år</option>
+          <option value="6">6 gånger/år</option>
+        </select></div>
       <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Beskrivning / Maskintyp</label>
         <input id="em-beskrivning" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;margin-top:4px;background:var(--card);color:var(--fg);"></div>
       <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:700;color:var(--gray);">Adress (var maskinen står)</label>
@@ -3438,6 +3446,28 @@ async function openEgenMaskinKort(nr) {
         ${m.notering?`<div style="font-size:12px;color:var(--gray);margin-top:6px;font-style:italic;">${m.notering}</div>`:''}
       </div>` : ''}
 
+      ${(() => {
+        if (!m.serviceavtal) return '';
+        const lastP = protokoll && protokoll.length ? protokoll[0] : null;
+        const lastDate = lastP ? lastP.datum : null;
+        let nextDate = '';
+        if (lastDate && m.serviceavtal) {
+          const d = new Date(lastDate);
+          const monthsToAdd = Math.round(12 / parseInt(m.serviceavtal));
+          d.setMonth(d.getMonth() + monthsToAdd);
+          nextDate = d.toISOString().slice(0,10);
+        }
+        const savtLabel = {'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'}[m.serviceavtal] || m.serviceavtal + ' ggr/år';
+        return `<div class="checklist-card" style="margin-bottom:12px;background:#e8f5e9;border-color:#a5d6a7;">
+          <div style="font-size:11px;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Serviceavtal</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <div><div style="font-size:10px;color:#388e3c;">Intervall</div><div style="font-size:13px;font-weight:700;">${savtLabel}</div></div>
+            <div><div style="font-size:10px;color:#388e3c;">Senaste service</div><div style="font-size:13px;">${lastDate||'–'}</div></div>
+            <div><div style="font-size:10px;color:#388e3c;">Nästa planerade</div><div style="font-size:13px;font-weight:600;">${nextDate||'–'}</div></div>
+          </div>
+        </div>`;
+      })()}
+
       ${m.hydraulfilter||m.hydraulolja||m.hydraulslangar||m.gasdampare ? `<div class="checklist-card" style="margin-bottom:12px;">
         <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Komponenter</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
@@ -3481,7 +3511,7 @@ async function openEgenMaskinKort(nr) {
 function openNyEgenMaskin() {
   document.getElementById('ny-egen-maskin-title').textContent = '＋ Ny maskin';
   document.getElementById('egen-maskin-edit-nr').value = '';
-  ['nr','fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt'].forEach(f => {
+  ['nr','fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt','serviceavtal'].forEach(f => {
     const el = document.getElementById('em-' + f);
     if (el) el.value = '';
   });
@@ -3497,7 +3527,7 @@ async function editEgenMaskin(nr) {
     document.getElementById('egen-maskin-edit-nr').value = nr;
     document.getElementById('em-nr').value = nr;
     document.getElementById('em-nr').disabled = true;
-    ['fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt'].forEach(f => {
+    ['fabrikat','modell','tillvnr','arsmodell','hydraulfilter','hydraulolja','hydraulslangar','gasdampare','beskrivning','adress','kontakt','serviceavtal'].forEach(f => {
       const el = document.getElementById('em-' + f);
       if (el) el.value = m[f] || '';
     });
@@ -3522,6 +3552,7 @@ async function saveEgenMaskin() {
     hydraulolja: document.getElementById('em-hydraulolja').value,
     hydraulslangar: document.getElementById('em-hydraulslangar').value,
     gasdampare: document.getElementById('em-gasdampare').value,
+    serviceavtal: document.getElementById('em-serviceavtal').value,
     beskrivning: document.getElementById('em-beskrivning').value,
     adress: document.getElementById('em-adress').value,
     kontakt: document.getElementById('em-kontakt').value,

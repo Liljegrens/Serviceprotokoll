@@ -158,6 +158,8 @@ def init_db():
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN adress TEXT DEFAULT ''")
         if 'kontakt' not in cols_em:
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN kontakt TEXT DEFAULT ''")
+        if 'serviceavtal' not in cols_em:
+            db.execute("ALTER TABLE egna_maskiner ADD COLUMN serviceavtal TEXT DEFAULT ''")
 
 init_db()
 
@@ -1253,7 +1255,7 @@ def get_egen_maskin(nr):
 def patch_egen_maskin(nr):
     data = request.get_json(force=True)
     allowed = {'fabrikat','modell','tillvnr','arsmodell','beskrivning','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','adress','kontakt'}
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','adress','kontakt','serviceavtal'}
     fields = {k: v for k, v in data.items() if k in allowed}
     if fields:
         set_clause = ', '.join(f'{k}=?' for k in fields)
@@ -1280,10 +1282,10 @@ def export_egna_maskiner():
     ws.title = 'Egna maskiner'
     headers = ['Maskinnummer','Fabrikat','Modell','Tillvnr','Årsmodell',
                'Beskrivning','Adress','Kontakt','Notering',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare']
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare','Serviceavtal (ggr/år)']
     cols    = ['nr','fabrikat','modell','tillvnr','arsmodell',
                'beskrivning','adress','kontakt','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare']
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','serviceavtal']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
     for ci, h in enumerate(headers, 1):
@@ -1296,7 +1298,7 @@ def export_egna_maskiner():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [14,20,20,18,12,35,40,30,35,25,25,25,25]
+    col_widths = [14,20,20,18,12,35,40,30,35,25,25,25,25,18]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()
@@ -1338,7 +1340,7 @@ def import_egna_maskiner():
         cKund = col('kund') if col('kund') is not None else 3
         cKont = 4
         cAdr  = col('företagsnamn') or col('adress') or 6
-        cFab=cMod=cTill=cArs=cNot=cHydf=cHydo=cHyds=cGas = None
+        cFab=cMod=cTill=cArs=cNot=cHydf=cHydo=cHyds=cGas=cSavt = None
     else:
         cFab  = col('fabrikat')
         cMod  = col('modell')
@@ -1353,6 +1355,7 @@ def import_egna_maskiner():
         cHydo = col('hydraulolja')
         cHyds = col('hydraulslangar')
         cGas  = col('gasdämpare') or col('gasdampare')
+        cSavt = col('serviceavtal (ggr/år)') or col('serviceavtal')
     if cNr is None:
         return jsonify({'error': 'Kolumnen Maskinnummer saknas'}), 400
     LILJEGRENS_KUNDER = {'liljegrens', 'liljegrens i tyresö ab', ''}
@@ -1377,6 +1380,7 @@ def import_egna_maskiner():
             'hydraulolja': cell(row, cHydo) if cHydo is not None else '',
             'hydraulslangar': cell(row, cHyds) if cHyds is not None else '',
             'gasdampare': cell(row, cGas) if cGas is not None else '',
+            'serviceavtal': cell(row, cSavt) if cSavt is not None else '',
             'status': 'uthyrd' if is_uthyrd else 'ledig',
             'uthyrd_till': kund if is_uthyrd else '',
         })
@@ -1385,11 +1389,11 @@ def import_egna_maskiner():
             INSERT INTO egna_maskiner
                 (nr,fabrikat,modell,tillvnr,arsmodell,beskrivning,notering,
                  adress,kontakt,hydraulfilter,hydraulolja,hydraulslangar,gasdampare,
-                 status,uthyrd_till)
+                 serviceavtal,status,uthyrd_till)
             VALUES
                 (:nr,:fabrikat,:modell,:tillvnr,:arsmodell,:beskrivning,:notering,
                  :adress,:kontakt,:hydraulfilter,:hydraulolja,:hydraulslangar,:gasdampare,
-                 :status,:uthyrd_till)
+                 :serviceavtal,:status,:uthyrd_till)
             ON CONFLICT(nr) DO UPDATE SET
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
                 tillvnr=excluded.tillvnr, arsmodell=excluded.arsmodell,
@@ -1397,6 +1401,7 @@ def import_egna_maskiner():
                 adress=excluded.adress, kontakt=excluded.kontakt,
                 hydraulfilter=excluded.hydraulfilter, hydraulolja=excluded.hydraulolja,
                 hydraulslangar=excluded.hydraulslangar, gasdampare=excluded.gasdampare,
+                serviceavtal=excluded.serviceavtal,
                 status=excluded.status, uthyrd_till=excluded.uthyrd_till
         """, machines)
     return jsonify({'imported': len(machines)})
