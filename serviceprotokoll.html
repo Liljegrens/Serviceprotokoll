@@ -4177,6 +4177,18 @@ function openHistoryModal(rec) {
     `${rec.maskin_nr} · ${rec.datum||'–'} · ${rec.type==='flygande'?'Flygande':'Verkstad'}`;
   renderModalBody(rec);
   document.getElementById('modal-overlay').classList.add('visible');
+  // Hämta serviceavtal från maskinregister
+  fetch('/api/machines/' + encodeURIComponent(rec.maskin_nr)).then(r => r.ok ? r.json() : null).then(m => {
+    if (!m) return;
+    // Prova egna maskiner om ej hittad i kundregister
+    const savt = m.serviceavtal;
+    if (savt) {
+      const label = {'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'}[savt] || savt+' ggr/år';
+      const f = document.getElementById('modal-serviceavtal-field');
+      const v = document.getElementById('modal-serviceavtal-val');
+      if (f && v) { v.textContent = label; f.style.display = ''; }
+    }
+  }).catch(()=>{});
 }
 
 function renderModalBody(rec) {
@@ -4187,6 +4199,7 @@ function renderModalBody(rec) {
     <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'–'}</div></div>
     <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'–'}</div></div>
     ${rec.saved_at && (window.currentUser?.role === 'admin') ? `<div class="modal-field" style="opacity:0.6;"><div class="mf-label">Sparad i systemet</div><div class="mf-val" style="font-size:12px;">${rec.saved_at.slice(0,16).replace('T',' ')}</div></div>` : ''}
+    <div class="modal-field" id="modal-serviceavtal-field" style="display:none;"><div class="mf-label">Serviceavtal</div><div class="mf-val" id="modal-serviceavtal-val"></div></div>
   </div></div>`;
 
   const flagged = (rec.items||[]).filter(i=>i.status==='2'||i.status==='3');
@@ -4796,6 +4809,7 @@ async function printRecord(rec) {
     <div class="mf"><label>Objektnummer</label><br><span>${rec.maskin_nr}</span></div>
     ${rec.saved_at ? `<div class="mf" style="color:#888;font-size:7pt;grid-column:1/-1;border-top:0.4pt solid #ccc;padding-top:4pt;margin-top:2pt;"><label style="color:#b0bec5;">Sparad i systemet</label><br><span>${rec.saved_at.slice(0,16).replace('T',' ')}</span></div>` : ''}
   </div>
+  SERVICEAVTAL_PLACEHOLDER
   <div class="status-bar">${statusText}</div>
   <div class="counts">
     <span class="cnt ok">✓ ${ok.length} OK</span>
@@ -4823,11 +4837,16 @@ async function printRecord(rec) {
 
   // Hämta maskin + hydrauliklogg för att ersätta placeholder
   let hydraulikHtml = '';
+  let serviceavtalHtml = '';
   try {
     const [machine, logs] = await Promise.all([
       fetch('/api/machines/' + encodeURIComponent(rec.maskin_nr)).then(r => r.json()),
       fetch('/api/hydrauliklogg/' + encodeURIComponent(rec.maskin_nr)).then(r => r.json())
     ]);
+    if (machine && machine.serviceavtal) {
+      const savtLabel = {'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'}[machine.serviceavtal] || machine.serviceavtal + ' ggr/år';
+      serviceavtalHtml = `<div style="background:#e8f5e9;border:0.5pt solid #a5d6a7;border-radius:4pt;padding:5pt 8pt;margin-bottom:8pt;font-size:8.5pt;color:#1b5e20;"><strong>Serviceavtal:</strong> ${savtLabel}</div>`;
+    }
     if (machine && (machine.hydraulfilter || machine.hydraulolja || machine.hydraulslangar)) {
       const senastFilter  = logs.find(l => l.filter)?.datum  || '–';
       const senastOlja    = logs.find(l => l.olja)?.datum    || '–';
@@ -4851,7 +4870,7 @@ async function printRecord(rec) {
       </div>`;
     }
   } catch(e) {}
-  const finalHtml = html.replace('HYDRAULIK_PLACEHOLDER', hydraulikHtml);
+  const finalHtml = html.replace('HYDRAULIK_PLACEHOLDER', hydraulikHtml).replace('SERVICEAVTAL_PLACEHOLDER', serviceavtalHtml);
 
   const w = printRecord._preOpenedWindow || window.open('', '_blank');
   printRecord._preOpenedWindow = null;
