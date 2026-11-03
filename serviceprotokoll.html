@@ -2666,12 +2666,8 @@ async function doLogout() {
 }
 
 async function loadRecentProtocols() {
-  // Tekniker ska inte se senaste protokoll
   const section = document.getElementById('recent-section');
-  if (!currentUser || currentUser.role !== 'admin') {
-    if (section) section.style.display = 'none';
-    return;
-  }
+  if (!currentUser) { if (section) section.style.display = 'none'; return; }
   if (section) section.style.display = '';
   const list = document.getElementById('recent-list');
   try {
@@ -4207,15 +4203,13 @@ function renderModalBody(rec) {
   }
   html += renderWorkflowPanel(rec);
   const isAdmin = currentUser && currentUser.role === 'admin';
-  if (isAdmin) {
-    const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
-    html += `<div class="modal-actions">
-      <button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>
-      <button class="modal-action-btn secondary" onclick="printRecord._preOpenedWindow=window.open('','_blank');printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
-      ${hasAnmarkningar ? `<button class="modal-action-btn" style="background:#1b5e20;color:#fff;border-color:#1b5e20;" onclick="openCreateOffer(_currentModalRec)">📋 Skapa kostnadsförslag</button>` : ''}
-      <button class="modal-action-btn" style="background:#fdecea;color:#c62828;border-color:#ef9a9a;" onclick="deleteProtocol(${rec.id})">🗑 Radera protokoll</button>
-    </div>`;
-  }
+  const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
+  html += `<div class="modal-actions">
+    <button class="modal-action-btn secondary" onclick="printRecord._preOpenedWindow=window.open('','_blank');printRecord(_currentModalRec)">🖨 Skriv ut / PDF</button>
+    ${isAdmin ? `<button class="modal-action-btn" onclick="emailFromRecord(_currentModalRec)">📧 Skicka via e-post</button>` : ''}
+    ${isAdmin && hasAnmarkningar ? `<button class="modal-action-btn" style="background:#1b5e20;color:#fff;border-color:#1b5e20;" onclick="openCreateOffer(_currentModalRec)">📋 Skapa kostnadsförslag</button>` : ''}
+    ${isAdmin ? `<button class="modal-action-btn" style="background:#fdecea;color:#c62828;border-color:#ef9a9a;" onclick="deleteProtocol(${rec.id})">🗑 Radera protokoll</button>` : ''}
+  </div>`;
   document.getElementById('modal-body').innerHTML = html;
 }
 
