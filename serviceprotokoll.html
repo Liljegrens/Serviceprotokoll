@@ -3350,10 +3350,10 @@ async function loadOpenItems() {
   if (!el) return;
   el.innerHTML = 'Laddar…';
   try {
-    const isAdmin = _currentRole === 'admin';
+    const isAdmin = currentUser && currentUser.role === 'admin';
     const url = isAdmin
       ? '/api/protocols/open-items'
-      : '/api/protocols/open-items?tekniker=' + encodeURIComponent(_currentUser || '');
+      : '/api/protocols/open-items?tekniker=' + encodeURIComponent(currentUser?.name || '');
     const data = await apiFetch(url);
     // Update home tile counter
     const sub = document.getElementById('open-items-tile-sub');
@@ -3392,7 +3392,7 @@ async function resolveOpenItem(protocolId, itemNr, btn) {
     await apiFetch(`/api/protocols/${protocolId}/resolve`, {
       method: 'PATCH',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({nr: itemNr, by: _currentUser || ''})
+      body: JSON.stringify({nr: itemNr, by: currentUser?.name || ''})
     });
     const row = document.getElementById(`oi-row-${protocolId}-${itemNr}`);
     if (row) {

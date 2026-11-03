@@ -939,10 +939,10 @@ def open_items():
     with get_db() as db:
         today = datetime.now().strftime('%Y-%m-%d')
         if tekniker:
-            # All of today's protocols for this technician
+            # All of today's protocols for this technician (datum = technician-entered date)
             rows = db.execute(
                 'SELECT id, maskin_nr, datum, tekniker, kund, modell, type, items_json, resolved_json '
-                'FROM protocols WHERE LOWER(tekniker)=LOWER(?) AND DATE(saved_at)=? '
+                'FROM protocols WHERE LOWER(tekniker)=LOWER(?) AND datum=? '
                 'ORDER BY saved_at DESC',
                 (tekniker, today)
             ).fetchall()
@@ -958,7 +958,7 @@ def open_items():
             # Admin: all of today's protocols
             rows = db.execute(
                 'SELECT id, maskin_nr, datum, tekniker, kund, modell, type, items_json, resolved_json '
-                'FROM protocols WHERE DATE(saved_at)=? ORDER BY saved_at DESC',
+                'FROM protocols WHERE datum=? ORDER BY saved_at DESC',
                 (today,)
             ).fetchall()
     result = []
