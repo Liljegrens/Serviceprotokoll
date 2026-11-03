@@ -362,6 +362,7 @@
   .check-item.status-ok { background: var(--ok-bg); }
   .check-item.status-bevaka { background: var(--bevaka-bg); }
   .check-item.status-akut { background: var(--akut-bg); }
+  .check-item.status-ej { background: #eceff1; }
   .item-top { display: flex; align-items: flex-start; gap: 10px; }
   .item-nr { font-size: 12px; font-weight: 700; color: var(--gray); min-width: 36px; padding-top: 2px; flex-shrink: 0; }
   .item-label { flex: 1; font-size: 14px; line-height: 1.4; }
@@ -378,6 +379,7 @@
   .radio-opt input[value="1"]:checked + label { background: var(--ok); border-color: var(--ok); color: #fff; }
   .radio-opt input[value="2"]:checked + label { background: var(--bevaka); border-color: var(--bevaka); color: #fff; }
   .radio-opt input[value="3"]:checked + label { background: var(--akut); border-color: var(--akut); color: #fff; }
+  .radio-opt input[value="4"]:checked + label { background: #607d8b; border-color: #607d8b; color: #fff; }
   .radio-opt input[value="ja"]:checked + label,
   .radio-opt input[value="nej"]:checked + label { background: var(--brand); border-color: var(--brand); color: #fff; }
   .radio-opt label:hover { border-color: #90a4ae; }
@@ -579,6 +581,7 @@
     .check-item.status-ok     { background: #f1f8f2 !important; }
     .check-item.status-bevaka { background: #fffbf0 !important; }
     .check-item.status-akut   { background: #fff5f5 !important; }
+    .check-item.status-ej     { background: #f5f5f5 !important; }
 
     .item-top { gap: 4pt; }
     .item-nr { font-size: 7.5pt; min-width: 26pt; }
@@ -594,6 +597,7 @@
     .check-item.status-ok     .item-nr::before { content: '✓ '; color: #2e7d32; }
     .check-item.status-bevaka .item-nr::before { content: '● '; color: #f57f17; }
     .check-item.status-akut   .item-nr::before { content: '▲ '; color: #c62828; }
+    .check-item.status-ej     .item-nr::before { content: '— '; color: #607d8b; }
 
     .comment-box, .comment-box.visible { display: none !important; }
 
@@ -4122,9 +4126,14 @@ function prefillFromProtocol(rec) {
 }
 
 function summarizeStatus(items) {
-  let ok=0, bevaka=0, akut=0;
-  (items||[]).forEach(i => { if(i.status==='1')ok++; else if(i.status==='2')bevaka++; else if(i.status==='3')akut++; });
-  return {ok,bevaka,akut};
+  let ok=0, bevaka=0, akut=0, ej=0;
+  (items||[]).forEach(i => {
+    if(i.status==='1')ok++;
+    else if(i.status==='2')bevaka++;
+    else if(i.status==='3')akut++;
+    else if(i.status==='4')ej++;
+  });
+  return {ok,bevaka,akut,ej};
 }
 
 let _currentModalRec = null;
@@ -4185,6 +4194,23 @@ function renderModalBody(rec) {
     });
     html += '</div>';
   }
+
+  const ejAtk = (rec.items||[]).filter(i=>i.status==='4');
+  if (ejAtk.length) {
+    html += `<div class="modal-section"><h3 style="color:#607d8b;">Ej åtkomliga punkter (${ejAtk.length})</h3>`;
+    ejAtk.forEach(i => {
+      html += `<div class="hist-item-row" style="opacity:0.8;">
+        <span class="hist-item-nr">${i.nr}</span>
+        <span class="hist-item-lbl">${i.label}</span>
+        <span style="display:flex;flex-direction:column;gap:2px;align-items:flex-end;">
+          <span class="badge" style="background:#eceff1;color:#607d8b;">Ej åtkomlig</span>
+          ${i.comment?`<span style="font-size:11px;color:#607d8b;font-style:italic;">${i.comment}</span>`:''}
+        </span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
   html += renderWorkflowPanel(rec);
   const isAdmin = currentUser && currentUser.role === 'admin';
   const hasAnmarkningar = rec.items && rec.items.some(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
@@ -4842,7 +4868,7 @@ function buildItem(item) {
   const lbl = document.createElement('span');
   lbl.className = 'item-label' + (item.indent?' sub':''); lbl.textContent = item.label;
   const rg = document.createElement('div'); rg.className = 'radio-group';
-  [['1','OK'],['2','Bev.'],['3','Akut']].forEach(([val,txt]) => {
+  [['1','OK'],['2','Bev.'],['3','Akut'],['4','Ej åtk.']].forEach(([val,txt]) => {
     const opt = document.createElement('div'); opt.className = 'radio-opt';
     const radio = document.createElement('input');
     radio.type='radio'; radio.name=id; radio.value=val; radio.id=id+'-'+val;
@@ -4920,9 +4946,9 @@ async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {
 }
 
 function onStatusChange(nr, val, div) {
-  div.className = 'check-item'+(val==='1'?' status-ok':val==='2'?' status-bevaka':' status-akut');
+  div.className = 'check-item'+(val==='1'?' status-ok':val==='2'?' status-bevaka':val==='3'?' status-akut':' status-ej');
   const cb = document.getElementById('item-'+nr.replace(/\./g,'_')+'-comment');
-  cb.classList.toggle('visible', val==='2'||val==='3');
+  cb.classList.toggle('visible', val==='2'||val==='3'||val==='4');
   updateSummary();
 }
 
@@ -4931,11 +4957,12 @@ function onStatusChange(nr, val, div) {
 // ═══════════════════════════════════════════════════
 function updateSummary() {
   const radios = document.querySelectorAll('.check-item input[type=radio]:checked');
-  let ok=0,bevaka=0,akut=0; const flagged=[];
+  let ok=0,bevaka=0,akut=0,ej=0; const flagged=[],ejList=[];
   radios.forEach(r => {
     if(r.value==='1')ok++;
     else if(r.value==='2'){bevaka++;flagged.push({radio:r,status:'bevaka'});}
     else if(r.value==='3'){akut++;flagged.push({radio:r,status:'akut'});}
+    else if(r.value==='4'){ej++;ejList.push(r);}
   });
   document.getElementById('cnt-ok').textContent=ok;
   document.getElementById('cnt-bevaka').textContent=bevaka;
@@ -4943,22 +4970,38 @@ function updateSummary() {
   const os=document.getElementById('overall-status');
   if(akut>0){os.className='overall-status akut';os.textContent='⚠ Akuta anmärkningar – åtgärd krävs';}
   else if(bevaka>0){os.className='overall-status bevaka';os.textContent='● Bevakningspunkter noterade – följ upp';}
-  else if(ok>0){os.className='overall-status ok';os.textContent='✓ Allt kontrollerat och godkänt';}
+  else if(ok>0||ej>0){os.className='overall-status ok';os.textContent='✓ Allt kontrollerat och godkänt';}
   else{os.className='overall-status ok';os.textContent='Fyll i kontrollpunkterna ovan';}
   const sn=document.getElementById('summary-notes');
-  if(!flagged.length){sn.innerHTML='';return;}
-  let html='<h3>Anmärkningar</h3>';
-  flagged.forEach(f=>{
-    const itemId=f.radio.name;
-    const nr=itemId.replace('item-','').replace(/_/g,'.');
-    const labelEl=document.querySelector(`#${itemId} .item-label`);
-    const ta=document.querySelector(`#${itemId}-comment textarea`);
-    html+=`<div class="summary-note-item ${f.status}">
-      <div class="snr">Nr ${nr} – ${f.status==='akut'?'🔴 Akut':'🟡 Bevaka'}</div>
-      <div class="stext">${labelEl?labelEl.textContent:''}</div>
-      ${ta&&ta.value.trim()?`<div class="scomment">${ta.value.trim()}</div>`:''}
-    </div>`;
-  });
+  let html='';
+  if(flagged.length){
+    html+='<h3>Anmärkningar</h3>';
+    flagged.forEach(f=>{
+      const itemId=f.radio.name;
+      const nr=itemId.replace('item-','').replace(/_/g,'.');
+      const labelEl=document.querySelector(`#${itemId} .item-label`);
+      const ta=document.querySelector(`#${itemId}-comment textarea`);
+      html+=`<div class="summary-note-item ${f.status}">
+        <div class="snr">Nr ${nr} – ${f.status==='akut'?'🔴 Akut':'🟡 Bevaka'}</div>
+        <div class="stext">${labelEl?labelEl.textContent:''}</div>
+        ${ta&&ta.value.trim()?`<div class="scomment">${ta.value.trim()}</div>`:''}
+      </div>`;
+    });
+  }
+  if(ejList.length){
+    html+=`<h3 style="color:#607d8b;margin-top:${flagged.length?'12px':'0'};">Ej åtkomliga punkter</h3>`;
+    ejList.forEach(r=>{
+      const itemId=r.name;
+      const nr=itemId.replace('item-','').replace(/_/g,'.');
+      const labelEl=document.querySelector(`#${itemId} .item-label`);
+      const ta=document.querySelector(`#${itemId}-comment textarea`);
+      html+=`<div class="summary-note-item" style="background:#eceff1;border-left:3px solid #607d8b;">
+        <div class="snr" style="color:#607d8b;">Nr ${nr} – Ej åtkomlig</div>
+        <div class="stext">${labelEl?labelEl.textContent:''}</div>
+        ${ta&&ta.value.trim()?`<div class="scomment">${ta.value.trim()}</div>`:''}
+      </div>`;
+    });
+  }
   sn.innerHTML=html;
 }
 
@@ -5271,7 +5314,7 @@ function buildBalpItem(item) {
   const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
   const lbl = document.createElement('span'); lbl.className = 'item-label'; lbl.textContent = item.label;
   const rg = document.createElement('div'); rg.className = 'radio-group';
-  [['1','OK'],['2','Bev.'],['3','Akut']].forEach(([val,txt]) => {
+  [['1','OK'],['2','Bev.'],['3','Akut'],['4','Ej åtk.']].forEach(([val,txt]) => {
     const opt = document.createElement('div'); opt.className = 'radio-opt';
     const radio = document.createElement('input');
     radio.type='radio'; radio.name=id; radio.value=val; radio.id=id+'-'+val;
@@ -6118,7 +6161,7 @@ function buildFkItem(item) {
   const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
   const lbl = document.createElement('span'); lbl.className = 'item-label'; lbl.textContent = item.label;
   const rg = document.createElement('div'); rg.className = 'radio-group';
-  [['1','OK'],['2','Bev.'],['3','Akut']].forEach(([val,txt]) => {
+  [['1','OK'],['2','Bev.'],['3','Akut'],['4','Ej åtk.']].forEach(([val,txt]) => {
     const opt = document.createElement('div'); opt.className = 'radio-opt';
     const radio = document.createElement('input');
     radio.type='radio'; radio.name=id; radio.value=val; radio.id=id+'-'+val;
