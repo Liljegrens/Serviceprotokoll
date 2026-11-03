@@ -135,6 +135,18 @@ def init_db():
             db.execute("ALTER TABLE machines ADD COLUMN gasdampare TEXT DEFAULT ''")
         if 'serviceavtal' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN serviceavtal TEXT DEFAULT ''")
+        if 'vantskruv' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN vantskruv TEXT DEFAULT ''")
+        if 'el_intag' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN el_intag TEXT DEFAULT ''")
+        if 'kontaktor' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN kontaktor TEXT DEFAULT ''")
+        if 'motorskydd' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN motorskydd TEXT DEFAULT ''")
+        if 'startnyckel' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN startnyckel TEXT DEFAULT ''")
+        if 'reservdelar_ovrigt' not in cols:
+            db.execute("ALTER TABLE machines ADD COLUMN reservdelar_ovrigt TEXT DEFAULT ''")
         if 'typskylt' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN typskylt TEXT DEFAULT ''")
     # Skapa hydrauliklogg-tabell om den saknas
@@ -430,6 +442,12 @@ def upload_machines():
         cHyds = col('hydraulslangar')
         cGas  = col('gasdämpare') or col('gasdampare')
         cSavt = col('serviceavtal (ggr/år)') or col('serviceavtal')
+        cVant = col('vantskruv (tömningsdörr)') or col('vantskruv')
+        cElIn = col('el-intag') or col('el_intag')
+        cKont = col('kontaktor')
+        cMoto = col('motorskydd')
+        cStar = col('startnyckel')
+        cResv = col('övriga reservdelar') or col('reservdelar_ovrigt')
         cAdr  = col('adress')
         cSta  = col('stad')
         cKont = col('kontakt')
@@ -456,6 +474,12 @@ def upload_machines():
                 'hydraulslangar':cell(row, cHyds),
                 'gasdampare':    cell(row, cGas),
                 'serviceavtal':  cell(row, cSavt) if cSavt is not None else '',
+                'vantskruv':     cell(row, cVant) if cVant is not None else '',
+                'el_intag':      cell(row, cElIn) if cElIn is not None else '',
+                'kontaktor':     cell(row, cKont) if cKont is not None else '',
+                'motorskydd':    cell(row, cMoto) if cMoto is not None else '',
+                'startnyckel':   cell(row, cStar) if cStar is not None else '',
+                'reservdelar_ovrigt': cell(row, cResv) if cResv is not None else '',
                 'adress':        cell(row, cAdr),
                 'stad':          cell(row, cSta),
                 'kontakt':       cell(row, cKont),
@@ -470,11 +494,13 @@ def upload_machines():
             INSERT INTO machines
                 (nr, kund, anlaggning, fabrikat, modell, inkopar, notering, beskrivning,
                  adress, stad, kontakt, telefon, tillvnr, arsmodell, agare,
-                 hydraulfilter, hydraulolja, hydraulslangar, gasdampare, serviceavtal)
+                 hydraulfilter, hydraulolja, hydraulslangar, gasdampare, serviceavtal,
+                 vantskruv, el_intag, kontaktor, motorskydd, startnyckel, reservdelar_ovrigt)
             VALUES
                 (:nr, :kund, :anlaggning, :fabrikat, :modell, :inkopar, :notering, :beskrivning,
                  :adress, :stad, :kontakt, :telefon, :tillvnr, :arsmodell, :agare,
-                 :hydraulfilter, :hydraulolja, :hydraulslangar, :gasdampare, :serviceavtal)
+                 :hydraulfilter, :hydraulolja, :hydraulslangar, :gasdampare, :serviceavtal,
+                 :vantskruv, :el_intag, :kontaktor, :motorskydd, :startnyckel, :reservdelar_ovrigt)
             ON CONFLICT(nr) DO UPDATE SET
                 kund=excluded.kund, anlaggning=excluded.anlaggning,
                 fabrikat=excluded.fabrikat, modell=excluded.modell,
@@ -488,7 +514,13 @@ def upload_machines():
                 hydraulolja=excluded.hydraulolja,
                 hydraulslangar=excluded.hydraulslangar,
                 gasdampare=excluded.gasdampare,
-                serviceavtal=excluded.serviceavtal
+                serviceavtal=excluded.serviceavtal,
+                vantskruv=excluded.vantskruv,
+                el_intag=excluded.el_intag,
+                kontaktor=excluded.kontaktor,
+                motorskydd=excluded.motorskydd,
+                startnyckel=excluded.startnyckel,
+                reservdelar_ovrigt=excluded.reservdelar_ovrigt
         """, machines)
 
     return jsonify({'imported': len(machines)})
@@ -506,7 +538,8 @@ def patch_machine(nr):
     data = request.get_json(force=True)
     allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare',
                'kund', 'anlaggning', 'fabrikat', 'modell', 'tillvnr', 'arsmodell',
-               'adress', 'stad', 'kontakt', 'telefon', 'agare', 'inkopar', 'beskrivning', 'serviceavtal'}
+               'adress', 'stad', 'kontakt', 'telefon', 'agare', 'inkopar', 'beskrivning',
+               'serviceavtal', 'vantskruv', 'el_intag', 'kontaktor', 'motorskydd', 'startnyckel', 'reservdelar_ovrigt'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({'error': 'Inga giltiga fält'}), 400
@@ -1091,10 +1124,12 @@ def export_machines():
     ws.title = 'Maskinregister'
     headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
                'Adress','Stad','Kontakt','Telefon','Ägare','Beskrivning','Notering',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare','Serviceavtal (ggr/år)']
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare','Serviceavtal (ggr/år)',
+               'Vantskruv (tömningsdörr)','El-intag','Kontaktor','Motorskydd','Startnyckel','Övriga reservdelar']
     cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
                'adress','stad','kontakt','telefon','agare','beskrivning','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','serviceavtal']
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','serviceavtal',
+               'vantskruv','el_intag','kontaktor','motorskydd','startnyckel','reservdelar_ovrigt']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
     for ci, h in enumerate(headers, 1):
@@ -1107,7 +1142,7 @@ def export_machines():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,35,35,25,25,25,25,18]
+    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,35,35,25,25,25,25,18,25,20,20,20,20,40]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()

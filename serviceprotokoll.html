@@ -3922,6 +3922,12 @@ async function lookupMachine(val) {
       { label: 'Tillv.nr',     val: m.tillvnr },
       { label: 'Beskrivning',  val: m.beskrivning },
       { label: 'Serviceavtal', val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : '– ej angivet –' },
+      { label: 'Vantskruv', val: m.vantskruv },
+      { label: 'El-intag', val: m.el_intag },
+      { label: 'Kontaktor', val: m.kontaktor },
+      { label: 'Motorskydd', val: m.motorskydd },
+      { label: 'Startnyckel', val: m.startnyckel },
+      { label: 'Övriga reservdelar', val: m.reservdelar_ovrigt },
     ].filter(f => f.val);
 
     infoGrid.innerHTML = fields.map(f => `
@@ -4847,26 +4853,45 @@ async function printRecord(rec) {
       const savtLabel = {'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'}[machine.serviceavtal] || machine.serviceavtal + ' ggr/år';
       serviceavtalHtml = `<div style="background:#e8f5e9;border:0.5pt solid #a5d6a7;border-radius:4pt;padding:5pt 8pt;margin-bottom:8pt;font-size:8.5pt;color:#1b5e20;"><strong>Serviceavtal:</strong> ${savtLabel}</div>`;
     }
-    if (machine && (machine.hydraulfilter || machine.hydraulolja || machine.hydraulslangar)) {
+    const hasKomponenter = machine && (machine.hydraulfilter || machine.hydraulolja || machine.hydraulslangar ||
+      machine.gasdampare || machine.vantskruv || machine.el_intag || machine.kontaktor ||
+      machine.motorskydd || machine.startnyckel || machine.reservdelar_ovrigt);
+    if (hasKomponenter) {
       const senastFilter  = logs.find(l => l.filter)?.datum  || '–';
       const senastOlja    = logs.find(l => l.olja)?.datum    || '–';
       const senastSlangar = logs.find(l => l.slangar)?.datum || '–';
-      const rows = [
+      const hydRows = [
         machine.hydraulfilter  ? `<tr><td>Hydraulfilter</td><td>${machine.hydraulfilter}</td><td>${senastFilter}</td><td>12 mån</td></tr>` : '',
         machine.hydraulolja    ? `<tr><td>Hydraulolja</td><td>${machine.hydraulolja}</td><td>${senastOlja}</td><td>12–24 mån</td></tr>` : '',
         machine.hydraulslangar ? `<tr><td>Hydraulslangar (presscylinder)</td><td>${machine.hydraulslangar}</td><td>${senastSlangar}</td><td>4–5 år</td></tr>` : '',
-      ].join('');
+      ].filter(Boolean).join('');
+      const delRows = [
+        machine.gasdampare   ? `<tr><td>Gasdämpare inkastlock</td><td>${machine.gasdampare}</td></tr>` : '',
+        machine.vantskruv    ? `<tr><td>Vantskruv (tömningsdörr)</td><td>${machine.vantskruv}</td></tr>` : '',
+        machine.el_intag     ? `<tr><td>El-intag</td><td>${machine.el_intag}</td></tr>` : '',
+        machine.kontaktor    ? `<tr><td>Kontaktor</td><td>${machine.kontaktor}</td></tr>` : '',
+        machine.motorskydd   ? `<tr><td>Motorskydd</td><td>${machine.motorskydd}</td></tr>` : '',
+        machine.startnyckel  ? `<tr><td>Startnyckel</td><td>${machine.startnyckel}</td></tr>` : '',
+        machine.reservdelar_ovrigt ? `<tr><td colspan="2" style="font-style:italic;">${machine.reservdelar_ovrigt}</td></tr>` : '',
+      ].filter(Boolean).join('');
       hydraulikHtml = `<div class="section" style="margin-top:10pt;">
-        <h3 style="font-size:9pt;font-weight:700;color:#1a3a5c;border-bottom:0.5pt solid #ccc;padding-bottom:3pt;margin-bottom:5pt;">Hydraulikstatus</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:8.5pt;">
+        <h3 style="font-size:9pt;font-weight:700;color:#1a3a5c;border-bottom:0.5pt solid #ccc;padding-bottom:3pt;margin-bottom:5pt;">Reservdelar och komponenter</h3>
+        ${hydRows ? `<table style="width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:6pt;">
           <thead><tr style="background:#e8eef3;">
-            <th style="text-align:left;padding:3pt 6pt;">Komponent</th>
+            <th style="text-align:left;padding:3pt 6pt;">Hydraulik</th>
             <th style="text-align:left;padding:3pt 6pt;">Art.nr / Typ</th>
             <th style="text-align:left;padding:3pt 6pt;">Senast bytt</th>
             <th style="text-align:left;padding:3pt 6pt;">Intervall</th>
           </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+          <tbody>${hydRows}</tbody>
+        </table>` : ''}
+        ${delRows ? `<table style="width:100%;border-collapse:collapse;font-size:8.5pt;">
+          <thead><tr style="background:#e8eef3;">
+            <th style="text-align:left;padding:3pt 6pt;">Komponent</th>
+            <th style="text-align:left;padding:3pt 6pt;">Art.nr / Beskrivning</th>
+          </tr></thead>
+          <tbody>${delRows}</tbody>
+        </table>` : ''}
       </div>`;
     }
   } catch(e) {}
@@ -5787,7 +5812,7 @@ function renderMaskinkortInfo(m) {
       <button onclick="saveServiceavtal('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara serviceavtal</button>
       <span id="serviceavtal-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
-    <h2 style="margin-top:16px;">Hydraulikspecifikation</h2>
+    <h2 style="margin-top:16px;">Reservdelar och komponenter</h2>
     <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
       <div class="field-group">
         <label>Hydraulfilter (art.nr)</label>
@@ -5798,19 +5823,41 @@ function renderMaskinkortInfo(m) {
         <input type="text" id="mk-hydraulolja" value="${m.hydraulolja||''}" placeholder="T.ex. VG46 – byt var 12–24 mån">
       </div>
       <div class="field-group">
-        <label>Hydraulslangar <span style="font-size:10px;font-weight:400;">(presscylinder) faktura/art.nr</span></label>
+        <label>Hydraulslangar <span style="font-size:10px;font-weight:400;">(presscylinder)</span></label>
         <input type="text" id="mk-hydraulslangar" value="${m.hydraulslangar||''}" placeholder="Art.nr – byt var 4–5 år">
       </div>
-    </div>
-    <h2 style="margin-top:20px;">Inkastlock</h2>
-    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
       <div class="field-group">
-        <label>Gasdämpare (art.nr / beskrivning)</label>
+        <label>Gasdämpare inkastlock</label>
         <input type="text" id="mk-gasdampare" value="${m.gasdampare||''}" placeholder="T.ex. 2× STABILUS 4321AB">
+      </div>
+      <div class="field-group">
+        <label>Vantskruv (tömningsdörr)</label>
+        <input type="text" id="mk-vantskruv" value="${m.vantskruv||''}" placeholder="Art.nr / beskrivning">
+      </div>
+      <div class="field-group">
+        <label>El-intag</label>
+        <input type="text" id="mk-el-intag" value="${m.el_intag||''}" placeholder="Art.nr / typ">
+      </div>
+      <div class="field-group">
+        <label>Kontaktor</label>
+        <input type="text" id="mk-kontaktor" value="${m.kontaktor||''}" placeholder="Art.nr / typ">
+      </div>
+      <div class="field-group">
+        <label>Motorskydd</label>
+        <input type="text" id="mk-motorskydd" value="${m.motorskydd||''}" placeholder="Art.nr / inställning">
+      </div>
+      <div class="field-group">
+        <label>Startnyckel</label>
+        <input type="text" id="mk-startnyckel" value="${m.startnyckel||''}" placeholder="Typ / art.nr">
+      </div>
+      <div class="field-group" style="grid-column:1/-1;">
+        <label>Övriga reservdelar</label>
+        <textarea id="mk-reservdelar-ovrigt" rows="3" placeholder="T.ex. packningar, knivar, lås – en rad per del"
+          style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:Arial,sans-serif;resize:vertical;">${m.reservdelar_ovrigt||''}</textarea>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;">
-      <button onclick="saveHydraulik('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara hydraulikspec</button>
+      <button onclick="saveHydraulik('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara reservdelar</button>
       <span id="hydraulik-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
     <h2 style="margin-top:20px;">Manöverinstruktion</h2>
@@ -5867,10 +5914,16 @@ async function saveServiceavtal(nr) {
 
 async function saveHydraulik(nr) {
   const data = {
-    hydraulfilter:  document.getElementById('mk-hydraulfilter').value.trim(),
-    hydraulolja:    document.getElementById('mk-hydraulolja').value.trim(),
-    hydraulslangar: document.getElementById('mk-hydraulslangar').value.trim(),
-    gasdampare:     document.getElementById('mk-gasdampare').value.trim()
+    hydraulfilter:      document.getElementById('mk-hydraulfilter').value.trim(),
+    hydraulolja:        document.getElementById('mk-hydraulolja').value.trim(),
+    hydraulslangar:     document.getElementById('mk-hydraulslangar').value.trim(),
+    gasdampare:         document.getElementById('mk-gasdampare').value.trim(),
+    vantskruv:          document.getElementById('mk-vantskruv').value.trim(),
+    el_intag:           document.getElementById('mk-el-intag').value.trim(),
+    kontaktor:          document.getElementById('mk-kontaktor').value.trim(),
+    motorskydd:         document.getElementById('mk-motorskydd').value.trim(),
+    startnyckel:        document.getElementById('mk-startnyckel').value.trim(),
+    reservdelar_ovrigt: document.getElementById('mk-reservdelar-ovrigt').value.trim(),
   };
   await fetch('/api/machines/' + encodeURIComponent(nr), {
     method: 'PATCH',
