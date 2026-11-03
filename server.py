@@ -1123,12 +1123,12 @@ def export_machines():
     ws = wb.active
     ws.title = 'Maskinregister'
     headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
-               'Adress','Stad','Kontakt','Telefon','Ägare','Beskrivning','Notering',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare','Serviceavtal (ggr/år)',
+               'Adress','Stad','Kontakt','Telefon','Ägare','Beskrivning','Notering','Serviceavtal (ggr/år)',
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare',
                'Vantskruv (tömningsdörr)','El-intag','Kontaktor','Motorskydd','Startnyckel','Övriga reservdelar']
     cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
-               'adress','stad','kontakt','telefon','agare','beskrivning','notering',
-               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','serviceavtal',
+               'adress','stad','kontakt','telefon','agare','beskrivning','notering','serviceavtal',
+               'hydraulfilter','hydraulolja','hydraulslangar','gasdampare',
                'vantskruv','el_intag','kontaktor','motorskydd','startnyckel','reservdelar_ovrigt']
     header_fill = PatternFill('solid', fgColor='1A3A5C')
     header_font = Font(bold=True, color='FFFFFF', name='Arial', size=10)
@@ -1142,7 +1142,7 @@ def export_machines():
         d = dict(row)
         for ci, col in enumerate(cols, 1):
             ws.cell(row=ri, column=ci, value=d.get(col) or '')
-    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,35,35,25,25,25,25,18,25,20,20,20,20,40]
+    col_widths = [18,30,35,20,20,18,12,30,20,25,18,25,35,35,18,25,25,25,25,25,20,20,20,20,40]
     for ci, w in enumerate(col_widths, 1):
         ws.column_dimensions[ws.cell(row=1, column=ci).column_letter].width = w
     buf = _io.BytesIO()
