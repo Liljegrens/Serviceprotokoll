@@ -3921,7 +3921,7 @@ async function lookupMachine(val) {
       { label: 'Årsmodell',    val: m.arsmodell },
       { label: 'Tillv.nr',     val: m.tillvnr },
       { label: 'Beskrivning',  val: m.beskrivning },
-      { label: 'Serviceavtal', val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : null },
+      { label: 'Serviceavtal', val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : '– ej angivet –' },
     ].filter(f => f.val);
 
     infoGrid.innerHTML = fields.map(f => `
@@ -5735,7 +5735,7 @@ function renderMaskinkortInfo(m) {
     ['Märke', m.fabrikat], ['Modell', m.modell], ['Årsmodell', m.arsmodell],
     ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
     ['Beskrivning', m.beskrivning], ['Notering', m.notering],
-    ['Gasdämpare inkastlock', m.gasdampare]
+    ['Gasdämpare inkastlock', m.gasdampare],
   ].filter(([,v]) => v);
   const kajVal = m.mot_kaj || 'nej';
   document.getElementById('maskinkort-info').innerHTML = `
@@ -5750,6 +5750,23 @@ function renderMaskinkortInfo(m) {
         </div>
         <button onclick="saveMotKaj('${m.nr}')" style="margin-top:8px;padding:4px 12px;font-size:12px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara</button>
       </div>
+    </div>
+    <h2 style="margin-top:16px;">Serviceavtal</h2>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
+      <div class="field-group">
+        <label>Serviceavtal (ggr/år)</label>
+        <select id="mk-serviceavtal" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;background:var(--card);color:var(--fg);">
+          <option value="" ${!m.serviceavtal?'selected':''}>– Inget –</option>
+          <option value="1" ${m.serviceavtal==='1'?'selected':''}>1 gång/år</option>
+          <option value="2" ${m.serviceavtal==='2'?'selected':''}>2 gånger/år</option>
+          <option value="4" ${m.serviceavtal==='4'?'selected':''}>4 gånger/år</option>
+          <option value="6" ${m.serviceavtal==='6'?'selected':''}>6 gånger/år</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+      <button onclick="saveServiceavtal('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara serviceavtal</button>
+      <span id="serviceavtal-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
     <h2 style="margin-top:16px;">Hydraulikspecifikation</h2>
     <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
@@ -5817,6 +5834,16 @@ async function saveMotKaj(nr) {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ mot_kaj: val })
   });
+}
+
+async function saveServiceavtal(nr) {
+  const val = document.getElementById('mk-serviceavtal').value;
+  await fetch('/api/machines/' + encodeURIComponent(nr), {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ serviceavtal: val })
+  });
+  const el = document.getElementById('serviceavtal-saved');
+  el.style.display = 'inline'; setTimeout(() => el.style.display = 'none', 2000);
 }
 
 async function saveHydraulik(nr) {
