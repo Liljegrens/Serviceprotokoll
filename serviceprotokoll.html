@@ -769,7 +769,7 @@
       </div>
       <div class="start-card" onclick="openProtocol('komprimator')">
         <div style="font-size:48px;margin-bottom:12px;">🗜️</div>
-        <h2>Serviceprotokoll Komprimator 2025</h2>
+        <h2>Serviceprotokoll Komprimator</h2>
         <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
       </div>
       <div class="start-card" onclick="openProtocol('vandare')">
@@ -4487,7 +4487,7 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator 2025', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
   // Visa/dölj fält beroende på protokolltyp
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
