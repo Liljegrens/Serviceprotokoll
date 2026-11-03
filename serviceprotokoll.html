@@ -710,18 +710,15 @@
       <div class="tile-label">Egna maskiner</div>
       <div class="tile-sub">Uthyrning & status</div>
     </div>
-<div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
+    <div class="home-tile" onclick="showPage('open-items')">
+      <div class="tile-icon">🔧</div>
+      <div class="tile-label">Öppna anmärkningar</div>
+      <div class="tile-sub" id="open-items-tile-sub">Punkter att åtgärda</div>
+    </div>
+    <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
       <div class="tile-icon">⚙️</div>
       <div class="tile-label">Admin</div>
       <div class="tile-sub">Register & användare</div>
-    </div>
-  </div>
-
-  <!-- Öppna anmärkningar -->
-  <div class="recent-section" id="open-items-section" style="margin-top:28px;">
-    <h3>Öppna anmärkningar</h3>
-    <div class="recent-list" id="open-items-home-list">
-      <div class="recent-empty">Laddar...</div>
     </div>
   </div>
 
@@ -1684,7 +1681,17 @@
   </div>
 </div>
 
-
+<!-- ═══════════ ÖPPNA ANMÄRKNINGAR PAGE ═══════════ -->
+<div id="open-items-page" style="display:none;">
+  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1 style="margin:0;font-size:18px;flex:1;">Öppna anmärkningar</h1>
+    <button onclick="loadOpenItems()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;">↻ Uppdatera</button>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <div id="open-items-list">Laddar…</div>
+  </div>
+</div>
 
 <!-- ═══ NY EGEN MASKIN MODAL ═══ -->
 <div id="ny-egen-maskin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)closeNyEgenMaskin()">
@@ -2644,7 +2651,6 @@ async function doLogin() {
     applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
-    loadOpenItems();
     _checkMaskinParam();
   } catch {
     err.textContent = 'Fel namn eller PIN — försök igen.';
@@ -3088,6 +3094,7 @@ function showPage(page) {
     'offert':             ['offert-page',               'block'],
     'offerter':           ['offerter-page',             'block'],
     'egna-maskiner':      ['egna-maskiner-page',        'block'],
+    'open-items':         ['open-items-page',           'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -3098,6 +3105,7 @@ function showPage(page) {
   if (page === 'fk-overview') loadFkOverview();
   if (page === 'offerter') loadOfferterList();
   if (page === 'egna-maskiner') loadEgnaMaskiner();
+  if (page === 'open-items') loadOpenItems();
   if (page === 'fordonskontroll') openFordonskontroll();
   if (page === 'materialkontroll') openMaterialkontroll();
 }
@@ -3338,44 +3346,46 @@ function filterEgnaMaskiner() {
 }
 
 async function loadOpenItems() {
-  const section = document.getElementById('open-items-section');
-  const list = document.getElementById('open-items-home-list');
-  if (!list) return;
+  const el = document.getElementById('open-items-list');
+  if (!el) return;
+  el.innerHTML = 'Laddar…';
   try {
     const isAdmin = currentUser && currentUser.role === 'admin';
     const url = isAdmin
       ? '/api/protocols/open-items'
       : '/api/protocols/open-items?tekniker=' + encodeURIComponent(currentUser?.name || '');
     const data = await apiFetch(url);
+    // Update home tile counter
+    const sub = document.getElementById('open-items-tile-sub');
+    if (sub) sub.textContent = data.length ? `${data.reduce((s,p)=>s+p.items.length,0)} punkt${data.reduce((s,p)=>s+p.items.length,0)===1?'':'er'} att åtgärda` : 'Inga öppna punkter';
     if (!data.length) {
-      if (section) section.style.display = 'none';
+      el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--gray);"><div style="font-size:48px;margin-bottom:12px;">✓</div><div style="font-size:16px;font-weight:600;">Inga öppna anmärkningar</div><div style="font-size:13px;margin-top:6px;">Alla protokollpunkter är åtgärdade.</div></div>';
       return;
     }
-    if (section) section.style.display = '';
-    list.innerHTML = '';
-    data.forEach(p => {
-      const s = summarizeStatus(p.items);
-      const div = document.createElement('div');
-      div.className = 'recent-item';
-      div.innerHTML = `
-        <span class="recent-icon">🔧</span>
-        <div class="recent-main">
-          <div class="recent-top">
-            <span class="recent-maskin">${p.maskin_nr}</span>
-            <span class="recent-kund">${p.kund||''}</span>
+    el.innerHTML = data.map(p => {
+      const statusColor = s => s==='3'||s==='akut' ? 'var(--akut)' : '#f57f17';
+      const statusLabel = s => s==='3'||s==='akut' ? 'Akut' : 'Bevaka';
+      const statusBg = s => s==='3'||s==='akut' ? 'var(--akut-bg,#fdecea)' : '#fff8e1';
+      const akutCount = p.items.filter(i=>i.status==='3'||i.status==='akut').length;
+      const bevakaCount = p.items.filter(i=>i.status==='2'||i.status==='bevaka').length;
+      const badges = [
+        akutCount ? `<span style="background:var(--akut-bg,#fdecea);color:var(--akut);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">${akutCount} Akut</span>` : '',
+        bevakaCount ? `<span style="background:#fff8e1;color:#f57f17;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;">${bevakaCount} Bevaka</span>` : '',
+      ].filter(Boolean).join(' ');
+      return `<div class="checklist-card" style="margin-bottom:10px;cursor:pointer;" onclick="openProtocolFromId(${p.id})">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;font-size:15px;">${p.maskin_nr}</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:2px;">${p.datum||''} · ${p.tekniker||''} · ${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</div>
           </div>
-          <div class="recent-sub">${p.datum||''} · ${p.tekniker||'–'} · ${p.type==='flygande'?'Flygande service':'Verkstad'}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${badges}
+            <span style="font-size:13px;color:var(--brand);font-weight:600;">Öppna →</span>
+          </div>
         </div>
-        <div class="recent-badges">
-          ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
-          ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
-        </div>`;
-      div.onclick = () => openProtocolFromId(p.id);
-      list.appendChild(div);
-    });
-  } catch(e) {
-    if (section) section.style.display = 'none';
-  }
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda anmärkningar.</p>'; }
 }
 
 async function openProtocolFromId(protocolId) {
