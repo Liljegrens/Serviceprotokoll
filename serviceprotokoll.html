@@ -740,7 +740,7 @@
   </div>
   <div style="background:linear-gradient(160deg,var(--brand) 0%,var(--brand-light) 100%);padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;">
     <div class="start-cards">
-      <div class="start-card" onclick="openProtocol('verkstad')">
+      <div class="start-card" data-protocol="verkstad" onclick="openProtocol('verkstad')">
         <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
           <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
           <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
@@ -748,7 +748,7 @@
         <h2>Verkstadsprotokoll Komprimator</h2>
         <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
       </div>
-      <div class="start-card" onclick="openProtocol('flygande')">
+      <div class="start-card" data-protocol="flygande" onclick="openProtocol('flygande')">
         <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
           <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
           <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
@@ -756,43 +756,43 @@
         <h2>Flygande protokoll Komprimator</h2>
         <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
       </div>
-      <div class="start-card" onclick="openLeverans()">
+      <div class="start-card" data-protocol="leverans" onclick="openLeverans()">
         <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
         <div class="icon">📦</div>
         <h2>Leveransgodkännande Ragn-Sells</h2>
         <p>Typ 3 · Överlämning av utrustning till kund</p>
       </div>
-      <div class="start-card" onclick="openBalp()">
+      <div class="start-card" data-protocol="balp" onclick="openBalp()">
         <img src="/balp-maskin.png" alt="Balpressmaskin" style="height:80px;object-fit:contain;margin-bottom:12px;">
         <h2>Serviceprotokoll Balpressar</h2>
         <p>Typ 4 · Serviceprotokoll för balpressar</p>
       </div>
-      <div class="start-card" onclick="openProtocol('komprimator')">
+      <div class="start-card" data-protocol="komprimator" onclick="openProtocol('komprimator')">
         <div style="font-size:48px;margin-bottom:12px;">🗜️</div>
         <h2>Serviceprotokoll Komprimator</h2>
         <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
       </div>
-      <div class="start-card" onclick="openProtocol('vandare')">
+      <div class="start-card" data-protocol="vandare" onclick="openProtocol('vandare')">
         <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
         <h2>Serviceprotokoll Komprimator</h2>
         <p>Typ 6 · R-S – fullständigt protokoll (röda + svarta punkter)</p>
       </div>
-      <div class="start-card" onclick="openProtocol('vandare-kaly')">
+      <div class="start-card" data-protocol="vandare-kaly" onclick="openProtocol('vandare-kaly')">
         <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
         <h2>Serviceprotokoll KÄLY</h2>
         <p>Typ 7 · R-S Käly – röda siffror (förenklat protokoll)</p>
       </div>
-      <div class="start-card" onclick="openProtocol('odourmikko')">
+      <div class="start-card" data-protocol="odourmikko" onclick="openProtocol('odourmikko')">
         <div class="icon">💨</div>
         <h2>Serviceprotokoll Vakuumaggregat</h2>
         <p>Typ 8 · OdourMikko 50-100 luktborttagning</p>
       </div>
-      <div class="start-card" onclick="openInstallation()">
+      <div class="start-card" data-protocol="installation" onclick="openInstallation()">
         <div class="icon">🔧</div>
         <h2>Installationsprotokoll Komprimator</h2>
         <p>Typ 9 · Montageprotokoll vid nyinstallation</p>
       </div>
-      <div class="start-card" onclick="openProtocol('lyftbord')">
+      <div class="start-card" data-protocol="lyftbord" onclick="openProtocol('lyftbord')">
         <div style="font-size:48px;margin-bottom:12px;">⬆️</div>
         <h2>Serviceprotokoll Lyftbord</h2>
         <p>Typ 10 · Hydrauliskt saxbord – hydraulik, mekanik, el och säkerhet</p>
@@ -961,6 +961,45 @@
 
     <div class="recent-section" style="margin-top:20px;">
       <h3>Fordonskontroller <button class="load-btn" style="margin-left:12px;font-size:12px;" onclick="showPage('fk-overview')">Öppna →</button></h3>
+    </div>
+
+    <div class="recent-section" style="margin-top:20px;">
+      <h3>Synlighet för tekniker</h3>
+      <p style="font-size:13px;color:var(--gray);margin-bottom:14px;">Välj vilka protokolltyper som ska vara <strong>dolda</strong> för teknikerna. Admin ser alltid alla.</p>
+      <div id="protokoll-toggle-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="verkstad" id="ptoggle-verkstad"> Verkstadsprotokoll Komprimator (Typ 1)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="flygande" id="ptoggle-flygande"> Flygande protokoll Komprimator (Typ 2)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="leverans" id="ptoggle-leverans"> Leveransgodkännande Ragn-Sells (Typ 3)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="balp" id="ptoggle-balp"> Serviceprotokoll Balpressar (Typ 4)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="komprimator" id="ptoggle-komprimator"> Serviceprotokoll Komprimator (Typ 5)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="vandare" id="ptoggle-vandare"> Serviceprotokoll Komprimator R-S (Typ 6)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="vandare-kaly" id="ptoggle-vandare-kaly"> Serviceprotokoll KÄLY R-S (Typ 7)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="odourmikko" id="ptoggle-odourmikko"> Serviceprotokoll Vakuumaggregat (Typ 8)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="installation" id="ptoggle-installation"> Installationsprotokoll Komprimator (Typ 9)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
+          <input type="checkbox" data-ptype="lyftbord" id="ptoggle-lyftbord"> Serviceprotokoll Lyftbord (Typ 10)
+        </label>
+      </div>
+      <button onclick="saveProtokollSynlighet()" style="padding:10px 20px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">💾 Spara inställningar</button>
+      <span id="ptoggle-msg" style="display:none;margin-left:12px;font-size:13px;font-weight:700;color:var(--ok);"></span>
     </div>
   </div>
 </div>
@@ -2227,7 +2266,7 @@ async function openMaskinReadOnly(nr) {
   }
 }
 
-function applyRoleUI() {
+async function applyRoleUI() {
   const isAdmin = currentUser && currentUser.role === 'admin';
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
   const regBtn = document.getElementById('reg-upload-btn');
@@ -2238,6 +2277,44 @@ function applyRoleUI() {
   if (nyMaskinBtn) nyMaskinBtn.style.display = isAdmin ? 'inline-block' : 'none';
   const fordonBtn = document.getElementById('fordon-upload-btn');
   if (fordonBtn) fordonBtn.style.display = isAdmin ? 'inline-block' : 'none';
+
+  // Hämta dolda protokoll och applicera för tekniker
+  try {
+    const dolda = await apiFetch('/api/settings/tekniker-protokoll');
+    document.querySelectorAll('.start-card[data-protocol]').forEach(card => {
+      const ptype = card.getAttribute('data-protocol');
+      if (!isAdmin && dolda.includes(ptype)) {
+        card.style.display = 'none';
+      } else {
+        card.style.display = '';
+      }
+    });
+  } catch {}
+}
+
+async function loadProtokollSynlighet() {
+  try {
+    const dolda = await apiFetch('/api/settings/tekniker-protokoll');
+    document.querySelectorAll('#protokoll-toggle-list input[data-ptype]').forEach(cb => {
+      cb.checked = dolda.includes(cb.getAttribute('data-ptype'));
+    });
+  } catch {}
+}
+
+async function saveProtokollSynlighet() {
+  const dolda = [];
+  document.querySelectorAll('#protokoll-toggle-list input[data-ptype]').forEach(cb => {
+    if (cb.checked) dolda.push(cb.getAttribute('data-ptype'));
+  });
+  try {
+    await apiFetch('/api/settings/tekniker-protokoll', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(dolda) });
+    const msg = document.getElementById('ptoggle-msg');
+    msg.textContent = 'Sparat!';
+    msg.style.display = 'inline';
+    setTimeout(() => { msg.style.display = 'none'; }, 2500);
+  } catch {
+    alert('Kunde inte spara inställningar.');
+  }
 }
 
 function loadUsers() {
@@ -3094,7 +3171,7 @@ function showPage(page) {
     if (el) el.style.display = (page === key) ? flex : 'none';
   });
   if (page === 'maskiner') loadMaskiner();
-  if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); }
+  if (page === 'admin') { checkRegisterStatus(); checkFordonRegisterStatus(); loadUsers(); loadProtokollSynlighet(); }
   if (page === 'fk-overview') loadFkOverview();
   if (page === 'offerter') loadOfferterList();
   if (page === 'egna-maskiner') loadEgnaMaskiner();
