@@ -2129,6 +2129,7 @@ async function openMaskinReadOnly(nr) {
       ['Årsmodell',    machine.arsmodell],
       ['Tillv.nr',     machine.tillvnr],
       ['Senast service', lastService],
+      ['Serviceavtal', machine.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[machine.serviceavtal] || machine.serviceavtal+' ggr/år') : null],
     ].filter(([,v]) => v);
 
     const kontaktFields = [
@@ -3920,6 +3921,7 @@ async function lookupMachine(val) {
       { label: 'Årsmodell',    val: m.arsmodell },
       { label: 'Tillv.nr',     val: m.tillvnr },
       { label: 'Beskrivning',  val: m.beskrivning },
+      { label: 'Serviceavtal', val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : null },
     ].filter(f => f.val);
 
     infoGrid.innerHTML = fields.map(f => `
