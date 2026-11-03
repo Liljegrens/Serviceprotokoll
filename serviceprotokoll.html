@@ -710,6 +710,11 @@
       <div class="tile-label">Egna maskiner</div>
       <div class="tile-sub">Uthyrning & status</div>
     </div>
+    <div class="home-tile" onclick="showPage('open-items')">
+      <div class="tile-icon">🔧</div>
+      <div class="tile-label">Öppna anmärkningar</div>
+      <div class="tile-sub" id="open-items-tile-sub">Punkter att åtgärda</div>
+    </div>
     <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
       <div class="tile-icon">⚙️</div>
       <div class="tile-label">Admin</div>
@@ -1657,12 +1662,34 @@
     <a href="/api/egna-maskiner/export" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;">↓ Excel</a>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <input id="egna-sok" type="search" placeholder="🔍 Sök maskin (nr, fabrikat, kund, adress…)" oninput="filterEgnaMaskiner()"
+      style="width:100%;box-sizing:border-box;padding:10px 14px;font-size:14px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);margin-bottom:12px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--card);border-radius:10px;border:1.5px dashed var(--border);">
       <span style="font-size:13px;color:var(--gray);flex:1;">Importera från Excel:</span>
       <input type="file" id="egna-maskiner-import-file" accept=".xlsx" style="font-size:13px;">
       <button onclick="importEgnaMaskiner()" style="background:var(--brand);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;">Importera</button>
     </div>
     <div id="egna-maskiner-list">Laddar…</div>
+  </div>
+</div>
+
+<!-- ═══ MASKINKORT OVERLAY ═══ -->
+<div id="egen-maskin-kort-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;overflow-y:auto;padding:24px 16px;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border-radius:14px;max-width:640px;margin:0 auto;padding:24px;position:relative;">
+    <button onclick="document.getElementById('egen-maskin-kort-overlay').style.display='none'" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">✕</button>
+    <div id="egen-maskin-kort-body">Laddar…</div>
+  </div>
+</div>
+
+<!-- ═══════════ ÖPPNA ANMÄRKNINGAR PAGE ═══════════ -->
+<div id="open-items-page" style="display:none;">
+  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1 style="margin:0;font-size:18px;flex:1;">Öppna anmärkningar</h1>
+    <button onclick="loadOpenItems()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;">↻ Uppdatera</button>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:16px;">
+    <div id="open-items-list">Laddar…</div>
   </div>
 </div>
 
@@ -2045,6 +2072,7 @@ async function initAuth() {
     applyRoleUI();
     checkRegisterStatus();
     loadRecentProtocols();
+    loadOpenItems();
     _checkMaskinParam();
   }
 }
@@ -3066,6 +3094,7 @@ function showPage(page) {
     'offert':             ['offert-page',               'block'],
     'offerter':           ['offerter-page',             'block'],
     'egna-maskiner':      ['egna-maskiner-page',        'block'],
+    'open-items':         ['open-items-page',           'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -3076,6 +3105,7 @@ function showPage(page) {
   if (page === 'fk-overview') loadFkOverview();
   if (page === 'offerter') loadOfferterList();
   if (page === 'egna-maskiner') loadEgnaMaskiner();
+  if (page === 'open-items') loadOpenItems();
   if (page === 'fordonskontroll') openFordonskontroll();
   if (page === 'materialkontroll') openMaterialkontroll();
 }
@@ -3260,44 +3290,197 @@ function updateOfferTotal() {
 
 // ═══════════ EGNA MASKINER JS ═══════════
 
+let _egnaMaskinerCache = [];
+
 async function loadEgnaMaskiner() {
   const el = document.getElementById('egna-maskiner-list');
   el.innerHTML = 'Laddar…';
   try {
-    const maskiner = await apiFetch('/api/egna-maskiner');
-    if (!maskiner.length) {
-      el.innerHTML = '<p style="color:var(--gray);text-align:center;padding:40px 0;">Inga maskiner registrerade än.</p>';
-      return;
-    }
-    el.innerHTML = maskiner.map(m => {
-      const uthyrd = m.status === 'uthyrd';
-      const statusBadge = uthyrd
-        ? `<span style="background:#fff8e1;color:#f57f17;border:1px solid #f57f17;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">● Uthyrd – ${m.uthyrd_till||''}</span>`
-        : `<span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d32;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">✓ Ledig</span>`;
-      return `<div class="checklist-card" style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;">
-            <div style="font-weight:700;font-size:15px;">${m.nr} ${m.fabrikat ? '· '+m.fabrikat : ''} ${m.modell ? m.modell : ''}</div>
-            ${m.beskrivning ? `<div style="font-size:13px;color:var(--gray);margin-top:2px;">${m.beskrivning}</div>` : ''}
-            ${m.adress ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">📍 ${m.adress}</div>` : ''}
-            ${m.kontakt ? `<div style="font-size:12px;color:var(--gray);margin-top:1px;">👤 ${m.kontakt}</div>` : ''}
-            ${uthyrd && m.uthyrd_datum ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">Ut: ${m.uthyrd_datum}</div>` : ''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
-            ${statusBadge}
-            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-              ${uthyrd
-                ? `<button onclick="aterlamnadMaskin('${m.nr}')" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">✓ Återlämnad</button>`
-                : `<button onclick="openHyraUt('${m.nr}')" style="background:var(--brand);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Hyr ut</button>`}
-              <button onclick="editEgenMaskin('${m.nr}')" style="background:none;border:1.5px solid var(--border);color:var(--fg);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">✏ Redigera</button>
-              <button onclick="visaUthyrningslogg('${m.nr}')" style="background:none;border:1.5px solid var(--border);color:var(--gray);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">📋 Logg</button>
-            </div>
+    _egnaMaskinerCache = await apiFetch('/api/egna-maskiner');
+    renderEgnaMaskinerList(_egnaMaskinerCache);
+  } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda maskiner.</p>'; }
+}
+
+function renderEgnaMaskinerList(maskiner) {
+  const el = document.getElementById('egna-maskiner-list');
+  if (!maskiner.length) {
+    el.innerHTML = '<p style="color:var(--gray);text-align:center;padding:40px 0;">Inga maskiner matchar sökningen.</p>';
+    return;
+  }
+  el.innerHTML = maskiner.map(m => {
+    const uthyrd = m.status === 'uthyrd';
+    const statusBadge = uthyrd
+      ? `<span style="background:#fff8e1;color:#f57f17;border:1px solid #f57f17;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">● Uthyrd – ${m.uthyrd_till||''}</span>`
+      : `<span style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d32;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">✓ Ledig</span>`;
+    const nr = m.nr.replace(/'/g, "\\'");
+    return `<div class="checklist-card" style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;cursor:pointer;" onclick="openEgenMaskinKort('${nr}')">
+          <div style="font-weight:700;font-size:15px;">${m.nr}${m.fabrikat ? ' · '+m.fabrikat : ''}${m.modell ? ' '+m.modell : ''}</div>
+          ${m.beskrivning ? `<div style="font-size:13px;color:var(--gray);margin-top:2px;">${m.beskrivning}</div>` : ''}
+          ${m.adress ? `<div style="font-size:12px;color:var(--gray);margin-top:2px;">📍 ${m.adress}</div>` : ''}
+          ${m.kontakt ? `<div style="font-size:12px;color:var(--gray);margin-top:1px;">👤 ${m.kontakt}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
+          ${statusBadge}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+            ${uthyrd
+              ? `<button onclick="aterlamnadMaskin('${nr}')" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">✓ Återlämnad</button>`
+              : `<button onclick="openHyraUt('${nr}')" style="background:var(--brand);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Hyr ut</button>`}
+            <button onclick="editEgenMaskin('${nr}')" style="background:none;border:1.5px solid var(--border);color:var(--fg);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">✏</button>
           </div>
         </div>
-        <div id="logg-${m.nr.replace(/[^a-z0-9]/gi,'_')}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterEgnaMaskiner() {
+  const q = (document.getElementById('egna-sok')?.value || '').toLowerCase();
+  if (!q) { renderEgnaMaskinerList(_egnaMaskinerCache); return; }
+  const filtered = _egnaMaskinerCache.filter(m =>
+    [m.nr, m.fabrikat, m.modell, m.beskrivning, m.adress, m.kontakt, m.uthyrd_till, m.notering]
+      .some(v => v && v.toLowerCase().includes(q))
+  );
+  renderEgnaMaskinerList(filtered);
+}
+
+async function loadOpenItems() {
+  const el = document.getElementById('open-items-list');
+  if (!el) return;
+  el.innerHTML = 'Laddar…';
+  try {
+    const isAdmin = _currentRole === 'admin';
+    const url = isAdmin
+      ? '/api/protocols/open-items'
+      : '/api/protocols/open-items?tekniker=' + encodeURIComponent(_currentUser || '');
+    const data = await apiFetch(url);
+    // Update home tile counter
+    const sub = document.getElementById('open-items-tile-sub');
+    if (sub) sub.textContent = data.length ? `${data.reduce((s,p)=>s+p.items.length,0)} punkt${data.reduce((s,p)=>s+p.items.length,0)===1?'':'er'} att åtgärda` : 'Inga öppna punkter';
+    if (!data.length) {
+      el.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--gray);"><div style="font-size:48px;margin-bottom:12px;">✓</div><div style="font-size:16px;font-weight:600;">Inga öppna anmärkningar</div><div style="font-size:13px;margin-top:6px;">Alla protokollpunkter är åtgärdade.</div></div>';
+      return;
+    }
+    el.innerHTML = data.map(p => {
+      const statusColor = s => s==='3'||s==='akut' ? 'var(--akut)' : '#f57f17';
+      const statusLabel = s => s==='3'||s==='akut' ? 'Akut' : 'Bevaka';
+      const statusBg = s => s==='3'||s==='akut' ? 'var(--akut-bg,#fdecea)' : '#fff8e1';
+      return `<div class="checklist-card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;min-width:160px;">
+            <div style="font-weight:700;font-size:15px;">${p.maskin_nr}</div>
+            <div style="font-size:12px;color:var(--gray);">${p.datum||''} · ${p.tekniker||''} · ${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</div>
+          </div>
+        </div>
+        ${p.items.map(item => `
+          <div id="oi-row-${p.id}-${item.nr}" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);flex-wrap:wrap;">
+            <span style="background:${statusBg(item.status)};color:${statusColor(item.status)};border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0;">${statusLabel(item.status)}</span>
+            <span style="flex:1;font-size:13px;">${item.namn||item.name||item.nr}</span>
+            ${item.notering ? `<span style="font-size:12px;color:var(--gray);font-style:italic;">${item.notering}</span>` : ''}
+            <button onclick="resolveOpenItem(${p.id},'${item.nr}',this)" style="background:var(--ok);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">✓ Åtgärdat</button>
+          </div>`).join('')}
       </div>`;
     }).join('');
-  } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda maskiner.</p>'; }
+  } catch(e) { el.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda anmärkningar.</p>'; }
+}
+
+async function resolveOpenItem(protocolId, itemNr, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    await apiFetch(`/api/protocols/${protocolId}/resolve`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({nr: itemNr, by: _currentUser || ''})
+    });
+    const row = document.getElementById(`oi-row-${protocolId}-${itemNr}`);
+    if (row) {
+      row.style.opacity = '0';
+      row.style.transition = 'opacity 0.3s';
+      setTimeout(() => {
+        row.remove();
+        // If card is empty of rows, reload
+        loadOpenItems();
+      }, 300);
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✓ Åtgärdat';
+    alert('Kunde inte markera som åtgärdat.');
+  }
+}
+
+async function openEgenMaskinKort(nr) {
+  const overlay = document.getElementById('egen-maskin-kort-overlay');
+  const body = document.getElementById('egen-maskin-kort-body');
+  overlay.style.display = 'flex';
+  body.innerHTML = 'Laddar…';
+  try {
+    const [m, protokoll] = await Promise.all([
+      apiFetch('/api/egna-maskiner/' + encodeURIComponent(nr)),
+      fetch('/api/protocols/' + encodeURIComponent(nr)).then(r => r.ok ? r.json() : []).catch(() => [])
+    ]);
+    const uthyrd = m.status === 'uthyrd';
+    const log = m.uthyrningslogg || [];
+    body.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:20px;font-weight:700;color:var(--brand);">${m.nr}</div>
+            <div style="font-size:14px;color:var(--gray);">${[m.fabrikat,m.modell].filter(Boolean).join(' · ')}</div>
+          </div>
+          <span style="background:${uthyrd?'#fff8e1':'#e8f5e9'};color:${uthyrd?'#f57f17':'#2e7d32'};border:1px solid ${uthyrd?'#f57f17':'#2e7d32'};border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">
+            ${uthyrd ? '● Uthyrd – '+m.uthyrd_till : '✓ Ledig'}
+          </span>
+        </div>
+      </div>
+
+      ${m.beskrivning||m.adress||m.kontakt ? `<div class="checklist-card" style="margin-bottom:12px;">
+        ${m.beskrivning?`<div style="font-size:13px;margin-bottom:6px;">${m.beskrivning}</div>`:''}
+        ${m.adress?`<div style="font-size:13px;">📍 ${m.adress}</div>`:''}
+        ${m.kontakt?`<div style="font-size:13px;margin-top:4px;">👤 ${m.kontakt}</div>`:''}
+        ${m.notering?`<div style="font-size:12px;color:var(--gray);margin-top:6px;font-style:italic;">${m.notering}</div>`:''}
+      </div>` : ''}
+
+      ${m.hydraulfilter||m.hydraulolja||m.hydraulslangar||m.gasdampare ? `<div class="checklist-card" style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Komponenter</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          ${m.hydraulfilter?`<div><div style="font-size:10px;color:var(--gray);">Hydraulfilter</div><div style="font-size:13px;">${m.hydraulfilter}</div></div>`:''}
+          ${m.hydraulolja?`<div><div style="font-size:10px;color:var(--gray);">Hydraulolja</div><div style="font-size:13px;">${m.hydraulolja}</div></div>`:''}
+          ${m.hydraulslangar?`<div><div style="font-size:10px;color:var(--gray);">Hydraulslangar</div><div style="font-size:13px;">${m.hydraulslangar}</div></div>`:''}
+          ${m.gasdampare?`<div><div style="font-size:10px;color:var(--gray);">Gasdämpare</div><div style="font-size:13px;">${m.gasdampare}</div></div>`:''}
+        </div>
+      </div>` : ''}
+
+      <div class="checklist-card" style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Uthyrningshistorik</div>
+        ${log.length ? log.map(l=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;">
+          <span style="font-weight:600;">${l.kund}</span>
+          <span style="color:var(--gray);">Ut: ${l.datum_ut||'–'}</span>
+          <span style="color:var(--gray);">In: ${l.datum_in||'pågående'}</span>
+          ${l.notering?`<span style="font-style:italic;color:var(--gray);">${l.notering}</span>`:''}
+        </div>`).join('') : '<p style="font-size:13px;color:var(--gray);">Ingen historik.</p>'}
+      </div>
+
+      <div class="checklist-card">
+        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Serviceprotokoll</div>
+        ${Array.isArray(protokoll) && protokoll.length ? protokoll.slice(0,10).map(p=>`
+          <div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <span style="color:var(--gray);">${p.datum||'–'}</span>
+            <span style="font-weight:600;">${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</span>
+            <span style="color:var(--gray);">${p.tekniker||''}</span>
+            <span style="background:${(p.workflow_status==='hanterad')?'var(--ok-bg)':'#fff8e1'};color:${(p.workflow_status==='hanterad')?'var(--ok)':'#f57f17'};border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;">${p.workflow_status==='hanterad'?'Hanterad':'Inkommen'}</span>
+          </div>`).join('') : '<p style="font-size:13px;color:var(--gray);">Inga protokoll registrerade.</p>'}
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        ${uthyrd
+          ? `<button onclick="aterlamnadMaskin('${nr}');document.getElementById('egen-maskin-kort-overlay').style.display='none'" style="flex:1;padding:11px;background:var(--ok);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">✓ Återlämnad</button>`
+          : `<button onclick="document.getElementById('egen-maskin-kort-overlay').style.display='none';openHyraUt('${nr}')" style="flex:1;padding:11px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Hyr ut</button>`}
+        <button onclick="document.getElementById('egen-maskin-kort-overlay').style.display='none';editEgenMaskin('${nr}')" style="padding:11px 18px;border:1.5px solid var(--border);background:none;color:var(--fg);border-radius:8px;font-weight:600;cursor:pointer;">✏ Redigera</button>
+      </div>`;
+  } catch(e) { body.innerHTML = '<p style="color:var(--akut);">Kunde inte ladda maskinkort.</p>'; }
 }
 
 function openNyEgenMaskin() {

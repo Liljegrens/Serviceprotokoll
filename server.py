@@ -933,6 +933,54 @@ def resolve_item(protocol_id):
                    (json.dumps(resolved, ensure_ascii=False), protocol_id))
     return jsonify({'resolved': resolved})
 
+@app.route('/api/protocols/open-items', methods=['GET'])
+def open_items():
+    tekniker = request.args.get('tekniker', '').strip()
+    with get_db() as db:
+        today = datetime.now().strftime('%Y-%m-%d')
+        if tekniker:
+            # All of today's protocols for this technician
+            rows = db.execute(
+                'SELECT id, maskin_nr, datum, tekniker, kund, modell, type, items_json, resolved_json '
+                'FROM protocols WHERE LOWER(tekniker)=LOWER(?) AND DATE(saved_at)=? '
+                'ORDER BY saved_at DESC',
+                (tekniker, today)
+            ).fetchall()
+            # Fall back to absolute latest if nothing today
+            if not rows:
+                row = db.execute(
+                    'SELECT id, maskin_nr, datum, tekniker, kund, modell, type, items_json, resolved_json '
+                    'FROM protocols WHERE LOWER(tekniker)=LOWER(?) ORDER BY saved_at DESC LIMIT 1',
+                    (tekniker,)
+                ).fetchone()
+                rows = [row] if row else []
+        else:
+            # Admin: all of today's protocols
+            rows = db.execute(
+                'SELECT id, maskin_nr, datum, tekniker, kund, modell, type, items_json, resolved_json '
+                'FROM protocols WHERE DATE(saved_at)=? ORDER BY saved_at DESC',
+                (today,)
+            ).fetchall()
+    result = []
+    for row in rows:
+        items = json.loads(row['items_json'] or '[]')
+        resolved = json.loads(row['resolved_json'] or '{}')
+        open_anm = [i for i in items
+                    if i.get('status') in ('2','3','bevaka','akut')
+                    and str(i.get('nr','')) not in resolved]
+        if open_anm:
+            result.append({
+                'id': row['id'],
+                'maskin_nr': row['maskin_nr'],
+                'datum': row['datum'],
+                'tekniker': row['tekniker'],
+                'kund': row['kund'],
+                'modell': row['modell'],
+                'type': row['type'],
+                'items': open_anm,
+            })
+    return jsonify(result)
+
 # ── Workflow ──────────────────────────────────────────────────
 
 WORKFLOW_STEPS = ['inkommen', 'hanterad']
