@@ -3989,16 +3989,18 @@ async function lookupMachine(val) {
     document.getElementById('f-kund').value = m.agare || m.kund || '';
 
     // Build info card
-    const fields = [
+    const basFields = [
       { label: 'Kund',          val: m.kund },
       { label: 'Adress',        val: [m.adress, m.stad].filter(Boolean).join(', ') },
       { label: 'Kontaktperson', val: m.kontakt },
       { label: 'Telefon',       val: m.telefon, tel: true },
       { label: 'Märke / Typ',   val: modStr },
-      { label: 'Årsmodell',    val: m.arsmodell },
-      { label: 'Tillv.nr',     val: m.tillvnr },
-      { label: 'Beskrivning',  val: m.beskrivning },
-      { label: 'Serviceavtal', val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : '– ej angivet –' },
+      { label: 'Årsmodell',     val: m.arsmodell },
+      { label: 'Tillv.nr',      val: m.tillvnr },
+      { label: 'Beskrivning',   val: m.beskrivning },
+      { label: 'Serviceavtal',  val: m.serviceavtal ? ({'1':'1 gång/år','2':'2 ggr/år','4':'4 ggr/år','6':'6 ggr/år'}[m.serviceavtal] || m.serviceavtal+' ggr/år') : '– ej angivet –' },
+    ];
+    const resFields = [
       { label: 'Vantskruv', val: m.vantskruv },
       { label: 'El-intag', val: m.el_intag },
       { label: 'Kontaktor', val: m.kontaktor },
@@ -4006,13 +4008,14 @@ async function lookupMachine(val) {
       { label: 'Startnyckel', val: m.startnyckel },
       { label: 'Övriga reservdelar', val: m.reservdelar_ovrigt },
     ].filter(f => f.val);
+    const fields = [...basFields, ...resFields];
 
     infoGrid.innerHTML = fields.map(f => `
       <div class="mi-field">
         <div class="mi-label">${f.label}</div>
-        <div class="mi-val">${f.tel && f.val
+        <div class="mi-val" style="${!f.val ? 'color:#aaa;font-style:italic;' : ''}">${f.tel && f.val
           ? `<a href="tel:${f.val.replace(/\s/g,'')}">${f.val}</a>`
-          : f.val}</div>
+          : (f.val || '–')}</div>
       </div>`).join('');
 
 
