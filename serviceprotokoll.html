@@ -5831,26 +5831,36 @@ async function openMaskinkort(nr) {
 
 function renderMaskinkortInfo(m) {
   if (!m) { document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Maskin ej hittad i register.</div>'; return; }
-  const fields = [
-    ['Objektnummer', m.nr], ['Kund', m.kund], ['Anläggning', m.anlaggning],
-    ['Adress', [m.adress, m.stad].filter(Boolean).join(', ')],
-    ['Märke', m.fabrikat], ['Modell', m.modell], ['Årsmodell', m.arsmodell],
-    ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
-    ['Beskrivning', m.beskrivning], ['Notering', m.notering],
-  ];
   const kajVal = m.mot_kaj || 'nej';
+  const inp = (id, val, ph='') => `<input type="text" id="${id}" value="${(val||'').replace(/"/g,'&quot;')}" placeholder="${ph}" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">`;
   document.getElementById('maskinkort-info').innerHTML = `
     <h2>Maskinuppgifter</h2>
     <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
-      ${fields.map(([l,v]) => `<div class="field-group"><label>${l}</label><div style="font-size:14px;padding:6px 0;color:#212121;">${v}</div></div>`).join('')}
+      <div class="field-group"><label>Kund</label>${inp('mki-kund', m.kund)}</div>
+      <div class="field-group"><label>Anläggning</label>${inp('mki-anlaggning', m.anlaggning)}</div>
+      <div class="field-group"><label>Adress</label>${inp('mki-adress', m.adress)}</div>
+      <div class="field-group"><label>Stad</label>${inp('mki-stad', m.stad)}</div>
+      <div class="field-group"><label>Märke / Fabrikat</label>${inp('mki-fabrikat', m.fabrikat)}</div>
+      <div class="field-group"><label>Modell</label>${inp('mki-modell', m.modell)}</div>
+      <div class="field-group"><label>Årsmodell</label>${inp('mki-arsmodell', m.arsmodell)}</div>
+      <div class="field-group"><label>Tillv.nr</label>${inp('mki-tillvnr', m.tillvnr)}</div>
+      <div class="field-group"><label>Kontakt</label>${inp('mki-kontakt', m.kontakt)}</div>
+      <div class="field-group"><label>Telefon</label>${inp('mki-telefon', m.telefon)}</div>
+      <div class="field-group"><label>Ägare</label>${inp('mki-agare', m.agare)}</div>
+      <div class="field-group"><label>Inköpare</label>${inp('mki-inkopar', m.inkopar)}</div>
+      <div class="field-group" style="grid-column:1/-1;"><label>Beskrivning</label><textarea id="mki-beskrivning" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;resize:vertical;">${m.beskrivning||''}</textarea></div>
+      <div class="field-group" style="grid-column:1/-1;"><label>Notering</label><textarea id="mki-notering" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;resize:vertical;">${m.notering||''}</textarea></div>
       <div class="field-group">
         <label>Står mot kaj</label>
         <div class="radio-group" style="margin-top:6px;">
           <div class="radio-opt"><input type="radio" name="mk-mot-kaj" value="ja" id="mk-mot-kaj-ja" ${kajVal==='ja'?'checked':''}><label for="mk-mot-kaj-ja">Ja</label></div>
           <div class="radio-opt"><input type="radio" name="mk-mot-kaj" value="nej" id="mk-mot-kaj-nej" ${kajVal!=='ja'?'checked':''}><label for="mk-mot-kaj-nej">Nej</label></div>
         </div>
-        <button onclick="saveMotKaj('${m.nr}')" style="margin-top:8px;padding:4px 12px;font-size:12px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara</button>
       </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+      <button onclick="saveMaskinInfo('${m.nr}')" style="padding:8px 20px;font-size:14px;font-weight:700;border:none;background:var(--brand);color:#fff;border-radius:7px;cursor:pointer;">💾 Spara uppgifter</button>
+      <span id="mki-saved" style="font-size:13px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
     <h2 style="margin-top:16px;">Serviceavtal</h2>
     <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
@@ -5948,6 +5958,35 @@ function renderMaskinkortInfo(m) {
     <button onclick="addHydrauliklogg('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--ok);color:#fff;border-radius:6px;cursor:pointer;">+ Lägg till post</button>
     <span id="hlog-msg" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;"></span>
     <div id="hlog-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>`;
+}
+
+async function saveMaskinInfo(nr) {
+  const g = id => document.getElementById(id)?.value || '';
+  const payload = {
+    kund:        g('mki-kund'),
+    anlaggning:  g('mki-anlaggning'),
+    adress:      g('mki-adress'),
+    stad:        g('mki-stad'),
+    fabrikat:    g('mki-fabrikat'),
+    modell:      g('mki-modell'),
+    arsmodell:   g('mki-arsmodell'),
+    tillvnr:     g('mki-tillvnr'),
+    kontakt:     g('mki-kontakt'),
+    telefon:     g('mki-telefon'),
+    agare:       g('mki-agare'),
+    inkopar:     g('mki-inkopar'),
+    beskrivning: document.getElementById('mki-beskrivning')?.value || '',
+    notering:    document.getElementById('mki-notering')?.value || '',
+    mot_kaj:     document.querySelector('input[name="mk-mot-kaj"]:checked')?.value || 'nej',
+  };
+  try {
+    await fetch('/api/machines/' + encodeURIComponent(nr), {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const el = document.getElementById('mki-saved');
+    el.style.display = 'inline'; setTimeout(() => el.style.display = 'none', 2000);
+  } catch { alert('Kunde inte spara.'); }
 }
 
 async function saveMotKaj(nr) {
