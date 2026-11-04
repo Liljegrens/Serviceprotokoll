@@ -5837,8 +5837,7 @@ function renderMaskinkortInfo(m) {
     ['Märke', m.fabrikat], ['Modell', m.modell], ['Årsmodell', m.arsmodell],
     ['Tillv.nr', m.tillvnr], ['Kontakt', m.kontakt], ['Telefon', m.telefon],
     ['Beskrivning', m.beskrivning], ['Notering', m.notering],
-    ['Gasdämpare inkastlock', m.gasdampare],
-  ].filter(([,v]) => v);
+  ];
   const kajVal = m.mot_kaj || 'nej';
   document.getElementById('maskinkort-info').innerHTML = `
     <h2>Maskinuppgifter</h2>
