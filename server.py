@@ -174,6 +174,10 @@ def init_db():
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN kontakt TEXT DEFAULT ''")
         if 'serviceavtal' not in cols_em:
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN serviceavtal TEXT DEFAULT ''")
+    with get_db() as db:
+        db.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
+        # Standardvärde: alla protokolltyper synliga för tekniker
+        db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('tekniker_dolda_protokoll', '[]')")
 
 init_db()
 
@@ -230,6 +234,19 @@ def logo():
     return send_from_directory(BASE, 'logo.png')
 
 # ── Users & auth ─────────────────────────────────────────────
+
+@app.route('/api/settings/tekniker-protokoll', methods=['GET'])
+def get_tekniker_protokoll():
+    with get_db() as db:
+        row = db.execute("SELECT value FROM settings WHERE key='tekniker_dolda_protokoll'").fetchone()
+    return jsonify(json.loads(row['value'] if row else '[]'))
+
+@app.route('/api/settings/tekniker-protokoll', methods=['POST'])
+def set_tekniker_protokoll():
+    dolda = request.get_json(force=True)
+    with get_db() as db:
+        db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('tekniker_dolda_protokoll', ?)", (json.dumps(dolda),))
+    return jsonify({'ok': True})
 
 @app.route('/api/users', methods=['GET'])
 def list_users():
