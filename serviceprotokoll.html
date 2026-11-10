@@ -6193,22 +6193,26 @@ function printMaskinkort(nr) {
   const html = `<!doctype html><html lang="sv"><head><meta charset="utf-8">
 <title>Maskinkort – ${nr}</title>
 <style>
-  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  @page { size: A4; margin: 8mm 10mm 8mm 10mm; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; margin: 0; }
-  h1 { font-size: 16pt; margin: 0 0 2px 0; }
-  .sub { font-size: 10pt; color: #555; margin-bottom: 14px; }
-  h2 { font-size: 11pt; font-weight: 700; border-bottom: 1.5px solid #333; padding-bottom: 3px; margin: 14px 0 6px 0; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-  td { padding: 3px 6px; vertical-align: top; }
-  td:first-child { width: 44%; font-weight: 600; color: #444; white-space: nowrap; }
-  td:last-child { width: 56%; }
-  .note { background: #f5f5f5; padding: 6px 8px; border-left: 3px solid #aaa; font-size: 10pt; white-space: pre-wrap; margin: 4px 0 8px 0; min-height: 24px; }
-  .footer { margin-top: 20px; font-size: 9pt; color: #888; border-top: 1px solid #ccc; padding-top: 6px; }
+  body { font-family: Arial, sans-serif; font-size: 7.5pt; color: #111; margin: 0; line-height: 1.25; }
+  h1 { font-size: 11pt; margin: 0 0 1px 0; }
+  .sub { font-size: 7pt; color: #555; margin-bottom: 5px; }
+  h2 { font-size: 7.5pt; font-weight: 700; border-bottom: 1px solid #555; padding-bottom: 1px; margin: 5px 0 2px 0; text-transform: uppercase; letter-spacing: 0.03em; color: #333; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10mm; }
+  .col {}
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 1px 4px; vertical-align: top; }
+  td:first-child { width: 48%; font-weight: 600; color: #555; }
+  td:last-child { width: 52%; }
+  .note { font-size: 7pt; color: #333; white-space: pre-wrap; padding: 2px 4px; min-height: 10px; border-left: 2px solid #ccc; margin: 1px 0 3px 0; }
+  .footer { margin-top: 5px; font-size: 6.5pt; color: #aaa; border-top: 1px solid #ddd; padding-top: 3px; }
 </style></head><body>
 <h1>Maskinkort – ${nr}</h1>
 <div class="sub">Liljegrens i Tyresö AB &nbsp;·&nbsp; Utskrivet ${new Date().toLocaleDateString('sv-SE')}</div>
 
+<div class="cols">
+<div class="col">
 <h2>Maskinuppgifter</h2>
 <table>
   ${row('Kund', kund)}
@@ -6223,13 +6227,14 @@ function printMaskinkort(nr) {
   ${row('Ägare', agare)}
   ${row('Inköpare', inkopar)}
 </table>
-
 <h2>Beskrivning</h2>
-<div class="note">${beskrivning ? beskrivning.replace(/</g,'&lt;') : '<span style="color:#aaa;">–</span>'}</div>
-
+<div class="note">${beskrivning ? beskrivning.replace(/</g,'&lt;') : '<span style="color:#bbb;">–</span>'}</div>
 <h2>Notering</h2>
-<div class="note">${notering ? notering.replace(/</g,'&lt;') : '<span style="color:#aaa;">–</span>'}</div>
-
+<div class="note">${notering ? notering.replace(/</g,'&lt;') : '<span style="color:#bbb;">–</span>'}</div>
+<h2>Manöverinstruktion</h2>
+<div class="note">${instruktion ? instruktion.replace(/</g,'&lt;') : '<span style="color:#bbb;">–</span>'}</div>
+</div>
+<div class="col">
 <h2>Reservdelar och komponenter</h2>
 <table>
   ${row('Hydraulfilter', hydraulfilter)}
@@ -6242,10 +6247,6 @@ function printMaskinkort(nr) {
   ${row('Motorskydd', motorskydd)}
   ${row('Startnyckel', startnyckel)}
 </table>
-
-<h2>Manöverinstruktion</h2>
-<div class="note">${instruktion ? instruktion.replace(/</g,'&lt;') : '<span style="color:#aaa;">–</span>'}</div>
-
 <h2>Installationsdata</h2>
 <table>
   ${row('A – Hjul ytterlängd', instA ? instA+' mm' : '')}
@@ -6263,7 +6264,10 @@ function printMaskinkort(nr) {
   ${row('Elintag', instEl !== '–' ? instEl : '')}
   ${row('Elintaget sitter', instElintag !== '–' ? instElintag : '')}
 </table>
-<div class="note">${instUnderlagBeskriv ? instUnderlagBeskriv.replace(/</g,'&lt;') : '<span style="color:#aaa;">–</span>'}</div>
+<h2>Underlag / förutsättningar</h2>
+<div class="note">${instUnderlagBeskriv ? instUnderlagBeskriv.replace(/</g,'&lt;') : '<span style="color:#bbb;">–</span>'}</div>
+</div>
+</div>
 
 <div class="footer">Serviceprotokoll – Liljegrens i Tyresö AB</div>
 </body></html>`;
