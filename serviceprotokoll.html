@@ -6032,6 +6032,9 @@ function renderMaskinkortInfo(m) {
       <button onclick="saveInstallationsdata('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara installationsdata</button>
       <span id="inst-data-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
+    <div style="margin-top:24px;padding-top:16px;border-top:2px solid var(--border);">
+      <button onclick="printMaskinkort('${m.nr}')" style="padding:10px 24px;font-size:14px;font-weight:700;border:2px solid var(--brand);background:transparent;color:var(--brand);border-radius:7px;cursor:pointer;">🖨 Skriv ut maskinkort</button>
+    </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
     <div id="hlog-status" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
@@ -6154,6 +6157,119 @@ async function saveInstallationsdata(nr) {
     const el = document.getElementById('inst-data-saved');
     el.style.display = 'inline'; setTimeout(() => el.style.display = 'none', 2500);
   } catch { alert('Kunde inte spara installationsdata.'); }
+}
+
+function printMaskinkort(nr) {
+  const g = id => document.getElementById(id)?.value || '';
+  const gTA = id => document.getElementById(id)?.value || '';
+  const cb = (...ids) => ids.filter(id => document.getElementById(id)?.checked).map(id => document.getElementById(id).value).join(', ') || '–';
+  const sel = id => { const el = document.getElementById(id); return el?.options[el.selectedIndex]?.value || '–'; };
+  const row = (label, val) => val ? `<tr><td>${label}</td><td>${val || '–'}</td></tr>` : '';
+
+  const kund = g('mki-kund'); const anl = g('mki-anlaggning');
+  const adress = [g('mki-adress'), g('mki-stad')].filter(Boolean).join(', ');
+  const fabrikat = g('mki-fabrikat'); const modell = g('mki-modell');
+  const arsmodell = g('mki-arsmodell'); const tillvnr = g('mki-tillvnr');
+  const kontakt = g('mki-kontakt'); const telefon = g('mki-telefon');
+  const agare = g('mki-agare'); const inkopar = g('mki-inkopar');
+  const beskrivning = gTA('mki-beskrivning'); const notering = gTA('mki-notering');
+  const instruktion = gTA('mk-instruktion');
+
+  const hydraulfilter = g('mk-hydraulfilter'); const hydraulolja = g('mk-hydraulolja');
+  const hydraulslangar = g('mk-hydraulslangar'); const gasdampare = g('mk-gasdampare');
+  const vantskruv = g('mk-vantskruv'); const elintag = g('mk-el-intag');
+  const kontaktor = g('mk-kontaktor'); const motorskydd = g('mk-motorskydd');
+  const startnyckel = g('mk-startnyckel');
+
+  const instA = g('mk-inst-a'); const instBBak = g('mk-inst-b-bak'); const instBFram = g('mk-inst-b-fram');
+  const instC = g('mk-inst-c'); const instC2 = g('mk-inst-c2'); const instMark = g('mk-inst-mark');
+  const instPanelH = g('mk-inst-panel-h'); const instPlacering = sel('mk-inst-placering');
+  const instUnderlag = sel('mk-inst-underlag'); const instTyp = sel('mk-inst-typ');
+  const instKrok = cb('mk-inst-krok-fram','mk-inst-krok-bak');
+  const instPanel = cb('mk-inst-panel-höger','mk-inst-panel-vänster','mk-inst-panel-fjärr');
+  const instEl = sel('mk-inst-el'); const instElintag = sel('mk-inst-elintag');
+  const instUnderlagBeskriv = gTA('mk-inst-underlag-beskriv');
+
+  const hasInst = [instA,instBBak,instBFram,instC,instC2,instMark,instPanelH].some(v=>v) ||
+    [instPlacering,instUnderlag,instTyp,instKrok,instPanel,instEl,instElintag].some(v=>v && v!=='–');
+  const hasRes = [hydraulfilter,hydraulolja,hydraulslangar,gasdampare,vantskruv,elintag,kontaktor,motorskydd,startnyckel].some(v=>v);
+
+  const html = `<!doctype html><html lang="sv"><head><meta charset="utf-8">
+<title>Maskinkort – ${nr}</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 11pt; color: #111; margin: 0; }
+  h1 { font-size: 16pt; margin: 0 0 2px 0; }
+  .sub { font-size: 10pt; color: #555; margin-bottom: 14px; }
+  h2 { font-size: 11pt; font-weight: 700; border-bottom: 1.5px solid #333; padding-bottom: 3px; margin: 14px 0 6px 0; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  td { padding: 3px 6px; vertical-align: top; }
+  td:first-child { width: 44%; font-weight: 600; color: #444; white-space: nowrap; }
+  td:last-child { width: 56%; }
+  .note { background: #f5f5f5; padding: 6px 8px; border-left: 3px solid #aaa; font-size: 10pt; white-space: pre-wrap; margin: 4px 0 8px 0; }
+  .footer { margin-top: 20px; font-size: 9pt; color: #888; border-top: 1px solid #ccc; padding-top: 6px; }
+</style></head><body>
+<h1>Maskinkort – ${nr}</h1>
+<div class="sub">Liljegrens i Tyresö AB &nbsp;·&nbsp; Utskrivet ${new Date().toLocaleDateString('sv-SE')}</div>
+
+<h2>Maskinuppgifter</h2>
+<table>
+  ${row('Kund', kund)}
+  ${row('Anläggning', anl)}
+  ${row('Adress', adress)}
+  ${row('Märke / Fabrikat', fabrikat)}
+  ${row('Modell', modell)}
+  ${row('Årsmodell', arsmodell)}
+  ${row('Tillverkningsnr', tillvnr)}
+  ${row('Kontaktperson', kontakt)}
+  ${row('Telefon', telefon)}
+  ${row('Ägare', agare)}
+  ${row('Inköpare', inkopar)}
+</table>
+${beskrivning ? `<div class="note">${beskrivning.replace(/</g,'&lt;')}</div>` : ''}
+${notering ? `<h2>Notering</h2><div class="note">${notering.replace(/</g,'&lt;')}</div>` : ''}
+
+${hasRes ? `<h2>Reservdelar och komponenter</h2><table>
+  ${row('Hydraulfilter', hydraulfilter)}
+  ${row('Hydraulolja', hydraulolja)}
+  ${row('Hydraulslangar', hydraulslangar)}
+  ${row('Gasdämpare inkastlock', gasdampare)}
+  ${row('Vantskruv', vantskruv)}
+  ${row('El-intag', elintag)}
+  ${row('Kontaktor', kontaktor)}
+  ${row('Motorskydd', motorskydd)}
+  ${row('Startnyckel', startnyckel)}
+</table>` : ''}
+
+${instruktion ? `<h2>Manöverinstruktion</h2><div class="note">${instruktion.replace(/</g,'&lt;')}</div>` : ''}
+
+${hasInst ? `<h2>Installationsdata</h2><table>
+  ${row('A – Hjul ytterlängd', instA ? instA+' mm' : '')}
+  ${row('B – Bakhjul ytterbredd', instBBak ? instBBak+' mm' : '')}
+  ${row('B – Framhjul ytterbredd', instBFram ? instBFram+' mm' : '')}
+  ${row('C – Höjd, lock stängt', instC ? instC+' mm' : '')}
+  ${row('C2 – Höjd, lock öppet', instC2 ? instC2+' mm' : '')}
+  ${row('Mark till öppning', instMark ? instMark+' mm' : '')}
+  ${row('Panelhöjd fr. mark', instPanelH ? instPanelH+' mm' : '')}
+  ${row('Maskinens placering', instPlacering !== '–' ? instPlacering : '')}
+  ${row('Underlag', instUnderlag !== '–' ? instUnderlag : '')}
+  ${row('Tömningstyp', instTyp !== '–' ? instTyp : '')}
+  ${row('Krokplacering', instKrok !== '–' ? instKrok : '')}
+  ${row('Panelplacering', instPanel !== '–' ? instPanel : '')}
+  ${row('Elintag', instEl !== '–' ? instEl : '')}
+  ${row('Elintaget sitter', instElintag !== '–' ? instElintag : '')}
+</table>
+${instUnderlagBeskriv ? `<div class="note">${instUnderlagBeskriv.replace(/</g,'&lt;')}</div>` : ''}` : ''}
+
+<div class="footer">Serviceprotokoll – Liljegrens i Tyresö AB</div>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=800,height=900');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  w.print();
 }
 
 async function saveInstruktion(nr) {
