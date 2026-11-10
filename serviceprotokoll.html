@@ -738,66 +738,87 @@
     <h1>Serviceprotokoll</h1>
     <span></span>
   </div>
-  <div style="background:linear-gradient(160deg,var(--brand) 0%,var(--brand-light) 100%);padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;">
-    <div class="start-cards">
-      <div class="start-card" data-protocol="verkstad" onclick="openProtocol('verkstad')">
-        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
-          <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
-          <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+  <div style="background:linear-gradient(160deg,var(--brand) 0%,var(--brand-light) 100%);padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:28px;">
+
+    <!-- Allmänna protokoll -->
+    <div style="width:100%;max-width:640px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.25);"></div>
+        <span style="color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">Liljegrens</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.25);"></div>
+      </div>
+      <div class="start-cards">
+        <div class="start-card" data-protocol="verkstad" onclick="openProtocol('verkstad')">
+          <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+            <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
+            <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+          </div>
+          <h2>Verkstadsprotokoll Komprimator</h2>
+          <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
         </div>
-        <h2>Verkstadsprotokoll Komprimator</h2>
-        <p>Typ 1 · Maskin inlämnad för genomgång och/eller reparation</p>
-      </div>
-      <div class="start-card" data-protocol="flygande" onclick="openProtocol('flygande')">
-        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
-          <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
-          <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+        <div class="start-card" data-protocol="flygande" onclick="openProtocol('flygande')">
+          <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:12px;">
+            <div style="width:52px;height:52px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;border:2px solid #1a3a5c;"><img src="/logo.png" alt="Liljegrens" style="width:100%;height:100%;object-fit:cover;"></div>
+            <img src="/komp-bild.png" alt="Komprimator" style="height:64px;object-fit:contain;">
+          </div>
+          <h2>Flygande protokoll Komprimator</h2>
+          <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
         </div>
-        <h2>Flygande protokoll Komprimator</h2>
-        <p>Typ 2 · Kontroll utförd hos kund / på plats</p>
-      </div>
-      <div class="start-card" data-protocol="leverans" onclick="openLeverans()">
-        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
-        <div class="icon">📦</div>
-        <h2>Leveransgodkännande Ragn-Sells</h2>
-        <p>Typ 3 · Överlämning av utrustning till kund</p>
-      </div>
-      <div class="start-card" data-protocol="balp" onclick="openBalp()">
-        <img src="/balp-maskin.png" alt="Balpressmaskin" style="height:80px;object-fit:contain;margin-bottom:12px;">
-        <h2>Serviceprotokoll Balpressar</h2>
-        <p>Typ 4 · Serviceprotokoll för balpressar</p>
-      </div>
-      <div class="start-card" data-protocol="komprimator" onclick="openProtocol('komprimator')">
-        <div style="font-size:48px;margin-bottom:12px;">🗜️</div>
-        <h2>Serviceprotokoll Komprimator</h2>
-        <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
-      </div>
-      <div class="start-card" data-protocol="vandare" onclick="openProtocol('vandare')">
-        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
-        <h2>Serviceprotokoll Komprimator</h2>
-        <p>Typ 6 · R-S – fullständigt protokoll (röda + svarta punkter)</p>
-      </div>
-      <div class="start-card" data-protocol="vandare-kaly" onclick="openProtocol('vandare-kaly')">
-        <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
-        <h2>Serviceprotokoll KÄLY</h2>
-        <p>Typ 7 · R-S Käly – röda siffror (förenklat protokoll)</p>
-      </div>
-      <div class="start-card" data-protocol="odourmikko" onclick="openProtocol('odourmikko')">
-        <div class="icon">💨</div>
-        <h2>Serviceprotokoll Vakuumaggregat</h2>
-        <p>Typ 8 · OdourMikko 50-100 luktborttagning</p>
-      </div>
-      <div class="start-card" data-protocol="installation" onclick="openInstallation()">
-        <div class="icon">🔧</div>
-        <h2>Installationsprotokoll Komprimator</h2>
-        <p>Typ 9 · Montageprotokoll vid nyinstallation</p>
-      </div>
-      <div class="start-card" data-protocol="lyftbord" onclick="openProtocol('lyftbord')">
-        <div style="font-size:48px;margin-bottom:12px;">⬆️</div>
-        <h2>Serviceprotokoll Lyftbord</h2>
-        <p>Typ 10 · Hydrauliskt saxbord – hydraulik, mekanik, el och säkerhet</p>
+        <div class="start-card" data-protocol="balp" onclick="openBalp()">
+          <img src="/balp-maskin.png" alt="Balpressmaskin" style="height:80px;object-fit:contain;margin-bottom:12px;">
+          <h2>Serviceprotokoll Balpressar</h2>
+          <p>Typ 4 · Serviceprotokoll för balpressar</p>
+        </div>
+        <div class="start-card" data-protocol="komprimator" onclick="openProtocol('komprimator')">
+          <div style="font-size:48px;margin-bottom:12px;">🗜️</div>
+          <h2>Serviceprotokoll Komprimator</h2>
+          <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
+        </div>
+        <div class="start-card" data-protocol="odourmikko" onclick="openProtocol('odourmikko')">
+          <div class="icon">💨</div>
+          <h2>Serviceprotokoll Vakuumaggregat</h2>
+          <p>Typ 8 · OdourMikko 50-100 luktborttagning</p>
+        </div>
+        <div class="start-card" data-protocol="installation" onclick="openInstallation()">
+          <div class="icon">🔧</div>
+          <h2>Installationsprotokoll Komprimator</h2>
+          <p>Typ 9 · Montageprotokoll vid nyinstallation</p>
+        </div>
+        <div class="start-card" data-protocol="lyftbord" onclick="openProtocol('lyftbord')">
+          <div style="font-size:48px;margin-bottom:12px;">⬆️</div>
+          <h2>Serviceprotokoll Lyftbord</h2>
+          <p>Typ 10 · Hydrauliskt saxbord – hydraulik, mekanik, el och säkerhet</p>
+        </div>
       </div>
     </div>
+
+    <!-- Ragn-Sells protokoll -->
+    <div style="width:100%;max-width:640px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.25);"></div>
+        <span style="color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;">Ragn-Sells</span>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.25);"></div>
+      </div>
+      <div class="start-cards">
+        <div class="start-card" data-protocol="leverans" onclick="openLeverans()">
+          <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+          <div class="icon">📦</div>
+          <h2>Leveransgodkännande Ragn-Sells</h2>
+          <p>Typ 3 · Överlämning av utrustning till kund</p>
+        </div>
+        <div class="start-card" data-protocol="vandare" onclick="openProtocol('vandare')">
+          <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+          <h2>Serviceprotokoll Komprimator R-S</h2>
+          <p>Typ 6 · Fullständigt protokoll (röda + svarta punkter)</p>
+        </div>
+        <div class="start-card" data-protocol="vandare-kaly" onclick="openProtocol('vandare-kaly')">
+          <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
+          <h2>Serviceprotokoll KÄLY R-S</h2>
+          <p>Typ 7 · Käly – röda siffror (förenklat protokoll)</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
