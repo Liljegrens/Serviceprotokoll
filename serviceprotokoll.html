@@ -1096,8 +1096,13 @@
       <h2 style="font-size:15px;font-weight:700;color:var(--brand);margin-bottom:16px;">1. Projektinformation</h2>
       <div class="field-grid">
         <div class="field-group">
+          <label>Objektnummer</label>
+          <input type="text" id="inst-maskin" placeholder="t.ex. 1-011" oninput="onInstMaskinInput(this.value)">
+          <div class="machine-lookup-badge" id="inst-machine-badge"></div>
+        </div>
+        <div class="field-group">
           <label>Kund / fastighet</label>
-          <input type="text" id="inst-kund" placeholder="Kundens namn">
+          <input type="text" id="inst-kund" placeholder="Fylls i automatiskt">
         </div>
         <div class="field-group">
           <label>Arbetsordernummer</label>
@@ -5960,6 +5965,74 @@ function renderMaskinkortInfo(m) {
         <span id="instruktion-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
       </div>
     </div>
+    <h2 style="margin-top:20px;">Installationsdata</h2>
+    <div class="field-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-top:8px;">
+      <div class="field-group"><label>A – Hjul ytterlängd (mm)</label><input type="number" id="mk-inst-a" value="${m.inst_a||''}" placeholder="mm"></div>
+      <div class="field-group"><label>B – Bakhjul ytterbredd (mm)</label><input type="number" id="mk-inst-b-bak" value="${m.inst_b_bak||''}" placeholder="mm"></div>
+      <div class="field-group"><label>B – Framhjul ytterbredd (mm)</label><input type="number" id="mk-inst-b-fram" value="${m.inst_b_fram||''}" placeholder="mm"></div>
+      <div class="field-group"><label>C – Höjd, lock stängt (mm)</label><input type="number" id="mk-inst-c" value="${m.inst_c||''}" placeholder="mm"></div>
+      <div class="field-group"><label>C2 – Höjd, lock öppet (mm)</label><input type="number" id="mk-inst-c2" value="${m.inst_c2||''}" placeholder="mm"></div>
+      <div class="field-group"><label>Mått mark till öppning (mm)</label><input type="number" id="mk-inst-mark" value="${m.inst_mark_oppning||''}" placeholder="mm"></div>
+      <div class="field-group"><label>Panelhöjd fr. mark (mm)</label><input type="number" id="mk-inst-panel-h" value="${m.inst_panelhojd||''}" placeholder="mm"></div>
+      <div class="field-group"><label>Maskinens placering</label>
+        <select id="mk-inst-placering" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_placering?'selected':''}>– Välj –</option>
+          <option value="Inkast inåt (mot kaj)" ${m.inst_placering==='Inkast inåt (mot kaj)'?'selected':''}>Inkast inåt (mot kaj)</option>
+          <option value="Inkast utåt" ${m.inst_placering==='Inkast utåt'?'selected':''}>Inkast utåt</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Underlag</label>
+        <select id="mk-inst-underlag" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_underlag?'selected':''}>– Välj –</option>
+          <option value="Betong" ${m.inst_underlag==='Betong'?'selected':''}>Betong</option>
+          <option value="Asfalt" ${m.inst_underlag==='Asfalt'?'selected':''}>Asfalt</option>
+          <option value="Annat" ${m.inst_underlag==='Annat'?'selected':''}>Annat</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Tömningstyp</label>
+        <select id="mk-inst-typ" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_typ?'selected':''}>– Välj –</option>
+          <option value="Lastväxlare" ${m.inst_typ==='Lastväxlare'?'selected':''}>Lastväxlare</option>
+          <option value="Liftdumper" ${m.inst_typ==='Liftdumper'?'selected':''}>Liftdumper</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Krokplacering</label>
+        <select id="mk-inst-krok" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_krok?'selected':''}>– Välj –</option>
+          <option value="Fram" ${m.inst_krok==='Fram'?'selected':''}>Fram</option>
+          <option value="Bak" ${m.inst_krok==='Bak'?'selected':''}>Bak</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Panelplacering</label>
+        <select id="mk-inst-panel" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_panel?'selected':''}>– Välj –</option>
+          <option value="Höger" ${m.inst_panel==='Höger'?'selected':''}>Höger</option>
+          <option value="Vänster" ${m.inst_panel==='Vänster'?'selected':''}>Vänster</option>
+          <option value="Fjärrdosa" ${m.inst_panel==='Fjärrdosa'?'selected':''}>Fjärrdosa</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Elintag (A)</label>
+        <select id="mk-inst-el" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_el?'selected':''}>– Välj –</option>
+          <option value="16A 3-fas" ${m.inst_el==='16A 3-fas'?'selected':''}>16A 3-fas</option>
+          <option value="32A 3-fas" ${m.inst_el==='32A 3-fas'?'selected':''}>32A 3-fas</option>
+        </select>
+      </div>
+      <div class="field-group"><label>Elintaget sitter</label>
+        <select id="mk-inst-elintag" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
+          <option value="" ${!m.inst_elintag?'selected':''}>– Välj –</option>
+          <option value="Höger" ${m.inst_elintag==='Höger'?'selected':''}>Höger</option>
+          <option value="Vänster" ${m.inst_elintag==='Vänster'?'selected':''}>Vänster</option>
+        </select>
+      </div>
+      <div class="field-group" style="grid-column:1/-1;"><label>Underlagsbeskrivning / övriga förutsättningar</label>
+        <textarea id="mk-inst-underlag-beskriv" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;resize:vertical;">${m.inst_underlag_beskriv||''}</textarea>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+      <button onclick="saveInstallationsdata('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;">Spara installationsdata</button>
+      <span id="inst-data-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
+    </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
     <div id="hlog-status" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
@@ -6053,6 +6126,35 @@ async function saveHydraulik(nr) {
   const el = document.getElementById('hydraulik-saved');
   el.style.display = 'inline';
   setTimeout(() => el.style.display = 'none', 3000);
+}
+
+async function saveInstallationsdata(nr) {
+  const g = id => document.getElementById(id)?.value || '';
+  const payload = {
+    inst_a:                 g('mk-inst-a'),
+    inst_b_bak:             g('mk-inst-b-bak'),
+    inst_b_fram:            g('mk-inst-b-fram'),
+    inst_c:                 g('mk-inst-c'),
+    inst_c2:                g('mk-inst-c2'),
+    inst_mark_oppning:      g('mk-inst-mark'),
+    inst_panelhojd:         g('mk-inst-panel-h'),
+    inst_placering:         g('mk-inst-placering'),
+    inst_underlag:          g('mk-inst-underlag'),
+    inst_typ:               g('mk-inst-typ'),
+    inst_krok:              g('mk-inst-krok'),
+    inst_panel:             g('mk-inst-panel'),
+    inst_el:                g('mk-inst-el'),
+    inst_elintag:           g('mk-inst-elintag'),
+    inst_underlag_beskriv:  document.getElementById('mk-inst-underlag-beskriv')?.value || '',
+  };
+  try {
+    await fetch('/api/machines/' + encodeURIComponent(nr), {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const el = document.getElementById('inst-data-saved');
+    el.style.display = 'inline'; setTimeout(() => el.style.display = 'none', 2500);
+  } catch { alert('Kunde inte spara installationsdata.'); }
 }
 
 async function saveInstruktion(nr) {
@@ -6549,11 +6651,44 @@ function printFordonskontroll() {
 // INSTALLATIONSPROTOKOLL
 // ═══════════════════════════════════════════════════
 
+let _instLookupTimer = null;
+function onInstMaskinInput(val) {
+  clearTimeout(_instLookupTimer);
+  const badge = document.getElementById('inst-machine-badge');
+  badge.className = 'machine-lookup-badge';
+  if (!val.trim()) return;
+  _instLookupTimer = setTimeout(async () => {
+    try {
+      const m = await apiFetch('/api/machines/' + encodeURIComponent(val.trim()));
+      if (!m) { badge.textContent = 'Ej hittat i register'; badge.className = 'machine-lookup-badge error visible'; return; }
+      badge.textContent = '✓ ' + (m.kund || m.anlaggning || m.nr);
+      badge.className = 'machine-lookup-badge ok visible';
+      document.getElementById('inst-kund').value = m.kund || '';
+      document.getElementById('inst-fabrikat').value = [m.fabrikat, m.modell].filter(Boolean).join(' ');
+      // Fyll i befintlig installationsdata om den finns
+      const setV = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+      setV('inst-a', m.inst_a); setV('inst-b-bak', m.inst_b_bak); setV('inst-b-fram', m.inst_b_fram);
+      setV('inst-c', m.inst_c); setV('inst-c2', m.inst_c2);
+      setV('inst-mark-öppning', m.inst_mark_oppning); setV('inst-panelhöjd', m.inst_panelhojd);
+      setV('inst-underlag-beskriv', m.inst_underlag_beskriv);
+      if (m.inst_placering) { const el = document.querySelector(`input[name="inst-placering"][value="${m.inst_placering}"]`); if (el) el.checked = true; }
+      if (m.inst_underlag)  { const el = document.querySelector(`input[name="inst-underlag"][value="${m.inst_underlag}"]`);  if (el) el.checked = true; }
+      if (m.inst_typ)       { const el = document.querySelector(`input[name="inst-typ"][value="${m.inst_typ}"]`);             if (el) el.checked = true; }
+      if (m.inst_krok)      { const el = document.querySelector(`input[name="inst-krok"][value="${m.inst_krok}"]`);           if (el) el.checked = true; }
+      if (m.inst_panel)     { const el = document.querySelector(`input[name="inst-panel"][value="${m.inst_panel}"]`);         if (el) el.checked = true; }
+      if (m.inst_el)        { const el = document.querySelector(`input[name="inst-el"][value="${m.inst_el}"]`);               if (el) el.checked = true; }
+      if (m.inst_elintag)   { const el = document.querySelector(`input[name="inst-elintag"][value="${m.inst_elintag}"]`);     if (el) el.checked = true; }
+    } catch { badge.textContent = 'Ej hittat i register'; badge.className = 'machine-lookup-badge error visible'; }
+  }, 500);
+}
+
 function openInstallation() {
   showPage('installation');
   document.getElementById('inst-datum').value = new Date().toISOString().split('T')[0];
   document.getElementById('inst-montör').value = currentUser ? currentUser.name : '';
   document.getElementById('inst-save-confirm').textContent = '';
+  document.getElementById('inst-maskin').value = '';
+  document.getElementById('inst-machine-badge').className = 'machine-lookup-badge';
   ['inst-kund','inst-arbetsorder','inst-fabrikat','inst-serienr',
    'inst-a','inst-c','inst-c2','inst-b-bak','inst-b-fram',
    'inst-underlag-beskriv','inst-mark-öppning','inst-panelhöjd'].forEach(id => {
@@ -6597,6 +6732,34 @@ async function saveInstallation() {
   const conf = document.getElementById('inst-save-confirm');
   conf.textContent = r.ok ? '✓ Protokollet är sparat!' : '✗ Kunde inte spara.';
   conf.style.color = r.ok ? 'var(--ok-dark,#2e7d32)' : '#c62828';
+
+  // Spara installationsdata till maskinen om objektnummer är angivet
+  const maskinNr = document.getElementById('inst-maskin')?.value?.trim();
+  if (maskinNr && r.ok) {
+    const instPayload = {
+      inst_a:                data.dim_a,
+      inst_b_bak:            data.dim_b_bak,
+      inst_b_fram:           data.dim_b_fram,
+      inst_c:                data.dim_c,
+      inst_c2:               data.dim_c2,
+      inst_mark_oppning:     data.mark_öppning,
+      inst_panelhojd:        data.panelhöjd,
+      inst_placering:        data.placering,
+      inst_underlag:         data.underlag,
+      inst_underlag_beskriv: data.underlag_beskriv,
+      inst_typ:              data.typ,
+      inst_krok:             data.krok,
+      inst_panel:            data.panel_placering,
+      inst_el:               data.elintag,
+      inst_elintag:          data.elintag_sida,
+    };
+    try {
+      await fetch('/api/machines/' + encodeURIComponent(maskinNr), {
+        method: 'PATCH', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(instPayload)
+      });
+    } catch {}
+  }
 }
 
 function sendInstallationEmail() {

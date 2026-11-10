@@ -149,6 +149,12 @@ def init_db():
             db.execute("ALTER TABLE machines ADD COLUMN reservdelar_ovrigt TEXT DEFAULT ''")
         if 'typskylt' not in cols:
             db.execute("ALTER TABLE machines ADD COLUMN typskylt TEXT DEFAULT ''")
+        for col_name in ['inst_a','inst_b_bak','inst_b_fram','inst_c','inst_c2',
+                         'inst_placering','inst_underlag','inst_underlag_beskriv',
+                         'inst_mark_oppning','inst_typ','inst_krok',
+                         'inst_panelhojd','inst_panel','inst_el','inst_elintag']:
+            if col_name not in cols:
+                db.execute(f"ALTER TABLE machines ADD COLUMN {col_name} TEXT DEFAULT ''")
     # Skapa hydrauliklogg-tabell om den saknas
     with get_db() as db:
         db.execute("""
@@ -556,7 +562,11 @@ def patch_machine(nr):
     allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare',
                'kund', 'anlaggning', 'fabrikat', 'modell', 'tillvnr', 'arsmodell',
                'adress', 'stad', 'kontakt', 'telefon', 'agare', 'inkopar', 'beskrivning',
-               'serviceavtal', 'vantskruv', 'el_intag', 'kontaktor', 'motorskydd', 'startnyckel', 'reservdelar_ovrigt'}
+               'serviceavtal', 'vantskruv', 'el_intag', 'kontaktor', 'motorskydd', 'startnyckel', 'reservdelar_ovrigt',
+               'inst_a', 'inst_b_bak', 'inst_b_fram', 'inst_c', 'inst_c2',
+               'inst_placering', 'inst_underlag', 'inst_underlag_beskriv',
+               'inst_mark_oppning', 'inst_typ', 'inst_krok',
+               'inst_panelhojd', 'inst_panel', 'inst_el', 'inst_elintag'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({'error': 'Inga giltiga fält'}), 400
