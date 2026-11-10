@@ -1198,8 +1198,8 @@
         <div class="field-group">
           <label>Krokplacering</label>
           <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
-            <div class="radio-opt"><input type="radio" name="inst-krok" value="Fram" id="inst-krok-fram" checked><label for="inst-krok-fram" style="width:auto;padding:6px 14px;">Fram</label></div>
-            <div class="radio-opt"><input type="radio" name="inst-krok" value="Bak" id="inst-krok-bak"><label for="inst-krok-bak" style="width:auto;padding:6px 14px;">Bak</label></div>
+            <div class="radio-opt"><input type="checkbox" id="inst-krok-fram" value="Fram"><label for="inst-krok-fram" style="width:auto;padding:6px 14px;">Fram</label></div>
+            <div class="radio-opt"><input type="checkbox" id="inst-krok-bak" value="Bak"><label for="inst-krok-bak" style="width:auto;padding:6px 14px;">Bak</label></div>
           </div>
         </div>
       </div>
@@ -1218,9 +1218,9 @@
         <div class="field-group">
           <label>Placering (sett från användarens ögon)</label>
           <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
-            <div class="radio-opt"><input type="radio" name="inst-panel" value="Höger" id="inst-panel-höger" checked><label for="inst-panel-höger" style="width:auto;padding:6px 14px;">Höger</label></div>
-            <div class="radio-opt"><input type="radio" name="inst-panel" value="Vänster" id="inst-panel-vänster"><label for="inst-panel-vänster" style="width:auto;padding:6px 14px;">Vänster</label></div>
-            <div class="radio-opt"><input type="radio" name="inst-panel" value="Fjärrdosa" id="inst-panel-fjärr"><label for="inst-panel-fjärr" style="width:auto;padding:6px 14px;">Fjärrdosa</label></div>
+            <div class="radio-opt"><input type="checkbox" id="inst-panel-höger" value="Höger"><label for="inst-panel-höger" style="width:auto;padding:6px 14px;">Höger</label></div>
+            <div class="radio-opt"><input type="checkbox" id="inst-panel-vänster" value="Vänster"><label for="inst-panel-vänster" style="width:auto;padding:6px 14px;">Vänster</label></div>
+            <div class="radio-opt"><input type="checkbox" id="inst-panel-fjärr" value="Fjärrdosa"><label for="inst-panel-fjärr" style="width:auto;padding:6px 14px;">Fjärrdosa</label></div>
           </div>
         </div>
         <div class="field-group">
@@ -5997,19 +5997,17 @@ function renderMaskinkortInfo(m) {
         </select>
       </div>
       <div class="field-group"><label>Krokplacering</label>
-        <select id="mk-inst-krok" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
-          <option value="" ${!m.inst_krok?'selected':''}>– Välj –</option>
-          <option value="Fram" ${m.inst_krok==='Fram'?'selected':''}>Fram</option>
-          <option value="Bak" ${m.inst_krok==='Bak'?'selected':''}>Bak</option>
-        </select>
+        <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+          <div class="radio-opt"><input type="checkbox" id="mk-inst-krok-fram" value="Fram" ${(m.inst_krok||'').split(',').map(v=>v.trim()).includes('Fram')?'checked':''}><label for="mk-inst-krok-fram" style="width:auto;padding:6px 14px;">Fram</label></div>
+          <div class="radio-opt"><input type="checkbox" id="mk-inst-krok-bak" value="Bak" ${(m.inst_krok||'').split(',').map(v=>v.trim()).includes('Bak')?'checked':''}><label for="mk-inst-krok-bak" style="width:auto;padding:6px 14px;">Bak</label></div>
+        </div>
       </div>
       <div class="field-group"><label>Panelplacering</label>
-        <select id="mk-inst-panel" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
-          <option value="" ${!m.inst_panel?'selected':''}>– Välj –</option>
-          <option value="Höger" ${m.inst_panel==='Höger'?'selected':''}>Höger</option>
-          <option value="Vänster" ${m.inst_panel==='Vänster'?'selected':''}>Vänster</option>
-          <option value="Fjärrdosa" ${m.inst_panel==='Fjärrdosa'?'selected':''}>Fjärrdosa</option>
-        </select>
+        <div class="radio-group" style="margin-top:6px;flex-wrap:wrap;gap:8px;">
+          <div class="radio-opt"><input type="checkbox" id="mk-inst-panel-höger" value="Höger" ${(m.inst_panel||'').split(',').map(v=>v.trim()).includes('Höger')?'checked':''}><label for="mk-inst-panel-höger" style="width:auto;padding:6px 14px;">Höger</label></div>
+          <div class="radio-opt"><input type="checkbox" id="mk-inst-panel-vänster" value="Vänster" ${(m.inst_panel||'').split(',').map(v=>v.trim()).includes('Vänster')?'checked':''}><label for="mk-inst-panel-vänster" style="width:auto;padding:6px 14px;">Vänster</label></div>
+          <div class="radio-opt"><input type="checkbox" id="mk-inst-panel-fjärr" value="Fjärrdosa" ${(m.inst_panel||'').split(',').map(v=>v.trim()).includes('Fjärrdosa')?'checked':''}><label for="mk-inst-panel-fjärr" style="width:auto;padding:6px 14px;">Fjärrdosa</label></div>
+        </div>
       </div>
       <div class="field-group"><label>Elintag (A)</label>
         <select id="mk-inst-el" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:14px;">
@@ -6141,8 +6139,8 @@ async function saveInstallationsdata(nr) {
     inst_placering:         g('mk-inst-placering'),
     inst_underlag:          g('mk-inst-underlag'),
     inst_typ:               g('mk-inst-typ'),
-    inst_krok:              g('mk-inst-krok'),
-    inst_panel:             g('mk-inst-panel'),
+    inst_krok:              ['mk-inst-krok-fram','mk-inst-krok-bak'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', '),
+    inst_panel:             ['mk-inst-panel-höger','mk-inst-panel-vänster','mk-inst-panel-fjärr'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', '),
     inst_el:                g('mk-inst-el'),
     inst_elintag:           g('mk-inst-elintag'),
     inst_underlag_beskriv:  document.getElementById('mk-inst-underlag-beskriv')?.value || '',
@@ -6674,8 +6672,10 @@ function onInstMaskinInput(val) {
       if (m.inst_placering) { const el = document.querySelector(`input[name="inst-placering"][value="${m.inst_placering}"]`); if (el) el.checked = true; }
       if (m.inst_underlag)  { const el = document.querySelector(`input[name="inst-underlag"][value="${m.inst_underlag}"]`);  if (el) el.checked = true; }
       if (m.inst_typ)       { const el = document.querySelector(`input[name="inst-typ"][value="${m.inst_typ}"]`);             if (el) el.checked = true; }
-      if (m.inst_krok)      { const el = document.querySelector(`input[name="inst-krok"][value="${m.inst_krok}"]`);           if (el) el.checked = true; }
-      if (m.inst_panel)     { const el = document.querySelector(`input[name="inst-panel"][value="${m.inst_panel}"]`);         if (el) el.checked = true; }
+      ['inst-krok-fram','inst-krok-bak'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+      if (m.inst_krok) { m.inst_krok.split(',').map(v=>v.trim()).forEach(v => { const el = document.getElementById('inst-krok-'+v.toLowerCase()); if (el) el.checked = true; }); }
+      ['inst-panel-höger','inst-panel-vänster','inst-panel-fjärr'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+      if (m.inst_panel) { m.inst_panel.split(',').map(v=>v.trim()).forEach(v => { const map = {'Höger':'inst-panel-höger','Vänster':'inst-panel-vänster','Fjärrdosa':'inst-panel-fjärr'}; const el = document.getElementById(map[v]); if (el) el.checked = true; }); }
       if (m.inst_el)        { const el = document.querySelector(`input[name="inst-el"][value="${m.inst_el}"]`);               if (el) el.checked = true; }
       if (m.inst_elintag)   { const el = document.querySelector(`input[name="inst-elintag"][value="${m.inst_elintag}"]`);     if (el) el.checked = true; }
     } catch { badge.textContent = 'Ej hittat i register'; badge.className = 'machine-lookup-badge error visible'; }
@@ -6696,9 +6696,13 @@ function openInstallation() {
     if (el) el.value = '';
   });
   ['inst-placering-inåt','inst-underlag-betong','inst-typ-lastväxlare',
-   'inst-krok-fram','inst-el-16a','inst-elintag-höger','inst-panel-höger'].forEach(id => {
+   'inst-el-16a','inst-elintag-höger'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.checked = true;
+  });
+  ['inst-krok-fram','inst-krok-bak','inst-panel-höger','inst-panel-vänster','inst-panel-fjärr'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
   });
 }
 
@@ -6720,9 +6724,9 @@ async function saveInstallation() {
     underlag_beskriv: document.getElementById('inst-underlag-beskriv').value,
     mark_öppning:   document.getElementById('inst-mark-öppning').value,
     typ:            document.querySelector('input[name="inst-typ"]:checked')?.value || '',
-    krok:           document.querySelector('input[name="inst-krok"]:checked')?.value || '',
+    krok:           ['inst-krok-fram','inst-krok-bak'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', '),
     panelhöjd:      document.getElementById('inst-panelhöjd').value,
-    panel_placering: document.querySelector('input[name="inst-panel"]:checked')?.value || '',
+    panel_placering: ['inst-panel-höger','inst-panel-vänster','inst-panel-fjärr'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', '),
     elintag:        document.querySelector('input[name="inst-el"]:checked')?.value || '',
     elintag_sida:   document.querySelector('input[name="inst-elintag"]:checked')?.value || '',
   };
@@ -6790,11 +6794,11 @@ function sendInstallationEmail() {
   line('LASTINKAST / TÖMNINGSTILKOPPLING');
   line(`Mått mark till öppning : ${document.getElementById('inst-mark-öppning').value} mm`);
   line(`Typ                    : ${document.querySelector('input[name="inst-typ"]:checked')?.value || '–'}`);
-  line(`Krokplacering          : ${document.querySelector('input[name="inst-krok"]:checked')?.value || '–'}`);
+  line(`Krokplacering          : ${['inst-krok-fram','inst-krok-bak'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', ') || '–'}`);
   line('');
   line('MANÖVERPANEL & ELANSLUTNING');
   line(`Panelhöjd fr. mark  : ${document.getElementById('inst-panelhöjd').value} mm`);
-  line(`Panelplacering      : ${document.querySelector('input[name="inst-panel"]:checked')?.value || '–'}`);
+  line(`Panelplacering      : ${['inst-panel-höger','inst-panel-vänster','inst-panel-fjärr'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value).join(', ') || '–'}`);
   line(`Elintag             : ${document.querySelector('input[name="inst-el"]:checked')?.value || '–'}`);
   line(`Elintaget sitter    : ${document.querySelector('input[name="inst-elintag"]:checked')?.value || '–'}`);
   const kund = document.getElementById('inst-kund').value || 'kund';
