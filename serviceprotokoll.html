@@ -6033,6 +6033,23 @@ function renderMaskinkortInfo(m) {
       <span id="inst-data-saved" style="font-size:12px;color:var(--ok);display:none;">✓ Sparad</span>
     </div>
     <div style="margin-top:24px;padding-top:16px;border-top:2px solid var(--border);">
+      <h2 style="margin-bottom:10px;">Foto av maskinen</h2>
+      <div id="mk-foto-wrap" style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+        <div id="mk-foto-preview" style="width:200px;height:150px;border-radius:8px;overflow:hidden;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:12px;">
+          <img id="mk-foto-img" src="/api/machines/${m.nr}/image" alt="Maskinfoto"
+            style="width:100%;height:100%;object-fit:cover;display:none;"
+            onload="this.style.display='block';document.getElementById('mk-foto-placeholder').style.display='none';"
+            onerror="this.style.display='none';">
+          <span id="mk-foto-placeholder">Inget foto</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label for="mk-foto-input" style="padding:8px 16px;font-size:13px;font-weight:700;border:none;background:var(--brand);color:#fff;border-radius:6px;cursor:pointer;display:inline-block;">📷 Välj foto</label>
+          <input type="file" id="mk-foto-input" accept="image/*" capture="environment" style="display:none;" onchange="uploadMaskinfoto('${m.nr}', this)">
+          <span id="mk-foto-status" style="font-size:12px;color:var(--ok);display:none;">✓ Uppladdat</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:2px solid var(--border);">
       <button onclick="printMaskinkort('${m.nr}')" style="padding:10px 24px;font-size:14px;font-weight:700;border:2px solid var(--brand);background:transparent;color:var(--brand);border-radius:7px;cursor:pointer;">🖨 Skriv ut maskinkort</button>
     </div>
     <h2 style="margin-top:20px;">Hydrauliklogg</h2>
@@ -6157,6 +6174,42 @@ async function saveInstallationsdata(nr) {
     const el = document.getElementById('inst-data-saved');
     el.style.display = 'inline'; setTimeout(() => el.style.display = 'none', 2500);
   } catch { alert('Kunde inte spara installationsdata.'); }
+}
+
+function uploadMaskinfoto(nr, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1000;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        const fd = new FormData();
+        fd.append('image', blob, 'foto.jpg');
+        fetch('/api/machines/' + encodeURIComponent(nr) + '/image', { method: 'POST', body: fd, credentials: 'include' })
+          .then(() => {
+            const imgEl = document.getElementById('mk-foto-img');
+            imgEl.src = '/api/machines/' + encodeURIComponent(nr) + '/image?t=' + Date.now();
+            imgEl.style.display = 'block';
+            document.getElementById('mk-foto-placeholder').style.display = 'none';
+            const st = document.getElementById('mk-foto-status');
+            st.style.display = 'inline'; setTimeout(() => st.style.display = 'none', 2500);
+          })
+          .catch(() => alert('Kunde inte ladda upp foto.'));
+      }, 'image/jpeg', 0.75);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function printMaskinkort(nr) {

@@ -548,6 +548,29 @@ def upload_machines():
 
     return jsonify({'imported': len(machines)})
 
+IMAGES_DIR = os.path.join(DATA_DIR, 'machine_images')
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
+@app.route('/api/machines/<nr>/image', methods=['POST'])
+def upload_machine_image(nr):
+    if 'image' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['image']
+    if not f.filename:
+        return jsonify({'error': 'Ingen fil'}), 400
+    safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
+    path = os.path.join(IMAGES_DIR, safe_nr + '.jpg')
+    f.save(path)
+    return jsonify({'ok': True})
+
+@app.route('/api/machines/<nr>/image', methods=['GET'])
+def get_machine_image(nr):
+    safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
+    path = os.path.join(IMAGES_DIR, safe_nr + '.jpg')
+    if not os.path.exists(path):
+        return '', 404
+    return send_file(path, mimetype='image/jpeg')
+
 @app.route('/api/machines/<nr>', methods=['GET'])
 def get_machine(nr):
     with get_db() as db:
