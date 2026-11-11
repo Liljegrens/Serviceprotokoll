@@ -6212,7 +6212,17 @@ function uploadMaskinfoto(nr, input) {
   reader.readAsDataURL(file);
 }
 
-function printMaskinkort(nr) {
+async function printMaskinkort(nr) {
+  // Try to fetch photo as data URL for embedding in print
+  let fotoDataUrl = null;
+  try {
+    const r = await fetch('/api/machines/' + encodeURIComponent(nr) + '/image', { credentials: 'include' });
+    if (r.ok) {
+      const blob = await r.blob();
+      fotoDataUrl = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
+    }
+  } catch {}
+
   const g = id => document.getElementById(id)?.value || '';
   const gTA = id => document.getElementById(id)?.value || '';
   const cb = (...ids) => ids.filter(id => document.getElementById(id)?.checked).map(id => document.getElementById(id).value).join(', ') || '–';
@@ -6288,6 +6298,7 @@ function printMaskinkort(nr) {
 <div class="note">${instruktion ? instruktion.replace(/</g,'&lt;') : '<span style="color:#bbb;">–</span>'}</div>
 </div>
 <div class="col">
+${fotoDataUrl ? `<h2>Foto</h2><img src="${fotoDataUrl}" style="width:100%;max-height:120px;object-fit:cover;border-radius:4px;margin-bottom:4px;">` : ''}
 <h2>Reservdelar och komponenter</h2>
 <table>
   ${row('Hydraulfilter', hydraulfilter)}
