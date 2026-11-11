@@ -6340,7 +6340,18 @@ ${fotoDataUrl ? `<h2>Foto</h2><img src="${fotoDataUrl}" style="width:100%;max-he
   w.document.write(html);
   w.document.close();
   w.focus();
-  w.print();
+  if (fotoDataUrl) {
+    // Wait for image to load before printing
+    const img = w.document.querySelector('img');
+    if (img && !img.complete) {
+      img.onload = () => w.print();
+      img.onerror = () => w.print();
+    } else {
+      setTimeout(() => w.print(), 300);
+    }
+  } else {
+    w.print();
+  }
 }
 
 async function saveInstruktion(nr) {
