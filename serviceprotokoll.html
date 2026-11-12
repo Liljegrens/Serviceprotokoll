@@ -5850,10 +5850,14 @@ async function openMaskinkort(nr) {
     renderMaskinkortHistorik(history);
     renderMaskinkortNotes(notes);
     renderTypskylt(typskylt?.filename, nr);
-    // Sätt dagens datum i hydrauliklogg-fältet
+    // Sätt dagens datum i hydraulik- och cylinderlogg-fälten
+    const today = new Date().toISOString().split('T')[0];
     const hlogDatum = document.getElementById('hlog-datum');
-    if (hlogDatum) hlogDatum.value = new Date().toISOString().split('T')[0];
+    if (hlogDatum) hlogDatum.value = today;
+    const clogDatum = document.getElementById('clog-datum');
+    if (clogDatum) clogDatum.value = today;
     loadHydrauliklogg(nr);
+    loadCylinderlogg(nr);
   } catch(e) {
     document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
   }
@@ -5946,6 +5950,10 @@ function renderMaskinkortInfo(m) {
       <div class="field-group">
         <label>Startnyckel</label>
         <input type="text" id="mk-startnyckel" value="${m.startnyckel||''}" placeholder="Typ / art.nr">
+      </div>
+      <div class="field-group">
+        <label>Cylinderpackningar</label>
+        <input type="text" id="mk-cylinder-packningar" value="${m.cylinder_packningar||''}" placeholder="Packningsspecifikation per cylinder">
       </div>
       <div class="field-group" style="grid-column:1/-1;">
         <label>Övriga reservdelar</label>
@@ -6074,7 +6082,24 @@ function renderMaskinkortInfo(m) {
     </div>
     <button onclick="addHydrauliklogg('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--ok);color:#fff;border-radius:6px;cursor:pointer;">+ Lägg till post</button>
     <span id="hlog-msg" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;"></span>
-    <div id="hlog-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>`;
+    <div id="hlog-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>
+    <h2 style="margin-top:24px;">Cylinderrenovering</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:14px;">
+      <div class="field-group"><label>Datum</label><input type="date" id="clog-datum"></div>
+      <div class="field-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+        <label style="margin-bottom:6px;">Typ av renovering</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="radio" name="clog-typ" id="clog-typ-packningar" value="packningar" checked> Nya packningar</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="radio" name="clog-typ" id="clog-typ-svets" value="svets"> Svetsat spricka</label>
+        </div>
+      </div>
+      <div class="field-group"><label>Faktura</label><input type="text" id="clog-faktura" placeholder="Fakturanummer"></div>
+      <div class="field-group" style="grid-column:1/-1;"><label>Packningar (specifikation)</label><textarea id="clog-packningar" rows="2" placeholder="Ange packningstyp per cylinder" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;font-family:Arial,sans-serif;resize:vertical;"></textarea></div>
+      <div class="field-group" style="grid-column:1/-1;"><label>Notering</label><input type="text" id="clog-not" placeholder="Valfri notering"></div>
+    </div>
+    <button onclick="addCylinderlogg('${m.nr}')" style="padding:6px 16px;font-size:13px;border:none;background:var(--ok);color:#fff;border-radius:6px;cursor:pointer;">+ Lägg till post</button>
+    <span id="clog-msg" style="margin-left:10px;font-size:12px;color:var(--ok);display:none;"></span>
+    <div id="clog-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;"></div>`;
 }
 
 async function saveMaskinInfo(nr) {
@@ -6136,7 +6161,8 @@ async function saveHydraulik(nr) {
     kontaktor:          document.getElementById('mk-kontaktor').value.trim(),
     motorskydd:         document.getElementById('mk-motorskydd').value.trim(),
     startnyckel:        document.getElementById('mk-startnyckel').value.trim(),
-    reservdelar_ovrigt: document.getElementById('mk-reservdelar-ovrigt').value.trim(),
+    reservdelar_ovrigt:    document.getElementById('mk-reservdelar-ovrigt').value.trim(),
+    cylinder_packningar:   document.getElementById('mk-cylinder-packningar').value.trim(),
   };
   await fetch('/api/machines/' + encodeURIComponent(nr), {
     method: 'PATCH',
@@ -6543,6 +6569,56 @@ async function addHydrauliklogg(nr) {
 async function deleteHydrauliklogg(id, nr) {
   await fetch('/api/hydrauliklogg/' + id, { method: 'DELETE' });
   loadHydrauliklogg(nr);
+}
+
+async function loadCylinderlogg(nr) {
+  const r = await fetch('/api/cylinderlogg/' + encodeURIComponent(nr));
+  const logs = await r.json();
+  const el = document.getElementById('clog-list');
+  if (!el) return;
+  if (!logs.length) { el.innerHTML = '<div style="font-size:13px;color:#888;">Inga poster ännu.</div>'; return; }
+  el.innerHTML = logs.map(l => {
+    const typLabel = l.typ === 'svets'
+      ? '<span style="background:#fff3e0;color:#e65100;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Svetsat spricka</span>'
+      : '<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Nya packningar</span>';
+    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${l.datum} &nbsp;${typLabel}${l.faktura ? ` &nbsp;<span style="font-size:12px;font-weight:400;color:#546e7a;">Fakt. ${l.faktura}</span>` : ''}</div>
+        ${l.packningar ? `<div style="font-size:12px;color:#37474f;margin-top:4px;"><strong>Packningar:</strong> ${l.packningar}</div>` : ''}
+        ${l.notering ? `<div style="font-size:12px;color:#546e7a;margin-top:3px;">${l.notering}</div>` : ''}
+      </div>
+      <button onclick="deleteCylinderlogg(${l.id},'${nr}')" style="border:none;background:none;color:#c62828;cursor:pointer;font-size:16px;padding:0;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function addCylinderlogg(nr) {
+  const datum      = document.getElementById('clog-datum').value;
+  const typ        = document.querySelector('input[name="clog-typ"]:checked')?.value || 'packningar';
+  const faktura    = document.getElementById('clog-faktura').value.trim();
+  const packningar = document.getElementById('clog-packningar').value.trim();
+  const notering   = document.getElementById('clog-not').value.trim();
+  const msg        = document.getElementById('clog-msg');
+  if (!datum) {
+    msg.textContent = 'Ange datum.';
+    msg.style.color = '#c62828'; msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 3000); return;
+  }
+  await fetch('/api/cylinderlogg', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ maskin_nr: nr, datum, typ, faktura, packningar, notering })
+  });
+  document.getElementById('clog-faktura').value = '';
+  document.getElementById('clog-packningar').value = '';
+  document.getElementById('clog-not').value = '';
+  msg.textContent = '✓ Sparad'; msg.style.color = 'var(--ok)'; msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
+  loadCylinderlogg(nr);
+}
+
+async function deleteCylinderlogg(id, nr) {
+  await fetch('/api/cylinderlogg/' + id, { method: 'DELETE' });
+  loadCylinderlogg(nr);
 }
 
 let _adminHlogNr = '';
