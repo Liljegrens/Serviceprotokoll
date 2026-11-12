@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, session, send_file
+﻿from flask import Flask, jsonify, request, send_from_directory, session, send_file
 from functools import wraps
 import sqlite3, json, os, secrets, uuid, io
 from datetime import datetime
@@ -21,7 +21,7 @@ else:
     app.secret_key = secrets.token_hex(32)
     open(_key_file, 'w').write(app.secret_key)
 
-# ── Database ────────────────────────────────────────────────
+# â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -118,7 +118,7 @@ def init_db():
             notering   TEXT DEFAULT ''
         );
         """)
-    # Migration: lägg till kolumner om de saknas
+    # Migration: lÃ¤gg till kolumner om de saknas
     with get_db() as db:
         cols = [r[1] for r in db.execute("PRAGMA table_info(machines)").fetchall()]
         if 'mot_kaj' not in cols:
@@ -182,7 +182,7 @@ def init_db():
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN serviceavtal TEXT DEFAULT ''")
     with get_db() as db:
         db.execute("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)")
-        # Standardvärde: alla protokolltyper synliga för tekniker
+        # StandardvÃ¤rde: alla protokolltyper synliga fÃ¶r tekniker
         db.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('tekniker_dolda_protokoll', '[]')")
 
 init_db()
@@ -213,7 +213,7 @@ def ensure_admin():
 
 ensure_admin()
 
-# ── Serve frontend ───────────────────────────────────────────
+# â”€â”€ Serve frontend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.route('/')
 def index():
@@ -239,7 +239,7 @@ def serve_balp_img():
 def logo():
     return send_from_directory(BASE, 'logo.png')
 
-# ── Users & auth ─────────────────────────────────────────────
+# â”€â”€ Users & auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.route('/api/settings/tekniker-protokoll', methods=['GET'])
 def get_tekniker_protokoll():
@@ -267,7 +267,7 @@ def create_user():
     pin  = (data.get('pin') or '').strip()
     role = data.get('role', 'tekniker')
     if not name or not pin:
-        return jsonify({'error': 'Namn och PIN krävs'}), 400
+        return jsonify({'error': 'Namn och PIN krÃ¤vs'}), 400
     with get_db() as db:
         db.execute('INSERT INTO users (name, pin, role) VALUES (?,?,?)', (name, pin, role))
     return jsonify({'ok': True}), 201
@@ -281,7 +281,7 @@ def patch_user(uid):
     if 'role' in data and data['role'] in ('admin', 'tekniker'):
         fields['role'] = data['role']
     if not fields:
-        return jsonify({'error': 'Inga giltiga fält'}), 400
+        return jsonify({'error': 'Inga giltiga fÃ¤lt'}), 400
     set_clause = ', '.join(f'{k}=?' for k in fields)
     with get_db() as db:
         db.execute(f'UPDATE users SET {set_clause} WHERE id=?', list(fields.values()) + [uid])
@@ -328,7 +328,7 @@ def logout():
 def me():
     return jsonify(session.get('user'))
 
-# ── Auth guard ───────────────────────────────────────────────
+# â”€â”€ Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 PUBLIC_API = {'/api/login', '/api/pin-login', '/api/logout', '/api/me', '/api/users'}
 
@@ -340,7 +340,7 @@ def require_login():
         if not session.get('user'):
             return jsonify({'error': 'Ej inloggad'}), 401
 
-# ── Machines ─────────────────────────────────────────────────
+# â”€â”€ Machines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.route('/api/machines')
 def list_machines():
@@ -385,7 +385,7 @@ def upload_machines():
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
 
-    # Find header row – stöder både Servicelista ("intern ref") och generiskt format ("maskinnummer")
+    # Find header row â€“ stÃ¶der bÃ¥de Servicelista ("intern ref") och generiskt format ("maskinnummer")
     header_row = None
     servicelista_format = False
     for i, row in enumerate(rows):
@@ -398,7 +398,7 @@ def upload_machines():
             header_row = i
             break
     if header_row is None:
-        return jsonify({'error': 'Kolumn för maskinnummer saknas. Filen ska ha "Intern ref." eller "Maskinnummer".'}), 400
+        return jsonify({'error': 'Kolumn fÃ¶r maskinnummer saknas. Filen ska ha "Intern ref." eller "Maskinnummer".'}), 400
 
     hdrs_raw = [str(c or '').strip() for c in rows[header_row]]
     hdrs     = [h.lower() for h in hdrs_raw]
@@ -409,7 +409,7 @@ def upload_machines():
         v = row[idx]
         if v is None: return ''
         s = str(v).strip()
-        # Rensa float-format på siffror (t.ex. "106590.0" → "106590")
+        # Rensa float-format pÃ¥ siffror (t.ex. "106590.0" â†’ "106590")
         if s.endswith('.0'):
             try: s = str(int(float(s)))
             except: pass
@@ -418,16 +418,16 @@ def upload_machines():
     if servicelista_format:
         cMask = col('intern ref')
         cKund = col('kundnamn')
-        cAdr  = col('hämtadress rad 1')
-        cSta  = col('hämtadress rad 2')
+        cAdr  = col('hÃ¤mtadress rad 1')
+        cSta  = col('hÃ¤mtadress rad 2')
         cKont = col('kontaktperson vid problem')
         cTel  = col('telefonnummer')
-        cFab  = col('märke')
+        cFab  = col('mÃ¤rke')
         cMod  = col('typ')
         cTill = col('tillverkningsnummer')
-        cArs  = col('årsmodell')
+        cArs  = col('Ã¥rsmodell')
         cBesk = col('beskrivning')  # Kolumn "Beskrivning"
-        cAgar = col('företag')  # Kolumn A – ägare/fakturakund
+        cAgar = col('fÃ¶retag')  # Kolumn A â€“ Ã¤gare/fakturakund
 
         machines = []
         for row in rows[header_row + 1:]:
@@ -455,7 +455,7 @@ def upload_machines():
     else:
         cMask = col('maskinnummer')
         cKund = col('kund')
-        cAnl  = col('anläggning') or col('anlaggning')
+        cAnl  = col('anlÃ¤ggning') or col('anlaggning')
         cFab  = col('fabrikat')
         cMod  = col('modell')
         cNot  = col('anteckn') or col('notering')
@@ -463,21 +463,21 @@ def upload_machines():
         cHydf = col('hydraulfilter')
         cHydo = col('hydraulolja')
         cHyds = col('hydraulslangar')
-        cGas  = col('gasdämpare') or col('gasdampare')
-        cSavt = col('serviceavtal (ggr/år)') or col('serviceavtal')
-        cVant = col('vantskruv (tömningsdörr)') or col('vantskruv')
+        cGas  = col('gasdÃ¤mpare') or col('gasdampare')
+        cSavt = col('serviceavtal (ggr/Ã¥r)') or col('serviceavtal')
+        cVant = col('vantskruv (tÃ¶mningsdÃ¶rr)') or col('vantskruv')
         cElIn = col('el-intag') or col('el_intag')
         cKont = col('kontaktor')
         cMoto = col('motorskydd')
         cStar = col('startnyckel')
-        cResv = col('övriga reservdelar') or col('reservdelar_ovrigt')
+        cResv = col('Ã¶vriga reservdelar') or col('reservdelar_ovrigt')
         cAdr  = col('adress')
         cSta  = col('stad')
         cKont = col('kontakt')
         cTel  = col('telefon')
         cTill = col('tillvnr')
-        cArs  = col('årsmodell') or col('arsmodell')
-        cAgar = col('ägare') or col('agare')
+        cArs  = col('Ã¥rsmodell') or col('arsmodell')
+        cAgar = col('Ã¤gare') or col('agare')
 
         machines = []
         for row in rows[header_row + 1:]:
@@ -551,7 +551,7 @@ def upload_machines():
 IMAGES_DIR = os.path.join(DATA_DIR, 'machine_images')
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
-@app.route('/api/machines/<nr>/image', methods=['POST'])
+@app.route('/api/machines/<path:nr>/image', methods=['POST'])
 def upload_machine_image(nr):
     if 'image' not in request.files:
         return jsonify({'error': 'Ingen fil'}), 400
@@ -563,7 +563,7 @@ def upload_machine_image(nr):
     f.save(path)
     return jsonify({'ok': True})
 
-@app.route('/api/machines/<nr>/image', methods=['GET'])
+@app.route('/api/machines/<path:nr>/image', methods=['GET'])
 def get_machine_image(nr):
     safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
     path = os.path.join(IMAGES_DIR, safe_nr + '.jpg')
@@ -571,7 +571,7 @@ def get_machine_image(nr):
         return '', 404
     return send_file(path, mimetype='image/jpeg')
 
-@app.route('/api/machines/<nr>', methods=['GET'])
+@app.route('/api/machines/<path:nr>', methods=['GET'])
 def get_machine(nr):
     with get_db() as db:
         row = db.execute('SELECT * FROM machines WHERE UPPER(nr)=UPPER(?)', (nr,)).fetchone()
@@ -579,7 +579,7 @@ def get_machine(nr):
         return jsonify(None), 404
     return jsonify(dict(row))
 
-@app.route('/api/machines/<nr>', methods=['PATCH'])
+@app.route('/api/machines/<path:nr>', methods=['PATCH'])
 def patch_machine(nr):
     data = request.get_json(force=True)
     allowed = {'mot_kaj', 'notering', 'hydraulfilter', 'hydraulolja', 'hydraulslangar', 'instruktion', 'gasdampare',
@@ -592,14 +592,14 @@ def patch_machine(nr):
                'inst_panelhojd', 'inst_panel', 'inst_el', 'inst_elintag'}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
-        return jsonify({'error': 'Inga giltiga fält'}), 400
+        return jsonify({'error': 'Inga giltiga fÃ¤lt'}), 400
     set_clause = ', '.join(f'{k}=?' for k in updates)
     with get_db() as db:
         db.execute(f'UPDATE machines SET {set_clause} WHERE UPPER(nr)=UPPER(?)',
                    list(updates.values()) + [nr])
     return jsonify({'ok': True})
 
-@app.route('/api/machines/<nr>/history', methods=['GET'])
+@app.route('/api/machines/<path:nr>/history', methods=['GET'])
 def get_machine_history(nr):
     with get_db() as db:
         service = db.execute(
@@ -628,13 +628,13 @@ def get_machine_history(nr):
     result.sort(key=lambda x: x.get('saved_at',''), reverse=True)
     return jsonify(result)
 
-@app.route('/api/machines/<nr>/notes', methods=['GET'])
+@app.route('/api/machines/<path:nr>/notes', methods=['GET'])
 def get_machine_notes(nr):
     with get_db() as db:
         rows = db.execute('SELECT id, saved_at, author, note FROM machine_notes WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY saved_at DESC', (nr,)).fetchall()
     return jsonify([dict(r) for r in rows])
 
-@app.route('/api/machines/<nr>/notes', methods=['POST'])
+@app.route('/api/machines/<path:nr>/notes', methods=['POST'])
 def add_machine_note(nr):
     data = request.get_json()
     with get_db() as db:
@@ -642,7 +642,7 @@ def add_machine_note(nr):
                    (nr, datetime.now().isoformat(), data.get('author',''), data.get('note','')))
     return jsonify({'ok': True})
 
-# ── Leveransgodkännande ──────────────────────────────────────
+# â”€â”€ LeveransgodkÃ¤nnande â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def init_leverans_db():
     with get_db() as db:
@@ -687,7 +687,7 @@ def delete_balp(balp_id):
         db.execute('DELETE FROM balp WHERE id=?', (balp_id,))
     return jsonify({'ok': True})
 
-# ── Fordonsregister & Fordonskontroll ───────────────────────────────────────
+# â”€â”€ Fordonsregister & Fordonskontroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 FORDON_DB = os.path.join(DATA_DIR, 'fordon-register.db')
 
@@ -741,7 +741,7 @@ def upload_fordon():
     imported = 0
     with get_fordon_db() as db:
         db.execute('DELETE FROM fordon')
-        # En flik: "Maskin och fordonsregister" — ID/Regnr, Typ, Märke, Modell, Årsmodell, Besiktning/Serienr, Förare/Ansvarig, Placering/Avdelning, Notering
+        # En flik: "Maskin och fordonsregister" â€” ID/Regnr, Typ, MÃ¤rke, Modell, Ã…rsmodell, Besiktning/Serienr, FÃ¶rare/Ansvarig, Placering/Avdelning, Notering
         sheet_name = next((s for s in wb.sheetnames if 'maskin' in s.lower() or 'fordon' in s.lower()), wb.sheetnames[0])
         for row in wb[sheet_name].iter_rows(min_row=3, values_only=True):
             regnr = str(row[0]).strip() if row[0] else None
@@ -793,7 +793,7 @@ def export_fordonskontroll():
     BEV_FILL  = PatternFill('solid', fgColor='FFF9C4')
     AKUT_FILL = PatternFill('solid', fgColor='FFCDD2')
 
-    headers = ['Protokoll-ID', 'Datum', 'Regnr', 'Förare', 'Km-ställning', 'Nr', 'Kontrollpunkt', 'Status', 'Anmärkning', 'Övrigt']
+    headers = ['Protokoll-ID', 'Datum', 'Regnr', 'FÃ¶rare', 'Km-stÃ¤llning', 'Nr', 'Kontrollpunkt', 'Status', 'AnmÃ¤rkning', 'Ã–vrigt']
     for col, h in enumerate(headers, 1):
         c = ws.cell(row=1, column=col, value=h)
         c.font = HEADER_FONT
@@ -813,7 +813,7 @@ def export_fordonskontroll():
         items   = d.get('items', [])
 
         if not items:
-            # Skriv en rad ändå
+            # Skriv en rad Ã¤ndÃ¥
             for col, val in enumerate([r['id'], datum, regnr, tekniker, km, '', '', '', '', ovrig], 1):
                 c = ws.cell(row=row_idx, column=col, value=val)
                 c.font = BODY_FONT; c.border = BORDER; c.alignment = Alignment(vertical='center')
@@ -880,9 +880,9 @@ def save_installationsprotokoll():
     with get_db() as db:
         db.execute('''CREATE TABLE IF NOT EXISTS installationsprotokoll (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            saved_at TEXT, montör TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
-        db.execute('INSERT INTO installationsprotokoll (saved_at, montör, kund, datum, data_json) VALUES (?,?,?,?,?)',
-                   (datetime.now().isoformat(), data.get('montör',''), data.get('kund',''),
+            saved_at TEXT, montÃ¶r TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
+        db.execute('INSERT INTO installationsprotokoll (saved_at, montÃ¶r, kund, datum, data_json) VALUES (?,?,?,?,?)',
+                   (datetime.now().isoformat(), data.get('montÃ¶r',''), data.get('kund',''),
                     data.get('datum',''), json.dumps(data, ensure_ascii=False)))
     return jsonify({'ok': True})
 
@@ -891,8 +891,8 @@ def list_installationsprotokoll():
     with get_db() as db:
         db.execute('''CREATE TABLE IF NOT EXISTS installationsprotokoll (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            saved_at TEXT, montör TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
-        rows = db.execute('SELECT id, saved_at, montör, kund, datum FROM installationsprotokoll ORDER BY saved_at DESC').fetchall()
+            saved_at TEXT, montÃ¶r TEXT, kund TEXT, datum TEXT, data_json TEXT)''')
+        rows = db.execute('SELECT id, saved_at, montÃ¶r, kund, datum FROM installationsprotokoll ORDER BY saved_at DESC').fetchall()
     return jsonify([dict(r) for r in rows])
 
 @app.route('/api/installationsprotokoll/<int:rec_id>', methods=['DELETE'])
@@ -915,7 +915,7 @@ def list_leverans():
         rows = db.execute('SELECT id, saved_at, tekniker, data_json FROM leverans ORDER BY saved_at DESC').fetchall()
     return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
 
-# ── Protocols ────────────────────────────────────────────────
+# â”€â”€ Protocols â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.route('/api/protocols/search')
 def search_protocols():
@@ -1021,7 +1021,7 @@ def resolve_item(protocol_id):
     data = request.get_json()
     nr   = data.get('nr')
     if not nr:
-        return jsonify({'error': 'nr krävs'}), 400
+        return jsonify({'error': 'nr krÃ¤vs'}), 400
     with get_db() as db:
         row = db.execute('SELECT resolved_json FROM protocols WHERE id=?', (protocol_id,)).fetchone()
         if not row:
@@ -1086,7 +1086,7 @@ def open_items():
             })
     return jsonify(result)
 
-# ── Workflow ──────────────────────────────────────────────────
+# â”€â”€ Workflow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 WORKFLOW_STEPS = ['inkommen', 'hanterad']
 WORKFLOW_LABELS = {
@@ -1110,7 +1110,7 @@ def update_workflow(protocol_id):
         log.append({
             'status': status,
             'label':  WORKFLOW_LABELS[status],
-            'by':     user.get('name', 'Okänd'),
+            'by':     user.get('name', 'OkÃ¤nd'),
             'at':     datetime.now().strftime('%Y-%m-%d %H:%M'),
             'note':   note,
         })
@@ -1122,7 +1122,7 @@ def update_workflow(protocol_id):
 def save_protocol():
     data = request.get_json()
     if not data or not data.get('maskin_nr'):
-        return jsonify({'error': 'maskin_nr krävs'}), 400
+        return jsonify({'error': 'maskin_nr krÃ¤vs'}), 400
     with get_db() as db:
         db.execute("""
             INSERT INTO protocols (maskin_nr, datum, type, machine_type, kund, anlaggning, tekniker, modell, items_json, saved_at)
@@ -1142,7 +1142,7 @@ def save_protocol():
         pid = db.execute('SELECT last_insert_rowid()').fetchone()[0]
     return jsonify({'id': pid}), 201
 
-# ── Photo upload ─────────────────────────────────────────────
+# â”€â”€ Photo upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 ALLOWED_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'}
 
@@ -1153,7 +1153,7 @@ def upload_photo():
     f = request.files['photo']
     ext = os.path.splitext(f.filename)[1].lower()
     if ext not in ALLOWED_EXT:
-        return jsonify({'error': 'Otillåtet filformat'}), 400
+        return jsonify({'error': 'OtillÃ¥tet filformat'}), 400
     filename = uuid.uuid4().hex + ext
     f.save(os.path.join(UPLOADS, filename))
     return jsonify({'filename': filename}), 201
@@ -1172,10 +1172,10 @@ def export_machines():
     wb = Workbook()
     ws = wb.active
     ws.title = 'Maskinregister'
-    headers = ['Maskinnummer','Kund','Anläggning','Fabrikat','Modell','Tillvnr','Årsmodell',
-               'Adress','Stad','Kontakt','Telefon','Ägare','Beskrivning','Notering','Serviceavtal (ggr/år)',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare',
-               'Vantskruv (tömningsdörr)','El-intag','Kontaktor','Motorskydd','Startnyckel','Övriga reservdelar']
+    headers = ['Maskinnummer','Kund','AnlÃ¤ggning','Fabrikat','Modell','Tillvnr','Ã…rsmodell',
+               'Adress','Stad','Kontakt','Telefon','Ã„gare','Beskrivning','Notering','Serviceavtal (ggr/Ã¥r)',
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','GasdÃ¤mpare',
+               'Vantskruv (tÃ¶mningsdÃ¶rr)','El-intag','Kontaktor','Motorskydd','Startnyckel','Ã–vriga reservdelar']
     cols    = ['nr','kund','anlaggning','fabrikat','modell','tillvnr','arsmodell',
                'adress','stad','kontakt','telefon','agare','beskrivning','notering','serviceavtal',
                'hydraulfilter','hydraulolja','hydraulslangar','gasdampare',
@@ -1204,14 +1204,14 @@ def export_machines():
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         headers={'Content-Disposition': f'attachment; filename="{fname}"'})
 
-@app.route('/api/machines/<maskin_nr>/typskylt', methods=['POST'])
+@app.route('/api/machines/<path:maskin_nr>/typskylt', methods=['POST'])
 def upload_typskylt(maskin_nr):
     if 'photo' not in request.files:
         return jsonify({'error': 'Ingen fil'}), 400
     f = request.files['photo']
     ext = os.path.splitext(f.filename)[1].lower()
     if ext not in ALLOWED_EXT:
-        return jsonify({'error': 'Otillåtet filformat'}), 400
+        return jsonify({'error': 'OtillÃ¥tet filformat'}), 400
     safe_nr = ''.join(c for c in maskin_nr if c.isalnum() or c in '-_')
     filename = f'typskylt_{safe_nr}{ext}'
     f.save(os.path.join(UPLOADS, filename))
@@ -1219,7 +1219,7 @@ def upload_typskylt(maskin_nr):
         db.execute("UPDATE machines SET typskylt=? WHERE UPPER(nr)=UPPER(?)", (filename, maskin_nr))
     return jsonify({'filename': filename}), 201
 
-@app.route('/api/machines/<maskin_nr>/typskylt', methods=['GET'])
+@app.route('/api/machines/<path:maskin_nr>/typskylt', methods=['GET'])
 def get_typskylt(maskin_nr):
     with get_db() as db:
         row = db.execute("SELECT typskylt FROM machines WHERE UPPER(nr)=UPPER(?)", (maskin_nr,)).fetchone()
@@ -1287,7 +1287,7 @@ def patch_offer(offer_id):
     if 'items' in d:
         d['items_json'] = json.dumps(d.pop('items'), ensure_ascii=False)
     updates = {k: v for k, v in d.items() if k in allowed}
-    if not updates: return jsonify({'error': 'Inga fält'}), 400
+    if not updates: return jsonify({'error': 'Inga fÃ¤lt'}), 400
     set_clause = ', '.join(f'{k}=?' for k in updates)
     with get_db() as db:
         db.execute(f'UPDATE offers SET {set_clause} WHERE id=?', list(updates.values()) + [offer_id])
@@ -1299,7 +1299,7 @@ def delete_offer(offer_id):
         db.execute('DELETE FROM offers WHERE id=?', [offer_id])
     return jsonify({'ok': True})
 
-# ═══════════ EGNA MASKINER ═══════════
+# â•â•â•â•â•â•â•â•â•â•â• EGNA MASKINER â•â•â•â•â•â•â•â•â•â•â•
 
 @app.route('/api/egna-maskiner', methods=['GET'])
 def get_egna_maskiner():
@@ -1370,9 +1370,9 @@ def export_egna_maskiner():
     wb = Workbook()
     ws = wb.active
     ws.title = 'Egna maskiner'
-    headers = ['Maskinnummer','Fabrikat','Modell','Tillvnr','Årsmodell',
+    headers = ['Maskinnummer','Fabrikat','Modell','Tillvnr','Ã…rsmodell',
                'Beskrivning','Adress','Kontakt','Notering',
-               'Hydraulfilter','Hydraulolja','Hydraulslangar','Gasdämpare','Serviceavtal (ggr/år)']
+               'Hydraulfilter','Hydraulolja','Hydraulslangar','GasdÃ¤mpare','Serviceavtal (ggr/Ã¥r)']
     cols    = ['nr','fabrikat','modell','tillvnr','arsmodell',
                'beskrivning','adress','kontakt','notering',
                'hydraulfilter','hydraulolja','hydraulslangar','gasdampare','serviceavtal']
@@ -1429,13 +1429,13 @@ def import_egna_maskiner():
         cBesk = col('maskin') if col('maskin') is not None else 1
         cKund = col('kund') if col('kund') is not None else 3
         cKont = 4
-        cAdr  = col('företagsnamn') or col('adress') or 6
+        cAdr  = col('fÃ¶retagsnamn') or col('adress') or 6
         cFab=cMod=cTill=cArs=cNot=cHydf=cHydo=cHyds=cGas=cSavt = None
     else:
         cFab  = col('fabrikat')
         cMod  = col('modell')
         cTill = col('tillvnr')
-        cArs  = col('årsmodell') or col('arsmodell')
+        cArs  = col('Ã¥rsmodell') or col('arsmodell')
         cBesk = col('beskrivning')
         cNot  = col('notering')
         cAdr  = col('adress')
@@ -1444,11 +1444,11 @@ def import_egna_maskiner():
         cHydf = col('hydraulfilter')
         cHydo = col('hydraulolja')
         cHyds = col('hydraulslangar')
-        cGas  = col('gasdämpare') or col('gasdampare')
-        cSavt = col('serviceavtal (ggr/år)') or col('serviceavtal')
+        cGas  = col('gasdÃ¤mpare') or col('gasdampare')
+        cSavt = col('serviceavtal (ggr/Ã¥r)') or col('serviceavtal')
     if cNr is None:
         return jsonify({'error': 'Kolumnen Maskinnummer saknas'}), 400
-    LILJEGRENS_KUNDER = {'liljegrens', 'liljegrens i tyresö ab', ''}
+    LILJEGRENS_KUNDER = {'liljegrens', 'liljegrens i tyresÃ¶ ab', ''}
     machines = []
     for row in rows[header_row + 1:]:
         nr = cell(row, cNr)
@@ -1503,7 +1503,7 @@ def hyra_ut(nr):
     datum_ut = data.get('datum_ut') or datetime.now().strftime('%Y-%m-%d')
     notering = data.get('notering','')
     if not kund:
-        return jsonify({'error': 'Kund krävs'}), 400
+        return jsonify({'error': 'Kund krÃ¤vs'}), 400
     with get_db() as db:
         db.execute("UPDATE egna_maskiner SET status='uthyrd', uthyrd_till=?, uthyrd_datum=? WHERE nr=?",
                    (kund, datum_ut, nr))
@@ -1511,7 +1511,7 @@ def hyra_ut(nr):
                    (nr, kund, datum_ut, notering))
     return jsonify({'ok': True})
 
-@app.route('/api/egna-maskiner/<nr>/aterlämnad', methods=['POST'])
+@app.route('/api/egna-maskiner/<nr>/aterlÃ¤mnad', methods=['POST'])
 def aterlamnad(nr):
     datum_in = datetime.now().strftime('%Y-%m-%d')
     with get_db() as db:
@@ -1525,14 +1525,14 @@ def aterlamnad(nr):
 def serve_spiris_test():
     return send_from_directory(BASE, 'spiris-test.html')
 
-# ── Spiris proxy ─────────────────────────────────────────────────────────────
+# â”€â”€ Spiris proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SPIRIS_HOST = 'publicapi.tid.vismaspcs.se'
 
 def spiris_token():
     app_id = os.environ.get('SPIRIS_APP_ID', '')
     secret = os.environ.get('SPIRIS_SECRET', '')
     if not app_id or not secret:
-        return None, 'SPIRIS_APP_ID eller SPIRIS_SECRET saknas i miljövariabler'
+        return None, 'SPIRIS_APP_ID eller SPIRIS_SECRET saknas i miljÃ¶variabler'
     cred = base64.b64encode(f'{app_id}:{secret}'.encode()).decode()
     req = urllib.request.Request(
         f'https://{SPIRIS_HOST}/v1/Auth/Token',
@@ -1581,7 +1581,8 @@ if __name__ == '__main__':
     port = 5000
     local_ip = socket.gethostbyname(socket.gethostname())
     print(f'\n  Serviceprotokoll-server startad!')
-    print(f'  Öppna i webbläsare: http://localhost:{port}')
-    print(f'  Från andra enheter: http://{local_ip}:{port}')
-    print(f'  Tryck Ctrl+C för att stänga av\n')
+    print(f'  Ã–ppna i webblÃ¤sare: http://localhost:{port}')
+    print(f'  FrÃ¥n andra enheter: http://{local_ip}:{port}')
+    print(f'  Tryck Ctrl+C fÃ¶r att stÃ¤nga av\n')
     app.run(host=host, port=port, debug=False)
+
