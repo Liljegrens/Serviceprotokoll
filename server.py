@@ -1761,59 +1761,6 @@ def aterlamnad(nr):
                       ORDER BY id DESC LIMIT 1""", (datum_in, nr))
     return jsonify({'ok': True})
 
-@app.route('/spiris-test.html')
-def serve_spiris_test():
-    return send_from_directory(BASE, 'spiris-test.html')
-
-# â"€â"€ Spiris proxy â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-SPIRIS_HOST = 'publicapi.tid.vismaspcs.se'
-
-def spiris_token():
-    app_id = os.environ.get('SPIRIS_APP_ID', '')
-    secret = os.environ.get('SPIRIS_SECRET', '')
-    if not app_id or not secret:
-        return None, 'SPIRIS_APP_ID eller SPIRIS_SECRET saknas i miljÃ¶variabler'
-    cred = base64.b64encode(f'{app_id}:{secret}'.encode()).decode()
-    req = urllib.request.Request(
-        f'https://{SPIRIS_HOST}/v1/Auth/Token',
-        method='POST',
-        headers={'Authorization': f'Basic {cred}', 'Content-Type': 'application/json', 'Content-Length': '0'}
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = json.loads(r.read())
-            return data.get('accessToken'), None
-    except urllib.error.HTTPError as e:
-        body = e.read().decode('utf-8', errors='replace')
-        return None, f'HTTP {e.code}: {body}'
-    except Exception as e:
-        return None, str(e)
-
-def spiris_get(token, path):
-    req = urllib.request.Request(
-        f'https://{SPIRIS_HOST}{path}',
-        headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
-    )
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return json.loads(r.read())
-
-@app.route('/api/spiris/projekt/<projekt_nr>')
-def spiris_projekt(projekt_nr):
-    token, err = spiris_token()
-    if err:
-        return jsonify({'error': err}), 500
-    try:
-        projekt = spiris_get(token, f'/v1/Core/Projects?page=1&filter.query={urllib.parse.quote(projekt_nr)}')
-        return jsonify(projekt)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/spiris/test')
-def spiris_test():
-    token, err = spiris_token()
-    if err:
-        return jsonify({'ok': False, 'error': err}), 500
-    return jsonify({'ok': True, 'token_length': len(token)})
 
 if __name__ == '__main__':
     import socket
