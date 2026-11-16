@@ -21,7 +21,7 @@ else:
     app.secret_key = secrets.token_hex(32)
     open(_key_file, 'w').write(app.secret_key)
 
-# â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Database â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 def get_db():
     conn = sqlite3.connect(DB)
@@ -277,12 +277,12 @@ def _oversatt_logg(text):
 
 # ordrar-tabell för arbetsorder-state
 with get_db() as _db:
-    _db.execute(“””
+    _db.execute("""
     CREATE TABLE IF NOT EXISTS ordrar (
         projekt_id  TEXT PRIMARY KEY,
         state_json  TEXT NOT NULL,
         saved_at    TEXT
-    )”””)
+    )""")
 
 @app.route('/api/projekt')
 def api_projekt_sok():
@@ -454,7 +454,7 @@ def serve_balp_img():
 def logo():
     return send_from_directory(BASE, 'logo.png')
 
-# â”€â”€ Users & auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Users & auth â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @app.route('/api/settings/tekniker-protokoll', methods=['GET'])
 def get_tekniker_protokoll():
@@ -543,7 +543,7 @@ def logout():
 def me():
     return jsonify(session.get('user'))
 
-# â”€â”€ Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Auth guard â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 PUBLIC_API = {'/api/login', '/api/pin-login', '/api/logout', '/api/me', '/api/users'}
 
@@ -555,7 +555,7 @@ def require_login():
         if not session.get('user'):
             return jsonify({'error': 'Ej inloggad'}), 401
 
-# â”€â”€ Machines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Machines â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @app.route('/api/machines')
 def list_machines():
@@ -600,7 +600,7 @@ def upload_machines():
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
 
-    # Find header row â€“ stÃ¶der bÃ¥de Servicelista ("intern ref") och generiskt format ("maskinnummer")
+    # Find header row â€" stÃ¶der bÃ¥de Servicelista ("intern ref") och generiskt format ("maskinnummer")
     header_row = None
     servicelista_format = False
     for i, row in enumerate(rows):
@@ -642,7 +642,7 @@ def upload_machines():
         cTill = col('tillverkningsnummer')
         cArs  = col('Ã¥rsmodell')
         cBesk = col('beskrivning')  # Kolumn "Beskrivning"
-        cAgar = col('fÃ¶retag')  # Kolumn A â€“ Ã¤gare/fakturakund
+        cAgar = col('fÃ¶retag')  # Kolumn A â€" Ã¤gare/fakturakund
 
         machines = []
         for row in rows[header_row + 1:]:
@@ -857,7 +857,7 @@ def add_machine_note(nr):
                    (nr, datetime.now().isoformat(), data.get('author',''), data.get('note','')))
     return jsonify({'ok': True})
 
-# â”€â”€ LeveransgodkÃ¤nnande â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ LeveransgodkÃ¤nnande â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 def init_leverans_db():
     with get_db() as db:
@@ -902,7 +902,7 @@ def delete_balp(balp_id):
         db.execute('DELETE FROM balp WHERE id=?', (balp_id,))
     return jsonify({'ok': True})
 
-# â”€â”€ Fordonsregister & Fordonskontroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Fordonsregister & Fordonskontroll â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 FORDON_DB = os.path.join(DATA_DIR, 'fordon-register.db')
 
@@ -956,7 +956,7 @@ def upload_fordon():
     imported = 0
     with get_fordon_db() as db:
         db.execute('DELETE FROM fordon')
-        # En flik: "Maskin och fordonsregister" â€” ID/Regnr, Typ, MÃ¤rke, Modell, Ã…rsmodell, Besiktning/Serienr, FÃ¶rare/Ansvarig, Placering/Avdelning, Notering
+        # En flik: "Maskin och fordonsregister" â€" ID/Regnr, Typ, MÃ¤rke, Modell, Ã…rsmodell, Besiktning/Serienr, FÃ¶rare/Ansvarig, Placering/Avdelning, Notering
         sheet_name = next((s for s in wb.sheetnames if 'maskin' in s.lower() or 'fordon' in s.lower()), wb.sheetnames[0])
         for row in wb[sheet_name].iter_rows(min_row=3, values_only=True):
             regnr = str(row[0]).strip() if row[0] else None
@@ -1130,7 +1130,7 @@ def list_leverans():
         rows = db.execute('SELECT id, saved_at, tekniker, data_json FROM leverans ORDER BY saved_at DESC').fetchall()
     return jsonify([{**dict(r), 'data': json.loads(r['data_json'])} for r in rows])
 
-# â”€â”€ Protocols â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Protocols â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 @app.route('/api/protocols/search')
 def search_protocols():
@@ -1301,7 +1301,7 @@ def open_items():
             })
     return jsonify(result)
 
-# â”€â”€ Workflow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Workflow â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 WORKFLOW_STEPS = ['inkommen', 'hanterad']
 WORKFLOW_LABELS = {
@@ -1357,7 +1357,7 @@ def save_protocol():
         pid = db.execute('SELECT last_insert_rowid()').fetchone()[0]
     return jsonify({'id': pid}), 201
 
-# â”€â”€ Photo upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Photo upload â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 ALLOWED_EXT = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'}
 
@@ -1765,7 +1765,7 @@ def aterlamnad(nr):
 def serve_spiris_test():
     return send_from_directory(BASE, 'spiris-test.html')
 
-# â”€â”€ Spiris proxy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Spiris proxy â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 SPIRIS_HOST = 'publicapi.tid.vismaspcs.se'
 
 def spiris_token():
