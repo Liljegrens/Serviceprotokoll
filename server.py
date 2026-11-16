@@ -3,7 +3,7 @@ from functools import wraps
 import sqlite3, json, os, secrets, uuid, io
 from datetime import datetime
 import openpyxl
-import urllib.request, urllib.parse, base64
+import urllib.request, urllib.parse, urllib.error, base64, threading, time as _time
 
 BASE    = os.path.dirname(os.path.abspath(__file__))
 # Persistent data directory: Railway Volume at /data, fallback to repo dir locally
@@ -231,8 +231,6 @@ def ensure_admin():
 ensure_admin()
 
 # ── Spiris API ──────────────────────────────────────────────────────────────────
-import urllib.error, threading, time as _time
-
 SPIRIS_HOST   = 'publicapi.tid.vismaspcs.se'
 SPIRIS_APP_ID = os.environ.get('SPIRIS_APP_ID', '')
 SPIRIS_SECRET = os.environ.get('SPIRIS_SECRET', '')
