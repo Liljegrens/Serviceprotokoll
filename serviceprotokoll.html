@@ -715,6 +715,11 @@
       <div class="tile-label">Egna maskiner</div>
       <div class="tile-sub">Uthyrning & status</div>
     </div>
+<div class="home-tile" onclick="showPage('arbetsorder')">
+      <div class="tile-icon">📋</div>
+      <div class="tile-label">Arbetsorder</div>
+      <div class="tile-sub">Spiris-projekt & checklista</div>
+    </div>
 <div class="home-tile admin-only" id="home-admin-tile" onclick="showPage('admin')">
       <div class="tile-icon">⚙️</div>
       <div class="tile-label">Admin</div>
@@ -1825,6 +1830,121 @@
   </div>
   <div style="max-width:820px;margin:0 auto;padding:16px;">
     <div id="offerter-list">Laddar…</div>
+  </div>
+</div>
+
+<!-- ═══════════ ARBETSORDER PAGE ═══════════ -->
+<div id="arbetsorder-page" style="display:none;">
+  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
+    <button class="back-btn" onclick="aoNySokning()">← Hem</button>
+    <h1 style="margin:0;font-size:18px;flex:1;">Arbetsorder</h1>
+  </div>
+
+  <!-- Söksida -->
+  <div id="ao-soksektion" style="max-width:680px;margin:40px auto;padding:0 16px;">
+    <div style="margin-bottom:20px;">
+      <input type="text" id="ao-sok" autocomplete="off"
+        placeholder="Sök projektnummer eller projektnamn…"
+        oninput="aoSokInput(this.value)"
+        style="width:100%;padding:13px 16px;font-size:15px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);outline:none;">
+      <div style="font-size:12px;color:var(--gray);margin-top:6px;">Skriv minst 2 tecken för att söka</div>
+      <div id="ao-results" style="display:none;background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-top:8px;"></div>
+    </div>
+    <!-- Verkstad-kö -->
+    <div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+        <span>🔧 På verkstad</span>
+        <button onclick="aoLaddaVerkstad()" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:15px;padding:0;">↺</button>
+      </div>
+      <div id="ao-verkstad-lista" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Arbetsorderkort -->
+  <div id="ao-kort-wrap" style="display:none;max-width:800px;margin:0 auto;padding:0 16px 40px;">
+    <!-- Banner -->
+    <div style="background:#1a1a18;border-radius:12px 12px 0 0;padding:20px 24px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="flex-shrink:0;">
+        <div style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Projektnummer</div>
+        <div id="ao-nr" style="font-size:40px;font-weight:700;color:#1D9E75;font-family:monospace;line-height:1;">—</div>
+        <div id="ao-namn" style="font-size:16px;font-weight:500;color:#fff;margin-top:6px;"></div>
+        <div id="ao-kund" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;"></div>
+        <div style="margin-top:10px;">
+          <span style="font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;">Datum</span>
+          <input id="ao-datum" type="text" style="display:block;width:130px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font-size:13px;padding:2px 0;outline:none;margin-top:2px;">
+        </div>
+      </div>
+      <div id="ao-banner-extra" style="flex:1;min-width:200px;border-left:1px solid rgba(255,255,255,.1);padding-left:24px;display:grid;grid-template-columns:1fr 1fr;gap:4px;"></div>
+    </div>
+
+    <!-- Alltid-notering -->
+    <div style="background:#fff8e1;border-left:4px solid #f5a623;padding:10px 20px;font-size:12px;color:#1a1a18;">
+      📷 Ska alltid utföras: &nbsp;<strong>Fota serviceprotokoll</strong> &nbsp;·&nbsp; <strong>Fota skador</strong> &nbsp;·&nbsp; <strong>Fota maskinskylt</strong>
+    </div>
+
+    <!-- Beskrivning -->
+    <div id="ao-beskrivning-wrap" style="display:none;padding:12px 24px 4px;background:var(--card);border:1px solid var(--border);border-top:none;">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:3px;">Beskrivning</div>
+      <div id="ao-beskrivning" style="font-size:13px;color:var(--fg);white-space:pre-wrap;line-height:1.5;"></div>
+    </div>
+
+    <!-- Arbetsmoment -->
+    <div class="sektion" style="margin-top:0;border-radius:0;border-top:none;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);padding:10px 24px 6px;background:var(--surface);border-bottom:1px solid var(--border);">Arbetsmoment</div>
+      <!-- Snabbmallar -->
+      <div style="padding:8px 24px 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);">Snabbmall:</span>
+        <button onclick="aoTillamaSnabbmall(0)" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--brand);background:var(--card);color:var(--brand);font-size:11px;font-weight:700;cursor:pointer;">🔧 Storservice</button>
+        <button onclick="aoTillamaSnabbmall(1)" style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--brand);background:var(--card);color:var(--brand);font-size:11px;font-weight:700;cursor:pointer;">🔩 Grundservice</button>
+      </div>
+      <div style="overflow-x:auto;padding:0 24px 16px;">
+        <table id="ao-moment-tabell" style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1.5px solid var(--border);">
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:center;white-space:nowrap;">Nr</th>
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:left;">Åtgärd</th>
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:center;white-space:nowrap;width:80px;">Ska utföras</th>
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:center;white-space:nowrap;width:80px;">Utfört</th>
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:center;white-space:nowrap;width:60px;">Sign</th>
+            <th style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);padding:4px 6px;text-align:left;width:220px;">Notering</th>
+          </tr></thead>
+          <tbody id="ao-moment-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Godkännande -->
+    <div class="sektion" style="border-radius:0;border-top:none;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);padding:10px 24px 6px;background:var(--surface);border-bottom:1px solid var(--border);">Godkännande</div>
+      <div style="margin:12px 24px 0;padding:12px 16px;border:2px solid #1a1a18;border-radius:8px;background:var(--card);display:flex;align-items:center;gap:12px;">
+        <input type="checkbox" id="ao-provkord" style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer;flex-shrink:0;">
+        <label for="ao-provkord" style="font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;flex:1;">Maskin provkörd efter avslutad reparation</label>
+        <div style="flex-shrink:0;width:160px;"><div style="border-bottom:1.5px solid var(--fg);height:24px;margin-bottom:4px;"></div><div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);">Signatur</div></div>
+      </div>
+      <div style="margin:8px 24px 16px;padding:12px 16px;border:2px solid var(--brand);border-radius:8px;background:var(--card);display:flex;align-items:center;gap:12px;">
+        <input type="checkbox" id="ao-punkter-ok" style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer;flex-shrink:0;">
+        <label for="ao-punkter-ok" style="font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;flex:1;">Samtliga punkter utförda och kontrollerade</label>
+        <div style="flex-shrink:0;width:160px;"><div style="border-bottom:1.5px solid var(--fg);height:24px;margin-bottom:4px;"></div><div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gray);">Signatur</div></div>
+      </div>
+    </div>
+
+    <!-- Tidigare arbete -->
+    <div class="sektion" style="border-radius:0;border-top:none;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);padding:10px 24px 6px;background:var(--surface);border-bottom:1px solid var(--border);">Tidigare utfört arbete</div>
+      <div id="ao-tider" style="padding:4px 24px 14px;"></div>
+    </div>
+
+    <!-- Statushistorik -->
+    <div class="sektion" style="border-radius:0 0 12px 12px;border-top:none;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);padding:10px 24px 6px;background:var(--surface);border-bottom:1px solid var(--border);">Statushistorik</div>
+      <div id="ao-logg" style="padding:4px 24px 14px;"></div>
+    </div>
+
+    <!-- Knappar -->
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <button onclick="aoSkrivUt(false)" style="padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;border:none;background:var(--brand);color:#fff;cursor:pointer;">🖨 Skriv ut alla</button>
+      <button onclick="aoSkrivUt(true)"  style="padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;border:none;background:#333;color:#fff;cursor:pointer;">🖨 Skriv ut markerade</button>
+      <button onclick="aoNySokning()"    style="padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--card);color:var(--fg);cursor:pointer;">← Ny sökning</button>
+    </div>
   </div>
 </div>
 
@@ -3192,6 +3312,7 @@ function showPage(page) {
     'offerter':           ['offerter-page',             'block'],
     'egna-maskiner':      ['egna-maskiner-page',        'block'],
     'open-items':         ['open-items-page',           'block'],
+    'arbetsorder':        ['arbetsorder-page',          'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -7321,6 +7442,326 @@ function roOpenProtocol() {
 document.getElementById('qr-modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
+
+// ═══════════════════════════════════════════════════
+// ARBETSORDER
+// ═══════════════════════════════════════════════════
+var AO_MOMENT = [
+  { nr: 'P1',   text: 'Kontroll med protokoll' },
+  { nr: 'P2',   text: 'Felsökning' },
+  { nr: 'P3',   text: 'Reparation' },
+  { nr: 'P4',   text: 'Tillverkning' },
+  { nr: '1',    text: 'Reparation av hydraulik, pump, ventil, tank' },
+  { nr: '2',    text: 'Påfyllning av hydraulolja' },
+  { nr: '3',    text: 'Oljefilter' },
+  { nr: '4',    text: 'Hydraulslangar och kopplingar' },
+  { nr: '5',    text: 'Hydraulcylinder' },
+  { nr: '7',    text: 'Reparation el, styrsystem och motor' },
+  { nr: '10',   text: 'Reparation av manöverpanel och nödstoppsfunktion' },
+  { nr: '12',   text: 'Säkerhetslister och rörelseskydd' },
+  { nr: '13',   text: 'Renovering pressplatta' },
+  { nr: '14',   text: 'Jalusiplåtar och skraplister' },
+  { nr: '15',   text: 'Renovering inkastlock' },
+  { nr: '17',   text: 'Reparation baklucka' },
+  { nr: '17.1', text: 'Byte av vantskruv' },
+  { nr: '17.2', text: 'Extra tvingar' },
+  { nr: '17.3', text: 'Upphängningskedja' },
+  { nr: '19',   text: 'Tätlist baklucka' },
+  { nr: '20',   text: 'Reparation / byte hjul' },
+  { nr: '21',   text: 'Reparation / byte lyftkrokar' },
+  { nr: '22',   text: 'Smörjning' },
+  { nr: '23',   text: 'Bultar och infästningar' },
+  { nr: '24',   text: 'Lackering / målning' },
+  { nr: '25',   text: 'Byte varningsdekaler' },
+  { nr: '26',   text: 'Byte reflexer' },
+  { nr: '27',   text: 'Rensning och städning / tvättning' },
+  { nr: '28',   text: 'Renovering av golv' },
+  { nr: '29',   text: 'Reparation av låsning för transport i rambalk' },
+  { nr: '30',   text: '', custom: true },
+  { nr: '31',   text: '', custom: true },
+  { nr: '32',   text: '', custom: true },
+  { nr: '33',   text: '', custom: true },
+];
+var AO_SNABBMALLAR = [
+  { ska: [0, 5, 6, 7, 16, 22, 27] }, // Storservice: P1, olja, filter, slangar, vantskruv, smörjning, städning
+  { ska: [0, 6, 7, 22, 27] },         // Grundservice
+];
+
+var _aoProjektId   = null;
+var _aoSparTimer   = null;
+var _aoSokTimer    = null;
+
+function aoInit() {
+  aoLaddaVerkstad();
+  const today = new Date();
+  document.getElementById('ao-datum').value =
+    today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+}
+
+function aoNySokning() {
+  _aoProjektId = null;
+  clearTimeout(_aoSparTimer);
+  document.getElementById('ao-soksektion').style.display = '';
+  document.getElementById('ao-kort-wrap').style.display  = 'none';
+  document.getElementById('ao-sok').value = '';
+  document.getElementById('ao-results').style.display = 'none';
+}
+
+function aoSokInput(val) {
+  clearTimeout(_aoSokTimer);
+  const res = document.getElementById('ao-results');
+  if (val.trim().length < 2) { res.style.display = 'none'; return; }
+  _aoSokTimer = setTimeout(() => aoSok(val.trim()), 300);
+}
+
+async function aoSok(q) {
+  const res = document.getElementById('ao-results');
+  res.style.display = 'block';
+  res.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px;">Söker…</div>';
+  try {
+    const data = await apiFetch('/api/projekt?q=' + encodeURIComponent(q));
+    if (!data.length) { res.innerHTML = '<div style="padding:16px;color:var(--gray);font-size:13px;">Inga projekt hittades</div>'; return; }
+    res.innerHTML = data.map(p => `<div onclick="aoVisaProjekt(${p.id})" style="padding:11px 16px;border-bottom:.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;">
+      <span style="font-family:monospace;font-size:11px;background:var(--surface);padding:2px 7px;border-radius:4px;color:var(--gray);white-space:nowrap;font-weight:600;">${p.nr||'—'}</span>
+      <span style="font-size:13px;font-weight:500;flex:1;">${p.namn||''}</span>
+      <span style="font-size:11px;color:var(--gray);white-space:nowrap;">${p.kund||''}</span>
+    </div>`).join('');
+  } catch(e) {
+    res.innerHTML = '<div style="padding:16px;color:#c62828;font-size:13px;">Fel: ' + e.message + '</div>';
+  }
+}
+
+async function aoLaddaVerkstad() {
+  const lista = document.getElementById('ao-verkstad-lista');
+  lista.innerHTML = '<div style="font-size:12px;color:var(--gray);">Hämtar…</div>';
+  try {
+    const data = await apiFetch('/api/verkstad');
+    if (!data.length) { lista.innerHTML = '<div style="font-size:12px;color:var(--gray);">Inga projekt på verkstad</div>'; return; }
+    lista.innerHTML = data.map(p => {
+      const isStar = (p.status||'').toLowerCase().includes('star');
+      const border = isStar ? 'var(--brand)' : '#f5a623';
+      const bg     = isStar ? 'var(--card)'  : 'var(--card)';
+      return `<div onclick="aoVisaProjekt(${p.id})" style="background:${bg};border-radius:8px;border:1px solid var(--border);border-left:4px solid ${border};padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:monospace;font-size:12px;font-weight:700;">${p.nr||'—'}</div>
+          <div style="font-size:12px;color:var(--fg);margin-top:1px;">${p.namn||''}</div>
+          <div style="font-size:10px;color:var(--gray);margin-top:1px;">${p.kund||''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch {
+    lista.innerHTML = '<div style="font-size:12px;color:#c62828;">Kunde inte hämta</div>';
+  }
+}
+
+async function aoVisaProjekt(id) {
+  document.getElementById('ao-results').style.display = 'none';
+  document.getElementById('ao-sok').value = '';
+  document.getElementById('ao-soksektion').style.display = 'none';
+  document.getElementById('ao-kort-wrap').style.display  = 'block';
+  document.getElementById('ao-nr').textContent   = '…';
+  document.getElementById('ao-namn').textContent = '';
+  document.getElementById('ao-kund').textContent = '';
+  document.getElementById('ao-tider').innerHTML  = '<div style="font-size:13px;color:var(--gray);padding:8px 0;">Hämtar…</div>';
+  document.getElementById('ao-logg').innerHTML   = '<div style="font-size:13px;color:var(--gray);padding:8px 0;">Hämtar…</div>';
+
+  aoByggtabell();
+
+  try {
+    const [proj, akt, logg, tider] = await Promise.all([
+      apiFetch('/api/projekt/' + id),
+      apiFetch('/api/projekt/' + id + '/aktiviteter'),
+      apiFetch('/api/projekt/' + id + '/logg'),
+      apiFetch('/api/projekt/' + id + '/tider'),
+    ]);
+    aoRenderaProjekt(proj, logg, tider);
+    _aoProjektId = id;
+    const today = new Date();
+    document.getElementById('ao-datum').value =
+      today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    aoLaddaSparning(id, proj.status);
+    aoKoppla();
+  } catch(e) {
+    document.getElementById('ao-nr').textContent = 'Fel: ' + e.message;
+  }
+}
+
+function aoRenderaProjekt(p, logg, tider) {
+  document.getElementById('ao-nr').textContent   = p.nr   || '—';
+  document.getElementById('ao-namn').textContent = p.namn || '';
+  document.getElementById('ao-kund').textContent = p.kund || '';
+
+  // Bannerinfo
+  let extra = '';
+  if (p.status)  extra += aoBannerFalt('Status',        p.status);
+  if (p.adress)  extra += aoBannerFalt('Adress',        p.adress);
+  if (p.varRef)  extra += aoBannerFalt('Er referens',   p.varRef);
+  if (p.varRef2) extra += aoBannerFalt('Vår referens',  p.varRef2);
+  document.getElementById('ao-banner-extra').innerHTML = extra;
+
+  // Beskrivning
+  const bwrap = document.getElementById('ao-beskrivning-wrap');
+  if (p.beskrivning) {
+    document.getElementById('ao-beskrivning').textContent = p.beskrivning;
+    bwrap.style.display = '';
+  } else {
+    bwrap.style.display = 'none';
+  }
+
+  // Tider
+  const tiderMedKommentar = (tider||[]).filter(t => t.kommentar);
+  const tiderEl = document.getElementById('ao-tider');
+  if (tiderMedKommentar.length) {
+    tiderEl.innerHTML = tiderMedKommentar.map(t =>
+      `<div style="display:flex;gap:10px;padding:5px 0;border-bottom:.5px solid var(--border);font-size:12px;align-items:baseline;">
+        <span style="color:var(--gray);white-space:nowrap;min-width:72px;">${t.datum||''}</span>
+        <span style="color:#888;white-space:nowrap;min-width:110px;">${t.person||''}</span>
+        <span style="color:var(--fg);flex:1;">${t.kommentar||''}</span>
+      </div>`).join('');
+  } else {
+    tiderEl.innerHTML = '<div style="font-size:13px;color:var(--gray);padding:6px 0;">Inga kommentarer registrerade</div>';
+  }
+
+  // Logg
+  const loggEl = document.getElementById('ao-logg');
+  if (logg && logg.length) {
+    loggEl.innerHTML = logg.map(l =>
+      `<div style="display:flex;gap:12px;padding:5px 0;border-bottom:.5px solid var(--border);font-size:12px;">
+        <span style="color:var(--gray);white-space:nowrap;">${l.datum||''}</span>
+        <span style="color:#888;white-space:nowrap;">${l.av||''}</span>
+        <div style="flex:1;"><div>${l.text||''}</div>${l.kommentar?`<div style="font-size:11px;color:#666;font-style:italic;">${l.kommentar}</div>`:''}</div>
+      </div>`).join('');
+  } else {
+    loggEl.innerHTML = '<div style="font-size:13px;color:var(--gray);padding:6px 0;">Ingen historik tillgänglig</div>';
+  }
+}
+
+function aoBannerFalt(label, val) {
+  return `<div style="padding:4px 0;">
+    <span style="display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35);margin-bottom:2px;">${label}</span>
+    <span style="font-size:12px;color:rgba(255,255,255,.75);">${val}</span>
+  </div>`;
+}
+
+function aoByggtabell() {
+  const tbody = document.getElementById('ao-moment-tbody');
+  tbody.innerHTML = AO_MOMENT.map((m, i) => {
+    const artCell = m.custom
+      ? `<input type="text" class="ao-art-input" placeholder="Eget arbetsmoment…" style="border:none;border-bottom:1px solid var(--border);background:transparent;width:100%;font-size:12.5px;outline:none;padding:1px 2px;color:var(--fg);">`
+      : `<span>${m.text}</span>`;
+    return `<tr style="border-bottom:.5px solid var(--border);">
+      <td style="text-align:center;font-size:11px;color:var(--gray);font-weight:600;padding:5px 6px;">${m.nr}</td>
+      <td style="padding:5px 6px;">${artCell}</td>
+      <td style="text-align:center;padding:5px 6px;"><input type="checkbox" id="ao-ms${i}" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer;"></td>
+      <td style="text-align:center;padding:5px 6px;"><input type="checkbox" id="ao-mu${i}" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer;"></td>
+      <td style="padding:5px 6px;"><input type="text" class="ao-sign" placeholder="" style="border:none;border-bottom:1.5px solid var(--border);background:transparent;width:54px;font-size:12px;outline:none;padding:1px 2px;"></td>
+      <td style="padding:5px 6px;"><input type="text" class="ao-not" placeholder="" style="border:none;border-bottom:1px solid var(--border);background:transparent;width:100%;font-size:12px;outline:none;padding:1px 2px;"></td>
+    </tr>`;
+  }).join('');
+}
+
+function aoTillamaSnabbmall(idx) {
+  const mall = AO_SNABBMALLAR[idx];
+  if (!mall) return;
+  AO_MOMENT.forEach((_, i) => {
+    const cb = document.getElementById('ao-ms' + i);
+    if (cb) cb.checked = false;
+  });
+  mall.ska.forEach(i => {
+    const cb = document.getElementById('ao-ms' + i);
+    if (cb) cb.checked = true;
+  });
+  aoSparOrdning();
+}
+
+function aoByggState() {
+  const rows  = document.querySelectorAll('#ao-moment-tbody tr');
+  const moment = [];
+  rows.forEach((rad, i) => {
+    moment.push({
+      ska:        (document.getElementById('ao-ms' + i) || {}).checked || false,
+      utfort:     (document.getElementById('ao-mu' + i) || {}).checked || false,
+      sign:       (rad.querySelector('.ao-sign')    || {}).value || '',
+      notering:   (rad.querySelector('.ao-not')     || {}).value || '',
+      customText: (rad.querySelector('.ao-art-input')|| {}).value || '',
+    });
+  });
+  return {
+    bannerDatum: document.getElementById('ao-datum').value,
+    provkord:    (document.getElementById('ao-provkord')    || {}).checked || false,
+    punkterOk:   (document.getElementById('ao-punkter-ok') || {}).checked || false,
+    moment,
+  };
+}
+
+function aoGorSparning() {
+  if (!_aoProjektId) return;
+  apiFetch('/api/ordrar/' + _aoProjektId, { method: 'POST', body: JSON.stringify(aoByggState()) });
+}
+
+function aoSparOrdning() {
+  if (!_aoProjektId) return;
+  clearTimeout(_aoSparTimer);
+  _aoSparTimer = setTimeout(aoGorSparning, 800);
+}
+
+async function aoLaddaSparning(id, status) {
+  if ((status||'').toLowerCase().includes('avslut')) {
+    apiFetch('/api/ordrar/' + id, { method: 'DELETE' }).catch(() => {});
+    return;
+  }
+  try {
+    const state = await apiFetch('/api/ordrar/' + id);
+    if (!state) return;
+    if (state.bannerDatum) document.getElementById('ao-datum').value = state.bannerDatum;
+    (state.moment || []).forEach((m, i) => {
+      const rows = document.querySelectorAll('#ao-moment-tbody tr');
+      const rad  = rows[i];
+      if (!rad) return;
+      const ska  = document.getElementById('ao-ms' + i);
+      const utf  = document.getElementById('ao-mu' + i);
+      const sign = rad.querySelector('.ao-sign');
+      const not  = rad.querySelector('.ao-not');
+      const art  = rad.querySelector('.ao-art-input');
+      if (ska)  ska.checked  = m.ska    || false;
+      if (utf)  utf.checked  = m.utfort || false;
+      if (sign) sign.value   = m.sign       || '';
+      if (not)  not.value    = m.notering   || '';
+      if (art)  art.value    = m.customText || '';
+    });
+    if (state.provkord  != null) document.getElementById('ao-provkord').checked   = state.provkord;
+    if (state.punkterOk != null) document.getElementById('ao-punkter-ok').checked = state.punkterOk;
+  } catch {}
+}
+
+function aoKoppla() {
+  document.querySelectorAll('#ao-moment-tbody input').forEach(el => el.addEventListener('change', aoSparOrdning));
+  document.querySelectorAll('#ao-moment-tbody input[type=text]').forEach(el => el.addEventListener('input', aoSparOrdning));
+  document.getElementById('ao-datum').addEventListener('input', aoSparOrdning);
+  document.getElementById('ao-provkord').addEventListener('change', aoSparOrdning);
+  document.getElementById('ao-punkter-ok').addEventListener('change', aoSparOrdning);
+}
+
+function aoSkrivUt(markerade) {
+  aoGorSparning();
+  if (markerade) {
+    document.querySelectorAll('#ao-moment-tbody tr').forEach(rad => {
+      const nagonIkryssad = Array.from(rad.querySelectorAll('input[type=checkbox]')).some(cb => cb.checked);
+      if (!nagonIkryssad) rad.style.display = 'none';
+    });
+  }
+  window.print();
+  if (markerade) {
+    document.querySelectorAll('#ao-moment-tbody tr').forEach(rad => rad.style.display = '');
+  }
+}
+
+// Kör init när sidan för arbetsorder visas
+const _origShowPage = showPage;
+function showPage(page) {
+  _origShowPage(page);
+  if (page === 'arbetsorder') aoInit();
+}
 </script>
 </body>
 </html>

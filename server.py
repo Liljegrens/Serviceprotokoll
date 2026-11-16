@@ -173,6 +173,23 @@ def init_db():
         if 'typ' not in cols_hlog:
             db.execute("ALTER TABLE hydrauliklogg ADD COLUMN typ TEXT DEFAULT 'byte'")
     with get_db() as db:
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS cylinderlogg (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            maskin_nr TEXT NOT NULL,
+            datum     TEXT NOT NULL,
+            typ       TEXT DEFAULT 'packningar',
+            faktura   TEXT DEFAULT '',
+            packningar TEXT DEFAULT '',
+            notering  TEXT DEFAULT '',
+            saved_at  TEXT
+        )""")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_cyllogg_maskin ON cylinderlogg(maskin_nr)")
+        # cylinder_packningar column on machines
+        cols_m = [r[1] for r in db.execute("PRAGMA table_info(machines)").fetchall()]
+        if 'cylinder_packningar' not in cols_m:
+            db.execute("ALTER TABLE machines ADD COLUMN cylinder_packningar TEXT DEFAULT ''")
+    with get_db() as db:
         cols_em = [r[1] for r in db.execute("PRAGMA table_info(egna_maskiner)").fetchall()]
         if 'adress' not in cols_em:
             db.execute("ALTER TABLE egna_maskiner ADD COLUMN adress TEXT DEFAULT ''")
@@ -213,7 +230,207 @@ def ensure_admin():
 
 ensure_admin()
 
-# â”€â”€ Serve frontend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Spiris API ──────────────────────────────────────────────────────────────────
+import urllib.error, threading, time as _time
+
+SPIRIS_HOST   = 'publicapi.tid.vismaspcs.se'
+SPIRIS_APP_ID = os.environ.get('SPIRIS_APP_ID', '')
+SPIRIS_SECRET = os.environ.get('SPIRIS_SECRET', '')
+
+_spiris_token         = None
+_spiris_token_expires = 0
+_spiris_token_lock    = threading.Lock()
+
+def _spiris_get_token():
+    global _spiris_token, _spiris_token_expires
+    with _spiris_token_lock:
+        if _spiris_token and _time.time() < _spiris_token_expires:
+            return _spiris_token
+        cred = base64.b64encode(f'{SPIRIS_APP_ID}:{SPIRIS_SECRET}'.encode()).decode()
+        req  = urllib.request.Request(
+            f'https://{SPIRIS_HOST}/v1/Auth/Token',
+            method='POST',
+            headers={'Authorization': f'Basic {cred}', 'Content-Length': '0'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            j = json.loads(r.read())
+        _spiris_token         = j['accessToken']
+        _spiris_token_expires = _time.time() + 50 * 60
+        return _spiris_token
+
+def _spiris_get(path):
+    token = _spiris_get_token()
+    req   = urllib.request.Request(
+        f'https://{SPIRIS_HOST}{path}',
+        headers={'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
+    )
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read())
+
+def _spiris_items(data):
+    if isinstance(data, list): return data
+    return data.get('data') or data.get('items') or []
+
+def _oversatt_logg(text):
+    import re
+    text = re.sub(r'changed the status from\s+(.+?)\s+to\s+(.+)', r'Ändrade status från \1 till \2', text, flags=re.I)
+    text = re.sub(r'changed the status to\s+(.+)', r'Ändrade status till \1', text, flags=re.I)
+    return text
+
+# ordrar-tabell för arbetsorder-state
+with get_db() as _db:
+    _db.execute(“””
+    CREATE TABLE IF NOT EXISTS ordrar (
+        projekt_id  TEXT PRIMARY KEY,
+        state_json  TEXT NOT NULL,
+        saved_at    TEXT
+    )”””)
+
+@app.route('/api/projekt')
+def api_projekt_sok():
+    if not SPIRIS_APP_ID: return jsonify([])
+    q = request.args.get('q', '').strip()
+    if not q: return jsonify([])
+    try:
+        data  = _spiris_get(f'/v1/Core/Projects?page=1&pageSize=20&filter.query={urllib.parse.quote(q)}')
+        items = _spiris_items(data)
+        return jsonify([{
+            'id':     p['id'],
+            'nr':     p.get('orderNumber', ''),
+            'namn':   p.get('title', ''),
+            'kund':   (p.get('customer') or {}).get('name', ''),
+            'status': (p.get('status')   or {}).get('name', ''),
+        } for p in items if 'avslut' not in ((p.get('status') or {}).get('name', '') or '').lower()])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projekt/<int:projekt_id>')
+def api_projekt_detalj(projekt_id):
+    if not SPIRIS_APP_ID: return jsonify({}), 404
+    try:
+        p = _spiris_get(f'/v1/Core/Projects/{projekt_id}')
+        return jsonify({
+            'id':          p['id'],
+            'nr':          p.get('orderNumber', ''),
+            'namn':        p.get('title', ''),
+            'kund':        (p.get('customer')  or {}).get('name', ''),
+            'status':      (p.get('status')    or {}).get('name', ''),
+            'beskrivning': p.get('description', ''),
+            'adress':      (p.get('location')  or {}).get('address', ''),
+            'varRef':      p.get('yourReference', ''),
+            'varRef2':     p.get('ourReference', ''),
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projekt/<int:projekt_id>/aktiviteter')
+def api_projekt_aktiviteter(projekt_id):
+    if not SPIRIS_APP_ID: return jsonify([])
+    try:
+        data  = _spiris_get(f'/v1/Core/Tasks?page=1&pageSize=50&filter.projectId={projekt_id}')
+        items = _spiris_items(data)
+        return jsonify([{
+            'titel':  t.get('title') or t.get('name', ''),
+            'status': (t.get('status') or {}).get('name', '') or t.get('status', ''),
+            'datum':  t.get('dueDate') or t.get('endDate', ''),
+        } for t in items])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projekt/<int:projekt_id>/tider')
+def api_projekt_tider(projekt_id):
+    if not SPIRIS_APP_ID: return jsonify([])
+    try:
+        data  = _spiris_get(f'/v1/Core/TimeReports?page=1&pageSize=100&filter.projectId={projekt_id}&sortBy=date&sortOrder=descending')
+        items = _spiris_items(data)
+        return jsonify([{
+            'datum':     (t.get('date', '') or '')[:10],
+            'person':    (t.get('user') or {}).get('name', ''),
+            'timmar':    t.get('hours', 0),
+            'kommentar': t.get('comment', ''),
+        } for t in items])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projekt/<int:projekt_id>/logg')
+def api_projekt_logg(projekt_id):
+    if not SPIRIS_APP_ID: return jsonify([])
+    try:
+        data  = _spiris_get(f'/v1/Core/Logs?page=1&pageSize=50&filter.projectId={projekt_id}&filter.logType=project_Changed_Status')
+        items = _spiris_items(data)
+        return jsonify([{
+            'text':      _oversatt_logg(l.get('text') or l.get('message', '')),
+            'av':        (l.get('createdBy') or {}).get('name', ''),
+            'datum':     (l.get('createdDate', '') or '')[:10],
+            'kommentar': l.get('comment') or l.get('note', ''),
+        } for l in items])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/verkstad')
+def api_verkstad():
+    if not SPIRIS_APP_ID: return jsonify([])
+    try:
+        result = []
+        page   = 1
+        while True:
+            data  = _spiris_get(f'/v1/Core/Projects?page={page}&pageSize=100')
+            items = _spiris_items(data)
+            if not items: break
+            for p in items:
+                s = ((p.get('status') or {}).get('name', '') or '').lower()
+                if 'verkstad' in s:
+                    result.append({
+                        'id':    p['id'],
+                        'nr':    p.get('orderNumber', ''),
+                        'namn':  p.get('title', ''),
+                        'kund':  (p.get('customer') or {}).get('name', ''),
+                        'status':(p.get('status')   or {}).get('name', ''),
+                    })
+            if len(items) < 100: break
+            page += 1
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/artiklar')
+def api_artiklar():
+    if not SPIRIS_APP_ID: return jsonify([])
+    q = request.args.get('q', '').strip()
+    if not q: return jsonify([])
+    try:
+        data  = _spiris_get(f'/v1/Admin/Articles?page=1&pageSize=25&filter.query={urllib.parse.quote(q)}')
+        items = _spiris_items(data)
+        return jsonify([{
+            'id':   a['id'],
+            'nr':   a.get('articleNumber', ''),
+            'namn': a.get('name') or a.get('article', ''),
+        } for a in items])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ordrar/<projekt_id>', methods=['GET'])
+def api_ordrar_get(projekt_id):
+    with get_db() as db:
+        row = db.execute('SELECT state_json FROM ordrar WHERE projekt_id=?', [projekt_id]).fetchone()
+    if not row: return jsonify(None)
+    return jsonify(json.loads(row['state_json']))
+
+@app.route('/api/ordrar/<projekt_id>', methods=['POST'])
+def api_ordrar_post(projekt_id):
+    state = request.json
+    with get_db() as db:
+        db.execute('INSERT OR REPLACE INTO ordrar (projekt_id, state_json, saved_at) VALUES (?,?,?)',
+                   [projekt_id, json.dumps(state), datetime.now().isoformat()])
+    return jsonify({'ok': True})
+
+@app.route('/api/ordrar/<projekt_id>', methods=['DELETE'])
+def api_ordrar_delete(projekt_id):
+    with get_db() as db:
+        db.execute('DELETE FROM ordrar WHERE projekt_id=?', [projekt_id])
+    return jsonify({'ok': True})
+
+# ── Serve frontend ──────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -1250,6 +1467,31 @@ def post_hydrauliklogg():
 def delete_hydrauliklogg(log_id):
     with get_db() as db:
         db.execute('DELETE FROM hydrauliklogg WHERE id=?', [log_id])
+    return jsonify({'ok': True})
+
+@app.route('/api/cylinderlogg/<path:maskin_nr>', methods=['GET'])
+def get_cylinderlogg(maskin_nr):
+    with get_db() as db:
+        rows = db.execute(
+            'SELECT * FROM cylinderlogg WHERE UPPER(maskin_nr)=UPPER(?) ORDER BY datum DESC',
+            [maskin_nr]).fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/cylinderlogg', methods=['POST'])
+def post_cylinderlogg():
+    d = request.json
+    with get_db() as db:
+        db.execute(
+            'INSERT INTO cylinderlogg (maskin_nr,datum,typ,faktura,packningar,notering,saved_at) VALUES (?,?,?,?,?,?,?)',
+            [d['maskin_nr'], d['datum'], d.get('typ','packningar'),
+             d.get('faktura',''), d.get('packningar',''), d.get('notering',''),
+             datetime.now().isoformat()])
+    return jsonify({'ok': True})
+
+@app.route('/api/cylinderlogg/<int:log_id>', methods=['DELETE'])
+def delete_cylinderlogg(log_id):
+    with get_db() as db:
+        db.execute('DELETE FROM cylinderlogg WHERE id=?', [log_id])
     return jsonify({'ok': True})
 
 @app.route('/api/offers', methods=['POST'])
