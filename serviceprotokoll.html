@@ -3332,6 +3332,7 @@ function renderOfferPage(rec, items) {
               <div style="display:flex;flex-direction:column;gap:6px;min-width:140px;">
                 <label style="font-size:11px;font-weight:700;color:var(--gray);">Pris (kr)</label>
                 <input type="number" class="offert-pris-base" data-idx="${idx}" placeholder="t.ex. 5000"
+                  value="${it.pris_base || it.pris_min || ''}"
                   style="border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;" oninput="updateOfferTotal()">
                 <div class="offert-range-display" data-idx="${idx}" style="font-size:11px;color:var(--gray);min-height:16px;"></div>
               </div>
