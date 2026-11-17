@@ -3272,8 +3272,10 @@ async function exportMaskinregister() {
 
 function openCreateOffer(rec) {
   closeModal(null, true);
-  const anmarkningar = rec.items.filter(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
-  renderOfferPage(rec, anmarkningar);
+  const allItems = rec.items || [];
+  const anmarkningar = allItems.filter(i => i.status === 'akut' || i.status === 'bevaka' || i.status === '2' || i.status === '3');
+  console.log('openCreateOffer items:', allItems.length, 'anmarkningar:', anmarkningar.length, allItems.map(i=>i.status));
+  renderOfferPage(rec, anmarkningar.length ? anmarkningar : allItems);
   showPage('offert');
   document.getElementById('offert-back-btn').onclick = () => showPage('overview');
 }
