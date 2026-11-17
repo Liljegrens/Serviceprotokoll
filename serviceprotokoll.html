@@ -3819,6 +3819,7 @@ async function openSavedOffer(offerId) {
 
 async function saveOffer(protocolId, maskinNr, kund, anlaggning, modell, datum, tekniker) {
   const items = collectOfferItems();
+  console.log('saveOffer items:', items.length, JSON.stringify(items));
   try {
     await apiFetch('/api/offers', {
       method: 'POST',
