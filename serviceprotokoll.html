@@ -4617,7 +4617,7 @@ function openProtocol(type) {
   if (printBtn) printBtn.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
 
   currentMachineType = null;
-  buildChecklist(getChecklistItems());
+  loadPointInstructions().then(() => buildChecklist(getChecklistItems()));
   document.getElementById('f-datum').value = new Date().toISOString().split('T')[0];
   ['f-maskin','f-modell','f-kund'].forEach(id => document.getElementById(id).value='');
   document.getElementById('temp-info-block').style.display = 'none';
@@ -5013,6 +5013,12 @@ function goBack() {
 // ═══════════════════════════════════════════════════
 // BUILD CHECKLIST
 // ═══════════════════════════════════════════════════
+let _pointInstructions = {};
+
+async function loadPointInstructions() {
+  try { _pointInstructions = await apiFetch('/api/point-instructions'); } catch { _pointInstructions = {}; }
+}
+
 function buildChecklist(items) {
   const container = document.getElementById('checklist-container');
   container.innerHTML = '';
@@ -5042,7 +5048,15 @@ function buildItem(item) {
   const top = document.createElement('div'); top.className = 'item-top';
   const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
   const lbl = document.createElement('span');
-  lbl.className = 'item-label' + (item.indent?' sub':''); lbl.textContent = item.label;
+  lbl.className = 'item-label' + (item.indent?' sub':'');
+  const instr = _pointInstructions[item.nr];
+  if (instr && (instr.body || instr.image_path)) {
+    lbl.innerHTML = `<span style="color:var(--brand);cursor:pointer;border-bottom:1px dashed var(--brand);" onclick="openPointInstruction('${item.nr}')">${item.label}</span>`;
+  } else if (currentUser && currentUser.role === 'admin') {
+    lbl.innerHTML = `<span style="cursor:pointer;" onclick="openPointInstruction('${item.nr}')">${item.label}</span>`;
+  } else {
+    lbl.textContent = item.label;
+  }
   const rg = document.createElement('div'); rg.className = 'radio-group';
   [['1','OK'],['2','Bev.'],['3','Akut'],['4','Ej åtk.']].forEach(([val,txt]) => {
     const opt = document.createElement('div'); opt.className = 'radio-opt';
@@ -5074,6 +5088,62 @@ function buildItem(item) {
 
   cb.appendChild(cl); cb.appendChild(ta); cb.appendChild(photoRow); div.appendChild(cb);
   return div;
+}
+
+async function openPointInstruction(pointNr) {
+  const instr = _pointInstructions[pointNr] || {};
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:var(--card);border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:20px;position:relative;">
+      <button onclick="this.closest('[style]').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">✕</button>
+      <div style="font-size:11px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Instruktion – punkt ${pointNr}</div>
+      <div id="pi-content">
+        ${instr.body || instr.image_path ? `
+          ${instr.body ? `<p style="font-size:14px;line-height:1.6;margin:0 0 12px;">${instr.body.replace(/\n/g,'<br>')}</p>` : ''}
+          ${instr.image_path ? `<img src="/uploads/${instr.image_path}" style="width:100%;border-radius:8px;margin-top:8px;">` : ''}
+        ` : `<p style="color:var(--gray);font-size:14px;">Ingen instruktion tillagd ännu.</p>`}
+      </div>
+      ${isAdmin ? `
+        <div id="pi-edit" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+          <label style="font-size:12px;font-weight:700;color:var(--gray);">Text</label>
+          <textarea id="pi-body" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:13px;margin-top:4px;resize:vertical;">${instr.body||''}</textarea>
+          <label style="font-size:12px;font-weight:700;color:var(--gray);margin-top:10px;display:block;">Bild</label>
+          <input type="file" id="pi-img" accept="image/*" style="margin-top:4px;">
+          ${instr.image_path ? `<img src="/uploads/${instr.image_path}" style="width:80px;border-radius:6px;margin-top:6px;">` : ''}
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="savePointInstruction('${pointNr}',this)" style="flex:1;padding:10px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Spara</button>
+            <button onclick="document.getElementById('pi-edit').style.display='none'" style="padding:10px 16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:none;">Avbryt</button>
+          </div>
+        </div>
+        <button onclick="document.getElementById('pi-edit').style.display='block'" style="margin-top:14px;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;background:none;color:var(--brand);">✏️ ${instr.body||instr.image_path?'Redigera':'Lägg till instruktion'}</button>
+      ` : ''}
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function savePointInstruction(pointNr, btn) {
+  const body = document.getElementById('pi-body').value.trim();
+  const imgFile = document.getElementById('pi-img').files[0];
+  btn.textContent = '⏳ Sparar…'; btn.disabled = true;
+  try {
+    let image_path = _pointInstructions[pointNr]?.image_path || '';
+    if (imgFile) {
+      const fd = new FormData(); fd.append('file', imgFile);
+      const up = await apiFetch('/api/upload', { method:'POST', body: fd });
+      image_path = up.filename;
+    }
+    await apiFetch('/api/point-instructions/' + encodeURIComponent(pointNr), {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ body, image_path })
+    });
+    _pointInstructions[pointNr] = { point_nr: pointNr, body, image_path };
+    document.querySelector('[style*="z-index:9000"]')?.remove();
+    buildChecklist(getChecklistItems());
+  } catch(e) { alert('Kunde inte spara.'); btn.textContent = 'Spara'; btn.disabled = false; }
 }
 
 async function uploadItemPhoto(fileInput, itemNr, photoRow, photoBtn) {

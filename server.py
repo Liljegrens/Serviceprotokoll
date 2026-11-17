@@ -155,6 +155,16 @@ def init_db():
                          'inst_panelhojd','inst_panel','inst_el','inst_elintag']:
             if col_name not in cols:
                 db.execute(f"ALTER TABLE machines ADD COLUMN {col_name} TEXT DEFAULT ''")
+    # Punktinstruktioner
+    with get_db() as db:
+        db.execute("""
+        CREATE TABLE IF NOT EXISTS point_instructions (
+            point_nr   TEXT PRIMARY KEY,
+            title      TEXT DEFAULT '',
+            body       TEXT DEFAULT '',
+            image_path TEXT DEFAULT '',
+            updated_at TEXT
+        )""")
     # Skapa hydrauliklogg-tabell om den saknas
     with get_db() as db:
         db.execute("""
@@ -1250,6 +1260,32 @@ def post_hydrauliklogg():
 def delete_hydrauliklogg(log_id):
     with get_db() as db:
         db.execute('DELETE FROM hydrauliklogg WHERE id=?', [log_id])
+    return jsonify({'ok': True})
+
+@app.route('/api/point-instructions', methods=['GET'])
+def list_point_instructions():
+    with get_db() as db:
+        rows = db.execute('SELECT * FROM point_instructions').fetchall()
+    return jsonify({r['point_nr']: dict(r) for r in rows})
+
+@app.route('/api/point-instructions/<path:point_nr>', methods=['GET'])
+def get_point_instruction(point_nr):
+    with get_db() as db:
+        row = db.execute('SELECT * FROM point_instructions WHERE point_nr=?', [point_nr]).fetchone()
+    return jsonify(dict(row) if row else {})
+
+@app.route('/api/point-instructions/<path:point_nr>', methods=['POST'])
+@require_admin
+def save_point_instruction(point_nr):
+    d = request.get_json(force=True)
+    with get_db() as db:
+        db.execute("""
+            INSERT INTO point_instructions (point_nr, title, body, image_path, updated_at)
+            VALUES (?,?,?,?,?)
+            ON CONFLICT(point_nr) DO UPDATE SET
+                title=excluded.title, body=excluded.body,
+                image_path=excluded.image_path, updated_at=excluded.updated_at
+        """, [point_nr, d.get('title',''), d.get('body',''), d.get('image_path',''), datetime.now().isoformat()])
     return jsonify({'ok': True})
 
 @app.route('/api/offers', methods=['POST'])
