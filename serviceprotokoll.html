@@ -775,6 +775,11 @@
           <h2>Serviceprotokoll Komprimator</h2>
           <p>Typ 5 · Detaljerat serviceprotokoll komprimator (5 sektioner)</p>
         </div>
+        <div class="start-card" data-protocol="komprimator-b" onclick="openProtocol('komprimator-b')">
+          <div style="font-size:48px;margin-bottom:12px;">🚗</div>
+          <h2>Flygande service Komprimator</h2>
+          <p>Typ 5B · Serviceprotokoll hos kund, inkl. installation och placering</p>
+        </div>
         <div class="start-card" data-protocol="odourmikko" onclick="openProtocol('odourmikko')">
           <div class="icon">💨</div>
           <h2>Serviceprotokoll Vakuumaggregat</h2>
@@ -3223,6 +3228,7 @@ let currentMachineType  = null;   // 'kaly' | null | …
 function getChecklistItems() {
   if (currentMachineType === 'kaly') return [...KALY_ITEMS];
   if (currentType === 'komprimator') return [...KOMP_NYTT_ITEMS];
+  if (currentType === 'komprimator-b') return [...KOMP_NYTT_ITEMS, ...FLYGANDE_EXTRA];
   if (currentType === 'vandare') return [...VANDARE_ITEMS];
   if (currentType === 'vandare-kaly') return [...VANDARE_KALY_ITEMS];
   if (currentType === 'odourmikko') return [...ODOURMIKKO_ITEMS];
@@ -4599,7 +4605,7 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator', 'komprimator-b': 'Typ 5B – Flygande service Komprimator', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
   // Visa/dölj fält beroende på protokolltyp
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
