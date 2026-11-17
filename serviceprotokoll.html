@@ -3792,7 +3792,7 @@ async function deleteOffer(offerId) {
 async function openSavedOffer(offerId) {
   try {
     const o = await apiFetch('/api/offers/' + offerId);
-    const items = typeof o.items_json === 'string' ? JSON.parse(o.items_json) : (o.items_json || []);
+    const items = Array.isArray(o.items) ? o.items : (typeof o.items_json === 'string' ? JSON.parse(o.items_json) : []);
     window._offerItems = items;
     const rec = { id: o.protocol_id, maskin_nr: o.maskin_nr, kund: o.kund, anlaggning: o.anlaggning, modell: o.modell, datum: o.datum, tekniker: o.tekniker };
     showPage('offert');
