@@ -5044,12 +5044,12 @@ function printBlankProtocol(type) {
       rows += `<tr><td colspan="6" style="background:#e8edf2;font-weight:700;font-size:9pt;padding:3pt 8pt;font-style:italic;">${it.sub}</td></tr>`;
     } else if (it.nr) {
       rows += `<tr>
-        <td style="width:30pt;text-align:center;font-size:8pt;color:#555;border-right:0.5pt solid #ccc;">${it.nr}</td>
-        <td style="font-size:9pt;padding:4pt 6pt;${it.indent?'padding-left:16pt;':''}">${it.label}</td>
-        <td style="width:28pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ OK</td>
-        <td style="width:34pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ Bev.</td>
-        <td style="width:34pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ Akut</td>
-        <td style="width:150pt;border-bottom:0.5pt solid #ccc;">&nbsp;</td>
+        <td style="width:22pt;text-align:center;font-size:6.5pt;color:#555;border-right:0.5pt solid #ccc;">${it.nr}</td>
+        <td style="font-size:7pt;padding:1pt 3pt;${it.indent?'padding-left:12pt;':''}">${it.label}</td>
+        <td style="width:22pt;text-align:center;font-size:7pt;border:0.5pt solid #ccc;">☐</td>
+        <td style="width:28pt;text-align:center;font-size:7pt;border:0.5pt solid #ccc;">☐</td>
+        <td style="width:28pt;text-align:center;font-size:7pt;border:0.5pt solid #ccc;">☐</td>
+        <td style="width:130pt;border-bottom:0.5pt solid #eee;">&nbsp;</td>
       </tr>`;
     }
   });
@@ -5057,24 +5057,23 @@ function printBlankProtocol(type) {
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>${title}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 15mm 12mm; font-size: 9pt; color: #000; }
-    h1 { font-size: 13pt; color: #1a3a5c; margin: 0 0 4pt; }
-    .meta { font-size: 9pt; color: #555; margin-bottom: 10pt; }
-    .meta-row { display: flex; gap: 20pt; margin-bottom: 8pt; }
-    .meta-field { flex: 1; border-bottom: 0.5pt solid #333; padding-bottom: 2pt; }
-    .meta-label { font-size: 7.5pt; color: #888; text-transform: uppercase; letter-spacing: .04em; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
-    td { padding: 3pt 4pt; vertical-align: middle; }
+    body { font-family: Arial, sans-serif; margin: 8mm 10mm; font-size: 7pt; color: #000; }
+    h1 { font-size: 9pt; color: #1a3a5c; margin: 0; }
+    .meta-row { display: flex; gap: 10pt; margin-bottom: 4pt; }
+    .meta-field { flex: 1; border-bottom: 0.5pt solid #333; padding-bottom: 1pt; }
+    .meta-label { font-size: 6pt; color: #888; text-transform: uppercase; letter-spacing: .04em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+    td { padding: 1.2pt 3pt; vertical-align: middle; line-height: 1.2; }
     tr:nth-child(even) td:nth-child(2) { background: #fafafa; }
-    .footer { margin-top: 10pt; font-size: 7.5pt; color: #888; border-top: 0.5pt solid #ccc; padding-top: 4pt; display: flex; justify-content: space-between; }
-    @media print { @page { size: A4; margin: 15mm 12mm; } }
+    .footer { margin-top: 5pt; font-size: 6.5pt; color: #888; border-top: 0.5pt solid #ccc; padding-top: 3pt; display: flex; justify-content: space-between; }
+    @media print { @page { size: A4 portrait; margin: 8mm 10mm; } }
   </style></head><body>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5pt solid #1a3a5c;padding-bottom:6pt;margin-bottom:8pt;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1pt solid #1a3a5c;padding-bottom:3pt;margin-bottom:4pt;">
     <div>
-      <div style="font-size:14pt;font-weight:700;color:#1a3a5c;">Liljegrens i Tyresö AB</div>
+      <div style="font-size:10pt;font-weight:700;color:#1a3a5c;">Liljegrens i Tyresö AB</div>
       <h1>${title}</h1>
     </div>
-    <div style="font-size:8pt;color:#555;text-align:right;">Datum: ____-____-____<br>Tekniker: _______________</div>
+    <div style="font-size:7pt;color:#555;text-align:right;">Datum: ____-____-____<br>Tekniker: _______________</div>
   </div>
   <div class="meta-row">
     <div class="meta-field"><div class="meta-label">Maskinnummer</div>&nbsp;</div>
@@ -5082,18 +5081,18 @@ function printBlankProtocol(type) {
     <div class="meta-field"><div class="meta-label">Kund / Anläggning</div>&nbsp;</div>
   </div>
   <table>
-    <thead><tr style="border-bottom:1pt solid #1a3a5c;">
-      <th style="width:30pt;font-size:8pt;color:#555;">Nr</th>
-      <th style="text-align:left;font-size:8pt;">Kontrollpunkt</th>
-      <th style="width:28pt;font-size:8pt;">OK</th>
-      <th style="width:34pt;font-size:8pt;">Bevaka</th>
-      <th style="width:34pt;font-size:8pt;">Akut</th>
-      <th style="width:150pt;font-size:8pt;text-align:left;">Kommentar / åtgärd</th>
+    <thead><tr style="border-bottom:0.5pt solid #1a3a5c;">
+      <th style="width:22pt;font-size:6.5pt;color:#555;">Nr</th>
+      <th style="text-align:left;font-size:6.5pt;">Kontrollpunkt</th>
+      <th style="width:22pt;font-size:6.5pt;">OK</th>
+      <th style="width:28pt;font-size:6.5pt;">Bevaka</th>
+      <th style="width:28pt;font-size:6.5pt;">Akut</th>
+      <th style="width:130pt;font-size:6.5pt;text-align:left;">Kommentar / åtgärd</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="footer">
-    <span>Liljegrens i Tyresö AB · Serviceprotokoll ${title}</span>
+    <span>Liljegrens i Tyresö AB · ${title}</span>
     <span>Underskrift: _________________________</span>
   </div>
   <script>window.onload=()=>window.print();<\/script>
