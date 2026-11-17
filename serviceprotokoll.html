@@ -5136,7 +5136,7 @@ function buildItem(item) {
   const nr = document.createElement('span'); nr.className = 'item-nr'; nr.textContent = item.nr;
   const lbl = document.createElement('span');
   lbl.className = 'item-label' + (item.indent?' sub':'');
-  const piKey = (currentType || 'verkstad') + '/' + item.nr;
+  const piKey = (currentType || 'verkstad') + '__' + item.nr;
   const instr = _pointInstructions[piKey];
   if (instr && (instr.body || instr.image_ok || instr.image_akut)) {
     lbl.innerHTML = `<span style="color:var(--brand);cursor:pointer;border-bottom:1px dashed var(--brand);" onclick="openPointInstruction('${piKey}')">${item.label}</span>`;
