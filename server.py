@@ -1275,8 +1275,13 @@ def get_point_instruction(point_nr):
     return jsonify(dict(row) if row else {})
 
 @app.route('/api/point-instructions/<path:point_nr>', methods=['POST'])
-@require_admin
 def save_point_instruction(point_nr):
+    if not session.get('user_id'):
+        return jsonify({'error': 'Ej inloggad'}), 401
+    with get_db() as db:
+        user = db.execute('SELECT role FROM users WHERE id=?', [session['user_id']]).fetchone()
+    if not user or user['role'] != 'admin':
+        return jsonify({'error': 'Kräver admin'}), 403
     d = request.get_json(force=True)
     with get_db() as db:
         db.execute("""
