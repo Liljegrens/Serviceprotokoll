@@ -819,8 +819,8 @@
         </div>
         <div class="start-card" data-protocol="vandare" onclick="openProtocol('vandare')">
           <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
-          <h2>Serviceprotokoll Komprimator R-S</h2>
-          <p>Typ 6 · Fullständigt protokoll (röda + svarta punkter)</p>
+          <h2>Serviceprotokoll Komprimator</h2>
+          <p>Typ 6 · Ragn-Sells</p>
         </div>
         <div class="start-card" data-protocol="vandare-kaly" onclick="openProtocol('vandare-kaly')">
           <img src="/RS-logo.png" alt="Ragn-Sells" style="height:36px;object-fit:contain;margin-bottom:8px;">
@@ -1015,7 +1015,7 @@
           <input type="checkbox" data-ptype="komprimator" id="ptoggle-komprimator"> Serviceprotokoll Komprimator (Typ 5)
         </label>
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
-          <input type="checkbox" data-ptype="vandare" id="ptoggle-vandare"> Serviceprotokoll Komprimator R-S (Typ 6)
+          <input type="checkbox" data-ptype="vandare" id="ptoggle-vandare"> Serviceprotokoll Komprimator (Typ 6)
         </label>
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:8px;">
           <input type="checkbox" data-ptype="vandare-kaly" id="ptoggle-vandare-kaly"> Serviceprotokoll KÄLY R-S (Typ 7)
@@ -4622,7 +4622,7 @@ async function saveProtocol() {
 function openProtocol(type) {
   currentType = type;
   showPage('protocol');
-  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator', 'komprimator-b': 'Typ 5B – Flygande service Komprimator', vandare: 'Serviceprotokoll Komprimator Vändare (R-S)', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
+  const titles = { verkstad: 'Typ 1 – Verkstadsintag', flygande: 'Typ 2 – Flygande service', komprimator: 'Serviceprotokoll Komprimator', 'komprimator-b': 'Typ 5B – Flygande service Komprimator', vandare: 'Serviceprotokoll Komprimator', 'vandare-kaly': 'Serviceprotokoll Käly Vändare (R-S)', odourmikko: 'Serviceprotokoll Vakuumaggregat – OdourMikko 50-100', lyftbord: 'Serviceprotokoll Lyftbord' };
   document.getElementById('protocol-title').textContent = titles[type] || type;
   // Visa/dölj fält beroende på protokolltyp
   const isKompExtra = ['komprimator','vandare','vandare-kaly'].includes(type);
