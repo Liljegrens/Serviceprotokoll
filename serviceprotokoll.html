@@ -710,6 +710,11 @@
       <div class="tile-label">Kostnadsförslag</div>
       <div class="tile-sub">Uppskattade kostnader</div>
     </div>
+    <div class="home-tile admin-only" onclick="showPage('tom-protokoll')">
+      <div class="tile-icon">🖨️</div>
+      <div class="tile-label">Tomma protokoll</div>
+      <div class="tile-sub">Skriv ut Typ 5 / 5B</div>
+    </div>
     <div class="home-tile admin-only" onclick="showPage('egna-maskiner')">
       <div class="tile-icon">🏗️</div>
       <div class="tile-label">Egna maskiner</div>
@@ -1820,6 +1825,17 @@
       <button onclick="bekraftaHyraUt()" style="flex:1;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Hyr ut</button>
       <button onclick="document.getElementById('hyra-ut-overlay').style.display='none'" style="padding:12px 20px;border:1.5px solid var(--border);background:none;color:var(--fg);border-radius:8px;font-weight:600;cursor:pointer;">Avbryt</button>
     </div>
+  </div>
+</div>
+
+<div id="tom-protokoll-page" style="display:none;">
+  <div class="top-bar" style="background:var(--brand);color:#fff;display:flex;align-items:center;gap:12px;padding:12px 16px;">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1 style="margin:0;font-size:18px;flex:1;">Tomma protokoll</h1>
+  </div>
+  <div style="max-width:820px;margin:0 auto;padding:16px;display:flex;gap:12px;flex-wrap:wrap;">
+    <button onclick="printBlankProtocol('komprimator')" style="flex:1;min-width:200px;padding:16px;background:var(--brand);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Skriv ut Typ 5<br><span style="font-size:12px;font-weight:400;opacity:.85;">Verkstadsintag Komprimator</span></button>
+    <button onclick="printBlankProtocol('komprimator-b')" style="flex:1;min-width:200px;padding:16px;background:#1b5e20;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">🖨️ Skriv ut Typ 5B<br><span style="font-size:12px;font-weight:400;opacity:.85;">Flygande service Komprimator</span></button>
   </div>
 </div>
 
@@ -3199,6 +3215,7 @@ function showPage(page) {
     'offerter':           ['offerter-page',             'block'],
     'egna-maskiner':      ['egna-maskiner-page',        'block'],
     'open-items':         ['open-items-page',           'block'],
+    'tom-protokoll':      ['tom-protokoll-page',        'block'],
   };
   Object.entries(pages).forEach(([key, [id, flex]]) => {
     const el = document.getElementById(id);
@@ -5015,6 +5032,75 @@ function goBack() {
 // ═══════════════════════════════════════════════════
 // BUILD CHECKLIST
 // ═══════════════════════════════════════════════════
+function printBlankProtocol(type) {
+  const titles = { 'komprimator': 'Typ 5 – Verkstadsintag Komprimator', 'komprimator-b': 'Typ 5B – Flygande service Komprimator' };
+  const items = type === 'komprimator-b' ? [...KOMP_NYTT_ITEMS, ...FLYGANDE_EXTRA] : [...KOMP_NYTT_ITEMS];
+  const title = titles[type] || type;
+  let rows = '';
+  items.forEach(it => {
+    if (it.section) {
+      rows += `<tr><td colspan="6" style="background:#1a3a5c;color:#fff;font-weight:700;font-size:10pt;padding:5pt 8pt;">${it.section}</td></tr>`;
+    } else if (it.sub) {
+      rows += `<tr><td colspan="6" style="background:#e8edf2;font-weight:700;font-size:9pt;padding:3pt 8pt;font-style:italic;">${it.sub}</td></tr>`;
+    } else if (it.nr) {
+      rows += `<tr>
+        <td style="width:30pt;text-align:center;font-size:8pt;color:#555;border-right:0.5pt solid #ccc;">${it.nr}</td>
+        <td style="font-size:9pt;padding:4pt 6pt;${it.indent?'padding-left:16pt;':''}">${it.label}</td>
+        <td style="width:28pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ OK</td>
+        <td style="width:34pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ Bev.</td>
+        <td style="width:34pt;text-align:center;border:1pt solid #ccc;border-radius:3pt;">☐ Akut</td>
+        <td style="width:150pt;border-bottom:0.5pt solid #ccc;">&nbsp;</td>
+      </tr>`;
+    }
+  });
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 15mm 12mm; font-size: 9pt; color: #000; }
+    h1 { font-size: 13pt; color: #1a3a5c; margin: 0 0 4pt; }
+    .meta { font-size: 9pt; color: #555; margin-bottom: 10pt; }
+    .meta-row { display: flex; gap: 20pt; margin-bottom: 8pt; }
+    .meta-field { flex: 1; border-bottom: 0.5pt solid #333; padding-bottom: 2pt; }
+    .meta-label { font-size: 7.5pt; color: #888; text-transform: uppercase; letter-spacing: .04em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8pt; }
+    td { padding: 3pt 4pt; vertical-align: middle; }
+    tr:nth-child(even) td:nth-child(2) { background: #fafafa; }
+    .footer { margin-top: 10pt; font-size: 7.5pt; color: #888; border-top: 0.5pt solid #ccc; padding-top: 4pt; display: flex; justify-content: space-between; }
+    @media print { @page { size: A4; margin: 15mm 12mm; } }
+  </style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5pt solid #1a3a5c;padding-bottom:6pt;margin-bottom:8pt;">
+    <div>
+      <div style="font-size:14pt;font-weight:700;color:#1a3a5c;">Liljegrens i Tyresö AB</div>
+      <h1>${title}</h1>
+    </div>
+    <div style="font-size:8pt;color:#555;text-align:right;">Datum: ____-____-____<br>Tekniker: _______________</div>
+  </div>
+  <div class="meta-row">
+    <div class="meta-field"><div class="meta-label">Maskinnummer</div>&nbsp;</div>
+    <div class="meta-field"><div class="meta-label">Modell</div>&nbsp;</div>
+    <div class="meta-field"><div class="meta-label">Kund / Anläggning</div>&nbsp;</div>
+  </div>
+  <table>
+    <thead><tr style="border-bottom:1pt solid #1a3a5c;">
+      <th style="width:30pt;font-size:8pt;color:#555;">Nr</th>
+      <th style="text-align:left;font-size:8pt;">Kontrollpunkt</th>
+      <th style="width:28pt;font-size:8pt;">OK</th>
+      <th style="width:34pt;font-size:8pt;">Bevaka</th>
+      <th style="width:34pt;font-size:8pt;">Akut</th>
+      <th style="width:150pt;font-size:8pt;text-align:left;">Kommentar / åtgärd</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">
+    <span>Liljegrens i Tyresö AB · Serviceprotokoll ${title}</span>
+    <span>Underskrift: _________________________</span>
+  </div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
 let _pointInstructions = {};
 
 async function loadPointInstructions() {
