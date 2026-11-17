@@ -3281,6 +3281,7 @@ function openCreateOffer(rec) {
 }
 
 function renderOfferPage(rec, items) {
+  window._offerItems = items;
   const body = document.getElementById('offert-body');
   const today = new Date().toISOString().split('T')[0];
   body.innerHTML = `
