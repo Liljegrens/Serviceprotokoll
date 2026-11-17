@@ -163,8 +163,15 @@ def init_db():
             title      TEXT DEFAULT '',
             body       TEXT DEFAULT '',
             image_path TEXT DEFAULT '',
+            image_ok   TEXT DEFAULT '',
+            image_akut TEXT DEFAULT '',
             updated_at TEXT
         )""")
+        cols_pi = [r[1] for r in db.execute("PRAGMA table_info(point_instructions)").fetchall()]
+        if 'image_ok' not in cols_pi:
+            db.execute("ALTER TABLE point_instructions ADD COLUMN image_ok TEXT DEFAULT ''")
+        if 'image_akut' not in cols_pi:
+            db.execute("ALTER TABLE point_instructions ADD COLUMN image_akut TEXT DEFAULT ''")
     # Skapa hydrauliklogg-tabell om den saknas
     with get_db() as db:
         db.execute("""
@@ -1262,6 +1269,18 @@ def delete_hydrauliklogg(log_id):
         db.execute('DELETE FROM hydrauliklogg WHERE id=?', [log_id])
     return jsonify({'ok': True})
 
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['file']
+    if not f.filename:
+        return jsonify({'error': 'Ingen fil'}), 400
+    ext = os.path.splitext(f.filename)[1].lower() or '.jpg'
+    filename = str(uuid.uuid4()) + ext
+    f.save(os.path.join(UPLOADS, filename))
+    return jsonify({'filename': filename})
+
 @app.route('/api/point-instructions', methods=['GET'])
 def list_point_instructions():
     with get_db() as db:
@@ -1284,12 +1303,13 @@ def save_point_instruction(point_nr):
     d = request.get_json(force=True)
     with get_db() as db:
         db.execute("""
-            INSERT INTO point_instructions (point_nr, title, body, image_path, updated_at)
-            VALUES (?,?,?,?,?)
+            INSERT INTO point_instructions (point_nr, title, body, image_ok, image_akut, updated_at)
+            VALUES (?,?,?,?,?,?)
             ON CONFLICT(point_nr) DO UPDATE SET
                 title=excluded.title, body=excluded.body,
-                image_path=excluded.image_path, updated_at=excluded.updated_at
-        """, [point_nr, d.get('title',''), d.get('body',''), d.get('image_path',''), datetime.now().isoformat()])
+                image_ok=excluded.image_ok, image_akut=excluded.image_akut,
+                updated_at=excluded.updated_at
+        """, [point_nr, d.get('title',''), d.get('body',''), d.get('image_ok',''), d.get('image_akut',''), datetime.now().isoformat()])
     return jsonify({'ok': True})
 
 @app.route('/api/offers', methods=['POST'])

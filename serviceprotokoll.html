@@ -5101,24 +5101,37 @@ async function openPointInstruction(pointNr) {
       <button onclick="this.closest('[style]').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);">✕</button>
       <div style="font-size:11px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Instruktion – punkt ${pointNr}</div>
       <div id="pi-content">
-        ${instr.body || instr.image_path ? `
+        ${instr.body || instr.image_ok || instr.image_akut ? `
           ${instr.body ? `<p style="font-size:14px;line-height:1.6;margin:0 0 12px;">${instr.body.replace(/\n/g,'<br>')}</p>` : ''}
-          ${instr.image_path ? `<img src="/uploads/${instr.image_path}" style="width:100%;border-radius:8px;margin-top:8px;">` : ''}
+          ${(instr.image_ok || instr.image_akut) ? `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+              ${instr.image_ok ? `<div><div style="font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:4px;">✅ OK skick</div><img src="/uploads/${instr.image_ok}" style="width:100%;border-radius:8px;"></div>` : '<div></div>'}
+              ${instr.image_akut ? `<div><div style="font-size:11px;font-weight:700;color:#c62828;margin-bottom:4px;">⚠️ Åtgärda/slitet</div><img src="/uploads/${instr.image_akut}" style="width:100%;border-radius:8px;"></div>` : '<div></div>'}
+            </div>` : ''}
         ` : `<p style="color:var(--gray);font-size:14px;">Ingen instruktion tillagd ännu.</p>`}
       </div>
       ${isAdmin ? `
         <div id="pi-edit" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
-          <label style="font-size:12px;font-weight:700;color:var(--gray);">Text</label>
-          <textarea id="pi-body" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:13px;margin-top:4px;resize:vertical;">${instr.body||''}</textarea>
-          <label style="font-size:12px;font-weight:700;color:var(--gray);margin-top:10px;display:block;">Bild</label>
-          <input type="file" id="pi-img" accept="image/*" style="margin-top:4px;">
-          ${instr.image_path ? `<img src="/uploads/${instr.image_path}" style="width:80px;border-radius:6px;margin-top:6px;">` : ''}
-          <div style="display:flex;gap:8px;margin-top:12px;">
+          <label style="font-size:12px;font-weight:700;color:var(--gray);">Beskrivning</label>
+          <textarea id="pi-body" rows="4" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:13px;margin-top:4px;resize:vertical;">${instr.body||''}</textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#2e7d32;display:block;margin-bottom:4px;">✅ Bild – OK skick</label>
+              ${instr.image_ok ? `<img src="/uploads/${instr.image_ok}" style="width:100%;border-radius:6px;margin-bottom:6px;">` : ''}
+              <input type="file" id="pi-img-ok" accept="image/*" capture="environment">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#c62828;display:block;margin-bottom:4px;">⚠️ Bild – Åtgärda/slitet</label>
+              ${instr.image_akut ? `<img src="/uploads/${instr.image_akut}" style="width:100%;border-radius:6px;margin-bottom:6px;">` : ''}
+              <input type="file" id="pi-img-akut" accept="image/*" capture="environment">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
             <button onclick="savePointInstruction('${pointNr}',this)" style="flex:1;padding:10px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Spara</button>
             <button onclick="document.getElementById('pi-edit').style.display='none'" style="padding:10px 16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:none;">Avbryt</button>
           </div>
         </div>
-        <button onclick="document.getElementById('pi-edit').style.display='block'" style="margin-top:14px;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;background:none;color:var(--brand);">✏️ ${instr.body||instr.image_path?'Redigera':'Lägg till instruktion'}</button>
+        <button onclick="document.getElementById('pi-edit').style.display='block'" style="margin-top:14px;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;background:none;color:var(--brand);">✏️ ${instr.body||instr.image_ok||instr.image_akut?'Redigera':'Lägg till instruktion'}</button>
       ` : ''}
     </div>`;
   document.body.appendChild(overlay);
@@ -5126,21 +5139,28 @@ async function openPointInstruction(pointNr) {
 
 async function savePointInstruction(pointNr, btn) {
   const body = document.getElementById('pi-body').value.trim();
-  const imgFile = document.getElementById('pi-img').files[0];
+  const imgOkFile = document.getElementById('pi-img-ok').files[0];
+  const imgAkutFile = document.getElementById('pi-img-akut').files[0];
   btn.textContent = '⏳ Sparar…'; btn.disabled = true;
   try {
-    let image_path = _pointInstructions[pointNr]?.image_path || '';
-    if (imgFile) {
-      const fd = new FormData(); fd.append('file', imgFile);
+    let image_ok = _pointInstructions[pointNr]?.image_ok || '';
+    let image_akut = _pointInstructions[pointNr]?.image_akut || '';
+    if (imgOkFile) {
+      const fd = new FormData(); fd.append('file', imgOkFile);
       const up = await apiFetch('/api/upload', { method:'POST', body: fd });
-      image_path = up.filename;
+      image_ok = up.filename;
+    }
+    if (imgAkutFile) {
+      const fd = new FormData(); fd.append('file', imgAkutFile);
+      const up = await apiFetch('/api/upload', { method:'POST', body: fd });
+      image_akut = up.filename;
     }
     await apiFetch('/api/point-instructions/' + encodeURIComponent(pointNr), {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ body, image_path })
+      body: JSON.stringify({ body, image_ok, image_akut })
     });
-    _pointInstructions[pointNr] = { point_nr: pointNr, body, image_path };
+    _pointInstructions[pointNr] = { point_nr: pointNr, body, image_ok, image_akut };
     document.querySelector('[style*="z-index:9000"]')?.remove();
     buildChecklist(getChecklistItems());
   } catch(e) { alert('Kunde inte spara.'); btn.textContent = 'Spara'; btn.disabled = false; }
