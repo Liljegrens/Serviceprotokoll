@@ -4466,7 +4466,7 @@ function renderModalBody(rec) {
               : `<button class="resolve-btn" onclick="toggleResolved(${rec.id}, '${i.nr}')">✓ Åtgärdad</button>`
             }
             ${!isResolved && currentUser && currentUser.role === 'admin'
-              ? `<button class="resolve-btn" style="border-color:#1565c0;color:#1565c0;background:#e3f2fd;" onclick="openCreateAtgard(${rec.id},'${i.nr}',${JSON.stringify(i.label).replace(/'/g,"&#39;")},'${rec.maskin_nr||''}')">+ Åtgärd</button>`
+              ? `<button class="resolve-btn" style="border-color:#1565c0;color:#1565c0;background:#e3f2fd;" data-pid="${rec.id}" data-nr="${i.nr}" data-lbl="${(i.label||'').replace(/"/g,'&quot;')}" data-maskin="${rec.maskin_nr||''}" onclick="openCreateAtgardBtn(this)">+ Åtgärd</button>`
               : ''
             }
           </span>
@@ -6876,6 +6876,10 @@ async function deleteHydrauliklogg(id, nr) {
 
 let _atgardMaskinNr = '';
 let _atgardProtocolId = null;
+
+function openCreateAtgardBtn(btn) {
+  openCreateAtgard(btn.dataset.pid, btn.dataset.nr, btn.dataset.lbl, btn.dataset.maskin);
+}
 
 function openCreateAtgard(protocolId, punktNr, punktLabel, maskinNr) {
   _atgardMaskinNr = maskinNr;
