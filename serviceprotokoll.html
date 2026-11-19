@@ -6796,12 +6796,16 @@ async function saveInstruktion(nr) {
 }
 
 function _hlogStatusCard(label, logs, key, monthsWarning) {
-  const sorted = logs.filter(l => l[key]).sort((a,b) => b.datum.localeCompare(a.datum));
-  if (!sorted.length) return `<div style="background:#f5f7f9;border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+  const utford   = logs.filter(l => l[key] && l.typ !== 'planerad').sort((a,b) => b.datum.localeCompare(a.datum));
+  const planerad = logs.filter(l => l[key] && l.typ === 'planerad').sort((a,b) => b.datum.localeCompare(a.datum));
+  const planeradHtml = planerad.length
+    ? `<div style="font-size:11px;color:#1565c0;font-weight:700;margin-top:4px;">📋 Planerad åtgärd</div>`
+    : '';
+  if (!utford.length) return `<div style="background:#f5f7f9;border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
     <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;">${label}</div>
-    <div style="font-size:12px;color:#aaa;margin-top:4px;">Ej loggat</div>
+    <div style="font-size:12px;color:#aaa;margin-top:4px;">Ej loggat</div>${planeradHtml}
   </div>`;
-  const last   = sorted[0];
+  const last   = utford[0];
   const lastD  = new Date(last.datum);
   const today  = new Date();
   const daysSince = Math.floor((today - lastD) / 86400000);
@@ -6813,7 +6817,7 @@ function _hlogStatusCard(label, logs, key, monthsWarning) {
   return `<div style="background:${bg};border:1px solid ${color}40;border-radius:8px;padding:10px 14px;">
     <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.05em;">${label}</div>
     <div style="font-size:13px;font-weight:700;color:#212121;margin-top:4px;">${last.datum} <span style="font-size:11px;font-weight:400;color:#546e7a;">${isKontroll ? '(kontroll)' : '(bytt)'}</span></div>
-    <div style="font-size:11px;color:${color};margin-top:2px;">${label2}</div>
+    <div style="font-size:11px;color:${color};margin-top:2px;">${label2}</div>${planeradHtml}
   </div>`;
 }
 
@@ -6836,7 +6840,9 @@ async function loadHydrauliklogg(nr) {
     if (l.slangar) chips.push('Slangar');
     const typLabel = l.typ === 'kontroll'
       ? '<span style="background:#e8f5e9;color:#2e7d32;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Kontroll</span>'
-      : '<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Byte</span>';
+      : l.typ === 'planerad'
+      ? '<span style="background:#e3f2fd;color:#1565c0;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Planerad</span>'
+      : '<span style="background:#e8eef3;color:var(--brand);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">Bytt</span>';
     return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div>
         <div style="font-weight:700;font-size:13px;">${l.datum} &nbsp;${typLabel} &nbsp;${chips.map(c=>`<span style="background:#f0f4f8;color:#546e7a;border-radius:10px;padding:2px 8px;font-size:11px;">${c}</span>`).join(' ')}</div>
