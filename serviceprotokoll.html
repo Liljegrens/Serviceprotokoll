@@ -4206,8 +4206,9 @@ async function lookupMachine(val) {
           { label: 'Hydraulslangar',art: m.hydraulslangar,key: 'slangar',months: 48 },
         ].filter(f => f.art || logs.some(l => l[f.key]));
         hydGrid.innerHTML = hydFields.map(f => {
-          const sorted = (logs||[]).filter(l => l[f.key]).sort((a,b) => b.datum.localeCompare(a.datum));
-          const last = sorted[0];
+          const utford = (logs||[]).filter(l => l[f.key] && l.typ !== 'planerad').sort((a,b) => b.datum.localeCompare(a.datum));
+          const planerad = (logs||[]).filter(l => l[f.key] && l.typ === 'planerad').sort((a,b) => b.datum.localeCompare(a.datum));
+          const last = utford[0];
           let statusHtml = '<div style="font-size:11px;color:#aaa;margin-top:4px;">Ej loggat</div>';
           if (last) {
             const daysSince = Math.floor((new Date() - new Date(last.datum)) / 86400000);
@@ -4218,10 +4219,13 @@ async function lookupMachine(val) {
             statusHtml = `<div style="font-size:11px;color:#546e7a;margin-top:4px;">Senast ${typTxt}: <strong>${last.datum}</strong></div>
               <div style="font-size:11px;font-weight:700;color:${color};margin-top:2px;">${txt}</div>`;
           }
+          const planeradHtml = planerad.length
+            ? `<div style="font-size:11px;color:#1565c0;font-weight:700;margin-top:4px;">📋 Planerad åtgärd – ${planerad[0].notering||''}</div>`
+            : '';
           return `<div>
             <div style="font-size:11px;color:#546e7a;font-weight:600;">${f.label}</div>
             <div style="font-size:14px;font-weight:700;color:#1a3a5c;">${f.art}</div>
-            ${statusHtml}
+            ${statusHtml}${planeradHtml}
           </div>`;
         }).join('');
         hydCard.style.display = '';
