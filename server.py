@@ -62,7 +62,8 @@ def init_db():
             resolved_json    TEXT DEFAULT '{}',
             workflow_status  TEXT DEFAULT 'inkommen',
             workflow_log     TEXT DEFAULT '[]',
-            machine_type     TEXT DEFAULT ''
+            machine_type     TEXT DEFAULT '',
+            planned_actions  TEXT DEFAULT '{}'
         );
         CREATE INDEX IF NOT EXISTS idx_protocols_maskin ON protocols(maskin_nr);
         CREATE TABLE IF NOT EXISTS machine_notes (
@@ -155,6 +156,11 @@ def init_db():
                          'inst_panelhojd','inst_panel','inst_el','inst_elintag']:
             if col_name not in cols:
                 db.execute(f"ALTER TABLE machines ADD COLUMN {col_name} TEXT DEFAULT ''")
+    # Migrera protocols: lägg till planned_actions om kolumnen saknas
+    with get_db() as db:
+        p_cols = [r[1] for r in db.execute("PRAGMA table_info(protocols)").fetchall()]
+        if 'planned_actions' not in p_cols:
+            db.execute("ALTER TABLE protocols ADD COLUMN planned_actions TEXT DEFAULT '{}'")
     # Punktinstruktioner
     with get_db() as db:
         db.execute("""
@@ -1142,8 +1148,8 @@ def save_protocol():
         return jsonify({'error': 'maskin_nr krÃ¤vs'}), 400
     with get_db() as db:
         db.execute("""
-            INSERT INTO protocols (maskin_nr, datum, type, machine_type, kund, anlaggning, tekniker, modell, items_json, saved_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO protocols (maskin_nr, datum, type, machine_type, kund, anlaggning, tekniker, modell, items_json, saved_at, planned_actions)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
         """, (
             data['maskin_nr'].upper(),
             data.get('datum', ''),
@@ -1154,7 +1160,8 @@ def save_protocol():
             data.get('tekniker', ''),
             data.get('modell', ''),
             json.dumps(data.get('items', []), ensure_ascii=False),
-            datetime.now().isoformat()
+            datetime.now().isoformat(),
+            json.dumps(data.get('planned_actions', {}), ensure_ascii=False),
         ))
         pid = db.execute('SELECT last_insert_rowid()').fetchone()[0]
     return jsonify({'id': pid}), 201

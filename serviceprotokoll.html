@@ -1682,6 +1682,29 @@
 
     <div id="checklist-container"></div>
 
+    <div class="checklist-card" id="planned-actions-card" style="padding:16px;margin-bottom:12px;">
+      <h3 style="margin:0 0 12px;font-size:15px;color:var(--brand);">Planerade åtgärder vid nästa service</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="pa-filter" style="width:18px;height:18px;accent-color:var(--brand);"> Filterbyte
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="pa-olja" style="width:18px;height:18px;accent-color:var(--brand);"> Oljebyte
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="pa-kedja" style="width:18px;height:18px;accent-color:var(--brand);"> Kedja / kedjespännare
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="pa-slitage" style="width:18px;height:18px;accent-color:var(--brand);"> Slitdelar (glidklossar, skraplist)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="pa-ovrigt" style="width:18px;height:18px;accent-color:var(--brand);"> Övrigt
+        </label>
+        <textarea id="pa-notering" rows="2" placeholder="Notering om planerade åtgärder…"
+          style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;box-sizing:border-box;margin-top:4px;background:var(--card);color:var(--fg);"></textarea>
+      </div>
+    </div>
+
     <div class="summary-card">
       <h2>Sammanfattning</h2>
       <div id="overall-status" class="overall-status ok">Fyll i kontrollpunkterna ovan</div>
@@ -4643,6 +4666,14 @@ async function saveProtocol() {
           adress:     document.getElementById('temp-adress').value.trim(),
         } : null,
         items,
+        planned_actions: {
+          filter:   document.getElementById('pa-filter')?.checked || false,
+          olja:     document.getElementById('pa-olja')?.checked || false,
+          kedja:    document.getElementById('pa-kedja')?.checked || false,
+          slitage:  document.getElementById('pa-slitage')?.checked || false,
+          ovrigt:   document.getElementById('pa-ovrigt')?.checked || false,
+          notering: document.getElementById('pa-notering')?.value || '',
+        },
         ...(['komprimator','vandare','vandare-kaly'].includes(currentType) ? {
           gangtid: document.getElementById('f-gangtid')?.value || '',
         } : {}),
