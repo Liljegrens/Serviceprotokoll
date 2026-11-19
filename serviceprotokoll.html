@@ -1735,6 +1735,43 @@
 </div>
 
 <!-- ═══ LÄGG TILL ANVÄNDARE MODAL ═══ -->
+<!-- ═══ SKAPA ÅTGÄRD MODAL ═══ -->
+<div id="atgard-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeCreateAtgard()">
+  <div style="background:var(--card);border-radius:12px;width:100%;max-width:400px;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;font-size:17px;color:var(--brand);">Skapa åtgärd</h2>
+      <button onclick="closeCreateAtgard()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray);">×</button>
+    </div>
+    <div id="atgard-punkt" style="font-size:13px;color:var(--gray);margin-bottom:12px;"></div>
+    <div class="field-group"><label style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;">Åtgärdstyp</label>
+      <select id="atgard-typ" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:Arial,sans-serif;margin-top:4px;background:var(--card);color:var(--fg);">
+        <option value="filter">Hydraulfilter</option>
+        <option value="olja">Hydraulolja</option>
+        <option value="slangar">Hydraulslangar</option>
+        <option value="kedja">Kedja / kedjespännare</option>
+        <option value="slitdelar">Slitdelar</option>
+        <option value="el">El / kontaktor</option>
+        <option value="ovrigt">Övrigt</option>
+      </select>
+    </div>
+    <div class="field-group" style="margin-top:10px;"><label style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;">Status</label>
+      <select id="atgard-status" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:Arial,sans-serif;margin-top:4px;background:var(--card);color:var(--fg);">
+        <option value="planerad">Planerad – utförs vid nästa service</option>
+        <option value="kontroll">Kontrollerad – inga åtgärder</option>
+        <option value="bytt">Åtgärdad / bytt idag</option>
+      </select>
+    </div>
+    <div class="field-group" style="margin-top:10px;"><label style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;">Notering</label>
+      <textarea id="atgard-notering" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;box-sizing:border-box;margin-top:4px;background:var(--card);color:var(--fg);"></textarea>
+    </div>
+    <div id="atgard-error" style="display:none;color:#c62828;font-size:13px;margin-top:8px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button onclick="closeCreateAtgard()" style="padding:10px 20px;border:1.5px solid var(--border);background:none;border-radius:8px;font-size:14px;cursor:pointer;">Avbryt</button>
+      <button onclick="saveCreateAtgard()" style="padding:10px 24px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Spara åtgärd</button>
+    </div>
+  </div>
+</div>
+
 <div id="add-user-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeAddUser()">
   <div style="background:var(--card);border-radius:12px;width:100%;max-width:380px;padding:24px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -4428,6 +4465,10 @@ function renderModalBody(rec) {
               ? `<button class="resolve-btn resolve-btn-undo" onclick="toggleResolved(${rec.id}, '${i.nr}')">Ångra</button>`
               : `<button class="resolve-btn" onclick="toggleResolved(${rec.id}, '${i.nr}')">✓ Åtgärdad</button>`
             }
+            ${!isResolved && currentUser && currentUser.role === 'admin'
+              ? `<button class="resolve-btn" style="border-color:#1565c0;color:#1565c0;background:#e3f2fd;" onclick="openCreateAtgard(${rec.id},'${i.nr}',${JSON.stringify(i.label).replace(/'/g,"&#39;")},'${rec.maskin_nr||''}')">+ Åtgärd</button>`
+              : ''
+            }
           </span>
         </div>
         ${i.comment && !isResolved ? `<div class="hist-item-comment">${i.comment}</div>` : ''}
@@ -6831,6 +6872,55 @@ async function addHydrauliklogg(nr) {
 async function deleteHydrauliklogg(id, nr) {
   await fetch('/api/hydrauliklogg/' + id, { method: 'DELETE' });
   loadHydrauliklogg(nr);
+}
+
+let _atgardMaskinNr = '';
+let _atgardProtocolId = null;
+
+function openCreateAtgard(protocolId, punktNr, punktLabel, maskinNr) {
+  _atgardMaskinNr = maskinNr;
+  _atgardProtocolId = protocolId;
+  document.getElementById('atgard-punkt').textContent = `Punkt ${punktNr}: ${punktLabel}`;
+  document.getElementById('atgard-notering').value = '';
+  document.getElementById('atgard-error').style.display = 'none';
+  // Försök gissa åtgärdstyp från punktlabel
+  const lbl = (punktLabel || '').toLowerCase();
+  const sel = document.getElementById('atgard-typ');
+  if (lbl.includes('filter')) sel.value = 'filter';
+  else if (lbl.includes('olja') || lbl.includes('hydraulolja')) sel.value = 'olja';
+  else if (lbl.includes('slang')) sel.value = 'slangar';
+  else if (lbl.includes('kedja')) sel.value = 'kedja';
+  else if (lbl.includes('el') || lbl.includes('kontaktor')) sel.value = 'el';
+  else sel.value = 'ovrigt';
+  document.getElementById('atgard-overlay').style.display = 'flex';
+}
+
+function closeCreateAtgard() {
+  document.getElementById('atgard-overlay').style.display = 'none';
+}
+
+async function saveCreateAtgard() {
+  const typ     = document.getElementById('atgard-typ').value;
+  const status  = document.getElementById('atgard-status').value;
+  const notering = document.getElementById('atgard-notering').value.trim();
+  const err     = document.getElementById('atgard-error');
+  if (!_atgardMaskinNr) { err.textContent = 'Maskinnummer saknas.'; err.style.display = 'block'; return; }
+  const datum = new Date().toISOString().slice(0,10);
+  const payload = {
+    maskin_nr: _atgardMaskinNr,
+    datum,
+    filter:  typ === 'filter'   ? 1 : 0,
+    olja:    typ === 'olja'     ? 1 : 0,
+    slangar: typ === 'slangar'  ? 1 : 0,
+    notering: `[${status === 'planerad' ? 'Planerad' : status === 'bytt' ? 'Åtgärdad' : 'Kontroll'}] ${notering}`.trim(),
+    typ: status === 'planerad' ? 'planerad' : status === 'bytt' ? 'bytt' : 'kontroll',
+  };
+  try {
+    await apiFetch('/api/hydrauliklogg', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    closeCreateAtgard();
+  } catch(e) {
+    err.textContent = 'Kunde inte spara åtgärd.'; err.style.display = 'block';
+  }
 }
 
 async function loadCylinderlogg(nr) {
