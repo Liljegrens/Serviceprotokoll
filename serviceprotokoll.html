@@ -4525,7 +4525,7 @@ function renderModalBody(rec) {
     <div class="modal-field"><div class="mf-label">Anläggning</div><div class="mf-val">${rec.anlaggning||'–'}</div></div>
     <div class="modal-field"><div class="mf-label">Tekniker</div><div class="mf-val">${rec.tekniker||'–'}</div></div>
     <div class="modal-field"><div class="mf-label">Modell</div><div class="mf-val">${rec.modell||'–'}</div></div>
-    ${rec.saved_at && (window.currentUser?.role === 'admin') ? `<div class="modal-field" style="opacity:0.6;"><div class="mf-label">Sparad i systemet</div><div class="mf-val" style="font-size:12px;">${rec.saved_at.slice(0,16).replace('T',' ')}</div></div>` : ''}
+    ${rec.saved_at ? `<div class="modal-field"><div class="mf-label">Sparat</div><div class="mf-val">${rec.saved_at.slice(0,16).replace('T',' ')}</div></div>` : ''}
     <div class="modal-field" id="modal-serviceavtal-field" style="display:none;"><div class="mf-label">Serviceavtal</div><div class="mf-val" id="modal-serviceavtal-val"></div></div>
   </div></div>`;
 
