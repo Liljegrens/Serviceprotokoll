@@ -1743,6 +1743,21 @@
 </div>
 
 <!-- ═══ LÄGG TILL ANVÄNDARE MODAL ═══ -->
+<!-- ═══ OFYLLDA PUNKTER MODAL ═══ -->
+<div id="missing-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--card);border-radius:12px;width:100%;max-width:420px;padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="margin:0;font-size:17px;color:var(--brand);">Ofyllda punkter</h2>
+    </div>
+    <p style="margin:0 0 12px;font-size:14px;color:var(--fg-muted);">Följande punkter saknar värde. Vill du gå tillbaka och fylla i dem, eller spara ändå?</p>
+    <ul id="missing-list" style="margin:0 0 20px;padding:0 0 0 18px;font-size:14px;line-height:1.8;"></ul>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeMissingOverlay()" style="padding:9px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--fg);cursor:pointer;font-size:14px;">Gå tillbaka</button>
+      <button onclick="confirmSaveAnyway()" style="padding:9px 18px;border-radius:8px;border:none;background:var(--brand);color:#fff;cursor:pointer;font-size:14px;">Spara ändå</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ SKAPA ÅTGÄRD MODAL ═══ -->
 <div id="atgard-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeCreateAtgard()">
   <div style="background:var(--card);border-radius:12px;width:100%;max-width:400px;padding:24px;">
@@ -4744,11 +4759,18 @@ async function saveProtocol() {
   });
 
   if (missing.length > 0) {
-    const list = missing.map(m => `• ${m}`).join('\n');
-    const proceed = confirm(`${missing.length} punkt${missing.length > 1 ? 'er saknar' : ' saknar'} värde:\n\n${list}\n\nVill du spara ändå?`);
-    if (!proceed) return;
+    const ul = document.getElementById('missing-list');
+    ul.innerHTML = missing.map(m => `<li>${m}</li>`).join('');
+    window._pendingSaveItems = items;
+    document.getElementById('missing-overlay').style.display = 'flex';
+    return;
   }
 
+  await _doSaveProtocol(items);
+}
+
+async function _doSaveProtocol(items) {
+  const maskin = document.getElementById('f-maskin').value.trim();
   const btn  = document.getElementById('save-btn');
   const conf = document.getElementById('save-confirm');
   btn.disabled = true;
@@ -6983,6 +7005,17 @@ function openCreateAtgard(protocolId, punktNr, punktLabel, maskinNr) {
 
 function closeCreateAtgard() {
   document.getElementById('atgard-overlay').style.display = 'none';
+}
+
+function closeMissingOverlay() {
+  document.getElementById('missing-overlay').style.display = 'none';
+  window._pendingSaveItems = null;
+}
+
+async function confirmSaveAnyway() {
+  document.getElementById('missing-overlay').style.display = 'none';
+  await _doSaveProtocol(window._pendingSaveItems || []);
+  window._pendingSaveItems = null;
 }
 
 async function saveCreateAtgard() {
