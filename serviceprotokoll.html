@@ -3182,7 +3182,8 @@ function openLeveransModal(rec) {
     <div style="margin:12px 0 4px;font-weight:700;">Kontrollpunkter</div>
     ${items}
     ${sigRow}
-    <div style="margin-top:16px;display:flex;gap:8px;">
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="save-btn" style="flex:1;" onclick="emailLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">📧 Skicka via e-post</button>
       <button class="save-btn" style="flex:1;" onclick="printLeveransFromData(${JSON.stringify(d).replace(/"/g,'&quot;')})">🖨 Skriv ut</button>
       <button class="save-btn" style="flex:1;background:#fdecea;color:#c62828;border:1px solid #ef9a9a;" onclick="deleteLeverans(${rec.id})">🗑 Radera</button>
     </div>`;
@@ -5803,6 +5804,33 @@ function sendLeveransEmail() {
 
 function printLeveransFromData(d) {
   _printLeverans(d);
+}
+
+function emailLeveransFromData(d) {
+  const subject = encodeURIComponent(`Leveransgodkännande – ${d.maskin_nr} – ${d.datum || ''}`);
+  const nl = '%0D%0A';
+  let body = '';
+  const line = (t = '') => body += encodeURIComponent(t) + nl;
+
+  line('LEVERANSGODKÄNNANDE – LILJEGRENS I TYRESÖ AB');
+  line('═'.repeat(48));
+  line();
+  line(`Objektnummer: ${d.maskin_nr || '–'}`);
+  line(`Kund:         ${d.kund || '–'}`);
+  line(`Modell:       ${d.modell || '–'}`);
+  line(`Datum:        ${d.datum || '–'}`);
+  line(`Tekniker:     ${d.tekniker || '–'}`);
+  line();
+  line('KONTROLLPUNKTER');
+  line('─'.repeat(48));
+  (d.items || []).forEach(it => line(`  ${it.ok ? '☑' : '☐'}  ${it.label}`));
+  line();
+  line('─'.repeat(48));
+  line('Med vänliga hälsningar,');
+  line(`${d.tekniker || ''}`);
+  line('Liljegrens i Tyresö AB');
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 function printLeverans() {
