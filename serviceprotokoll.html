@@ -4728,17 +4728,26 @@ async function saveProtocol() {
   }
 
   const items = [];
+  const missing = [];
   document.querySelectorAll('.check-item').forEach(div => {
     const checked = div.querySelector('input[type=radio]:checked');
-    if (!checked) return;
+    const nr    = div.querySelector('.item-nr').textContent.trim();
+    const label = div.querySelector('.item-label').textContent.trim();
+    if (!checked) { missing.push(`${nr} – ${label}`); return; }
     items.push({
-      nr:      div.querySelector('.item-nr').textContent.trim(),
-      label:   div.querySelector('.item-label').textContent.trim(),
+      nr,
+      label,
       status:  checked.value,
       comment: (div.querySelector('.comment-box textarea')||{}).value || '',
       photo:   div.querySelector('.photo-thumb') ? div.querySelector('.photo-thumb').dataset.filename : '',
     });
   });
+
+  if (missing.length > 0) {
+    const list = missing.map(m => `• ${m}`).join('\n');
+    const proceed = confirm(`${missing.length} punkt${missing.length > 1 ? 'er saknar' : ' saknar'} värde:\n\n${list}\n\nVill du spara ändå?`);
+    if (!proceed) return;
+  }
 
   const btn  = document.getElementById('save-btn');
   const conf = document.getElementById('save-confirm');
