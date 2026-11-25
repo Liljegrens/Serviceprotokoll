@@ -2335,7 +2335,7 @@ async function openMaskinReadOnly(nr) {
 
     // Senaste protokoll — visa bevaka/akut direkt
     const latestProtocolHtml = latestProtocol ? (() => {
-      const typeLabel  = latestProtocol.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+      const typeLabel  = protocolTypeLabel(latestProtocol.type);
       const akut       = (latestProtocol.items||[]).filter(i=>i.status==='3');
       const bevaka     = (latestProtocol.items||[]).filter(i=>i.status==='2');
       const statusText = akut.length   ? `⚠ ${akut.length} akuta anmärkningar` :
@@ -2967,7 +2967,7 @@ async function loadRecentProtocols() {
               <span class="recent-maskin">${rec.maskin_nr}${isTemp ? ' <span style="font-size:10px;background:#fff3e0;color:#e65100;border-radius:4px;padding:1px 5px;font-weight:700;">EJ KOPPLAD</span>' : ''}</span>
               <span class="recent-kund">${rec.kund || ''}</span>
             </div>
-            <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'}</div>
+            <div class="recent-sub">${rec.datum || ''} · ${rec.tekniker || '–'} · ${protocolTypeLabel(rec.type)}</div>
           </div>
           <div class="recent-badges">
             ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
@@ -3057,7 +3057,7 @@ async function loadOverview() {
       const items  = rec.items || [];
       const akut   = items.filter(i => i.status==='3').length;
       const bevaka = items.filter(i => i.status==='2').length;
-      const typLabel = rec.type === 'flygande' ? 'Flygande' : 'Verkstad';
+      const typLabel = protocolTypeLabel(rec.type);
       const row = document.createElement('div');
       row.className = 'ov-row' + (_ovSelected.has(rec.id) ? ' selected' : '');
       row.innerHTML = `
@@ -3182,7 +3182,7 @@ function buildBatchHTML(protocols) {
     const ok       = items.filter(i => i.status==='1');
     const bevaka   = items.filter(i => i.status==='2');
     const akut     = items.filter(i => i.status==='3');
-    const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+    const typLabel = protocolTypeLabel(rec.type);
     const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
     const statusText  = akut.length ? `⚠ ${akut.length} akuta anmärkningar`
                       : bevaka.length ? `● ${bevaka.length} bevakningspunkter`
@@ -3344,6 +3344,24 @@ let machineCount        = 0;
 let lookupTimer         = null;
 let currentType         = null;   // 'verkstad' | 'flygande' | 'komprimator'
 let currentMachineType  = null;   // 'kaly' | null | …
+
+function protocolTypeLabel(type) {
+  const map = {
+    'verkstad':      'Verkstad',
+    'flygande':      'Flygande service',
+    'komprimator':   'Komprimator – verkstad',
+    'komprimator-b': 'Komprimator – hos kund',
+    'vandare':       'Serviceprotokoll Komprimator',
+    'vandare-kaly':  'Kärlvändare',
+    'skruv':         'Skruvkomprimator',
+    'odourmikko':    'Vakuumaggregat',
+    'lyftbord':      'Lyftbord',
+    'leverans':      'Leveransgodkännande',
+    'balp':          'Balpressar',
+    'installation':  'Installation',
+  };
+  return map[type] || type || 'Verkstad';
+}
 
 function getChecklistItems() {
   if (currentMachineType === 'kaly') return [...KALY_ITEMS];
@@ -3604,7 +3622,7 @@ async function loadOpenItems() {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <div>
             <div style="font-weight:700;font-size:15px;">${p.maskin_nr}</div>
-            <div style="font-size:12px;color:var(--gray);margin-top:2px;">${p.datum||''} · ${p.tekniker||''} · ${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:2px;">${p.datum||''} · ${p.tekniker||''} · ${protocolTypeLabel(p.type)}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             ${badges}
@@ -3729,7 +3747,7 @@ async function openEgenMaskinKort(nr) {
         ${Array.isArray(protokoll) && protokoll.length ? protokoll.slice(0,10).map(p=>`
           <div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             <span style="color:var(--gray);">${p.datum||'–'}</span>
-            <span style="font-weight:600;">${p.type==='flygande'?'Flygande service':'Verkstadsintag'}</span>
+            <span style="font-weight:600;">${protocolTypeLabel(p.type)}</span>
             <span style="color:var(--gray);">${p.tekniker||''}</span>
             <span style="background:${(p.workflow_status==='hanterad')?'var(--ok-bg)':'#fff8e1'};color:${(p.workflow_status==='hanterad')?'var(--ok)':'#f57f17'};border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;">${p.workflow_status==='hanterad'?'Hanterad':'Inkommen'}</span>
           </div>`).join('') : '<p style="font-size:13px;color:var(--gray);">Inga protokoll registrerade.</p>'}
@@ -4354,7 +4372,7 @@ async function loadHistory(maskinNr) {
       div.className = 'history-item';
       div.innerHTML = `
         <span class="hi-date">${rec.datum || '–'}</span>
-        <span class="hi-type">${rec.type === 'flygande' ? 'Flygande service' : 'Verkstad'} · ${rec.tekniker || '–'}</span>
+        <span class="hi-type">${protocolTypeLabel(rec.type)} · ${rec.tekniker || '–'}</span>
         <span class="hi-badges">
           <span class="badge ok">${s.ok} OK</span>
           ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
@@ -4423,7 +4441,7 @@ let _currentModalRec = null;
 function openHistoryModal(rec) {
   _currentModalRec = rec;
   document.getElementById('modal-title').textContent =
-    `${rec.maskin_nr} · ${rec.datum||'–'} · ${rec.type==='flygande'?'Flygande':'Verkstad'}`;
+    `${rec.maskin_nr} · ${rec.datum||'–'} · ${protocolTypeLabel(rec.type)}`;
   renderModalBody(rec);
   document.getElementById('modal-overlay').classList.add('visible');
   // Hämta serviceavtal från maskinregister
@@ -4774,7 +4792,7 @@ function sendEmail() {
   const datum     = document.getElementById('f-datum').value;
   const tekniker  = document.getElementById('f-tekniker').value.trim();
   const modell    = document.getElementById('f-modell').value.trim();
-  const typLabel  = currentType === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+  const typLabel  = protocolTypeLabel(currentType);
 
   // Maskininfo från infokortet
   const infoFields = {};
@@ -4888,7 +4906,7 @@ function sendEmail() {
 }
 
 function buildEmailBody(rec) {
-  const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+  const typLabel = protocolTypeLabel(rec.type);
   const items    = rec.items || [];
   const ok       = items.filter(i => i.status === '1');
   const bevaka   = items.filter(i => i.status === '2');
@@ -4947,7 +4965,7 @@ async function printRecord(rec) {
   const ok      = items.filter(i => i.status === '1');
   const bevaka  = items.filter(i => i.status === '2');
   const akut    = items.filter(i => i.status === '3');
-  const typLabel = rec.type === 'flygande' ? 'Flygande service' : 'Verkstadsintag';
+  const typLabel = protocolTypeLabel(rec.type);
 
   const statusColor = akut.length ? '#c62828' : bevaka.length ? '#f57f17' : '#2e7d32';
   const statusText  = akut.length ? `⚠ ${akut.length} akuta anmärkningar`
