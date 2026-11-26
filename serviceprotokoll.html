@@ -6672,16 +6672,41 @@ function applyMaskinkortRoleView(isAdmin) {
 
   if (isAdmin) return;
 
-  // Tekniker: disabla alla redigeringsfält i maskinkort-info
+  // Tekniker: konvertera maskinkort-info till läs-only text
   const info = document.getElementById('maskinkort-info');
   if (info) {
-    info.querySelectorAll('input, textarea, select').forEach(el => {
-      el.disabled = true;
-      el.style.background = 'var(--surface)';
-      el.style.cursor = 'default';
-      el.style.color = 'var(--fg)';
+    info.querySelectorAll('input[type=text], input[type=number], textarea').forEach(el => {
+      const val = el.value.trim();
+      const span = document.createElement('div');
+      span.style.cssText = 'padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);min-height:36px;color:' + (val ? 'var(--fg)' : 'var(--fg-muted)') + ';';
+      span.textContent = val || '–';
+      el.parentNode.replaceChild(span, el);
+    });
+    info.querySelectorAll('select').forEach(el => {
+      const val = el.options[el.selectedIndex]?.text || '–';
+      const span = document.createElement('div');
+      span.style.cssText = 'padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);min-height:36px;color:' + (el.value ? 'var(--fg)' : 'var(--fg-muted)') + ';';
+      span.textContent = el.value ? val : '–';
+      el.parentNode.replaceChild(span, el);
+    });
+    // Dölj radio/checkbox-grupper och ersätt med text
+    info.querySelectorAll('.radio-group').forEach(rg => {
+      const checked = [...rg.querySelectorAll('input:checked')].map(i => i.closest('label') ? i.closest('label').textContent.trim() : i.nextElementSibling?.textContent.trim()).filter(Boolean);
+      const span = document.createElement('div');
+      span.style.cssText = 'padding:8px 0;font-size:14px;font-weight:600;color:' + (checked.length ? 'var(--fg)' : 'var(--fg-muted)') + ';';
+      span.textContent = checked.length ? checked.join(', ') : '–';
+      rg.parentNode.replaceChild(span, rg);
     });
     info.querySelectorAll('button').forEach(el => { el.style.display = 'none'; });
+    // Dölj h2-sektionstitlar som är admin-specifika
+    info.querySelectorAll('h2').forEach(h => {
+      const txt = h.textContent.trim();
+      if (['Serviceavtal','Manöverinstruktion'].includes(txt)) {
+        let next = h.nextElementSibling;
+        while (next && next.tagName !== 'H2') { next.style.display = 'none'; next = next.nextElementSibling; }
+        h.style.display = 'none';
+      }
+    });
   }
   // Dölj QR-bar och utskriftsknapp för tekniker (ej nödvändiga)
   // Håll typskylt-upload och hydrauliklogg dolda
