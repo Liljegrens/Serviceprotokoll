@@ -574,6 +574,8 @@ def upload_machines():
 IMAGES_DIR = os.path.join(DATA_DIR, 'machine_images')
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
+ALLOWED_SLOTS = {'maskin', 'skylt'}
+
 @app.route('/api/machines/<path:nr>/image', methods=['POST'])
 def upload_machine_image(nr):
     if 'image' not in request.files:
@@ -590,6 +592,32 @@ def upload_machine_image(nr):
 def get_machine_image(nr):
     safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
     path = os.path.join(IMAGES_DIR, safe_nr + '.jpg')
+    if not os.path.exists(path):
+        return '', 404
+    return send_file(path, mimetype='image/jpeg')
+
+@app.route('/api/machines/<nr>/image/<slot>', methods=['POST'])
+def upload_machine_image_slot(nr, slot):
+    if slot not in ALLOWED_SLOTS:
+        return jsonify({'error': 'Okänd bildplats'}), 400
+    if 'image' not in request.files:
+        return jsonify({'error': 'Ingen fil'}), 400
+    f = request.files['image']
+    if not f.filename:
+        return jsonify({'error': 'Ingen fil'}), 400
+    safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
+    filename = safe_nr + ('.' if slot == 'maskin' else f'_{slot}.') + 'jpg'
+    path = os.path.join(IMAGES_DIR, filename)
+    f.save(path)
+    return jsonify({'ok': True})
+
+@app.route('/api/machines/<nr>/image/<slot>', methods=['GET'])
+def get_machine_image_slot(nr, slot):
+    if slot not in ALLOWED_SLOTS:
+        return '', 404
+    safe_nr = ''.join(c for c in nr if c.isalnum() or c in '-_')
+    filename = safe_nr + ('.' if slot == 'maskin' else f'_{slot}.') + 'jpg'
+    path = os.path.join(IMAGES_DIR, filename)
     if not os.path.exists(path):
         return '', 404
     return send_file(path, mimetype='image/jpeg')
