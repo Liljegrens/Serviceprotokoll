@@ -626,13 +626,9 @@ def get_machine_image_slot(nr, slot):
 def get_machine(nr):
     nr_clean = nr.replace('-', '').upper()
     with get_db() as db:
-        # Exakt träff först
-        row = db.execute('SELECT * FROM machines WHERE UPPER(nr)=UPPER(?)', (nr,)).fetchone()
-        if row:
-            return jsonify(dict(row))
-        # Fuzzy: jämför nr utan bindestreck
         rows = db.execute('SELECT * FROM machines', ()).fetchall()
-        matches = [dict(r) for r in rows if r['nr'].replace('-','').upper() == nr_clean]
+    # Samla alla maskiner vars nr utan bindestreck matchar sökningen
+    matches = [dict(r) for r in rows if r['nr'].replace('-','').upper() == nr_clean]
     if not matches:
         return jsonify(None), 404
     if len(matches) == 1:
