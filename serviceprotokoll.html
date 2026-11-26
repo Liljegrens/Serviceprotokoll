@@ -686,11 +686,15 @@
 
   <!-- Snabbsök maskin direkt från startsidan -->
   <div style="padding:0 16px 20px;">
-    <div style="position:relative;">
-      <input type="text" id="home-msok-nr" inputmode="numeric" placeholder="Objektnummer – t.ex. 500100"
-        style="width:100%;box-sizing:border-box;font-size:17px;padding:13px 16px 13px 44px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);outline:none;"
-        oninput="onHomeMsokInput(this.value)" autocomplete="off">
-      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="position:relative;flex:1;">
+        <input type="text" id="home-msok-nr" inputmode="numeric" placeholder="Objektnummer – t.ex. 500100"
+          style="width:100%;box-sizing:border-box;font-size:17px;padding:13px 16px 13px 44px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);outline:none;"
+          oninput="onHomeMsokInput(this.value)" autocomplete="off">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
+      </div>
+      <button onclick="(function(){var i=document.getElementById('home-msok-nr');i.value+='-';onHomeMsokInput(i.value);i.focus();})()"
+        style="flex-shrink:0;font-size:22px;font-weight:700;padding:0 16px;height:50px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);cursor:pointer;line-height:1;">−</button>
     </div>
     <div id="home-msok-badge" class="machine-lookup-badge" style="margin-top:6px;"></div>
   </div>
