@@ -6675,12 +6675,16 @@ async function openMaskinkort(nr) {
   document.getElementById('typskylt-status').textContent = '';
 
   try {
-    const [machine, history, notes, typskylt] = await Promise.all([
+    const [rawMachine, history, notes, typskylt] = await Promise.all([
       apiFetch('/api/machines/' + encodeURIComponent(nr)),
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/history'),
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes'),
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/typskylt').catch(() => null)
     ]);
+    // Om flera maskiner matchar, välj den med exakt nr-träff
+    const machine = (rawMachine && rawMachine.multiple)
+      ? (rawMachine.matches.find(m => m.nr.toUpperCase() === nr.toUpperCase()) || rawMachine.matches[0])
+      : rawMachine;
     const isAdmin = currentUser && currentUser.role === 'admin';
     if (isAdmin) {
       renderMaskinkortInfo(machine);
