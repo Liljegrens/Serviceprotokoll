@@ -1590,7 +1590,7 @@
 <!-- ═══════════ MASKINKORT PAGE (CRM) ═══════════ -->
 <div id="maskinkort-page" style="display:none;">
   <div class="top-bar">
-    <button class="back-btn" onclick="showPage('maskiner')">← Maskinregister</button>
+    <button class="back-btn" id="maskinkort-back-btn" onclick="showPage('maskiner')">← Maskinregister</button>
     <h1 id="maskinkort-title">Maskinkort</h1>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:16px;">
@@ -1625,10 +1625,18 @@
     <div class="section-header" style="margin-top:20px;">Anteckningar</div>
     <div class="checklist-card" style="padding:16px;">
       <div id="maskinkort-notes" style="margin-bottom:12px;"></div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;" id="maskinkort-note-form">
         <textarea id="maskinkort-note-input" rows="2" placeholder="Skriv en anteckning…"
           style="flex:1;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:14px;font-family:Arial,sans-serif;resize:vertical;"></textarea>
         <button onclick="saveNote()" style="padding:10px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;align-self:flex-end;">Spara</button>
+      </div>
+    </div>
+
+    <!-- Protokollknappar (tekniker) -->
+    <div id="maskinkort-protokoll-section" style="display:none;margin-top:20px;">
+      <div class="section-header">Starta protokoll</div>
+      <div class="checklist-card" style="padding:16px;">
+        <div id="maskinkort-protokoll-btns" style="display:flex;flex-direction:column;gap:10px;"></div>
       </div>
     </div>
 
@@ -4260,6 +4268,7 @@ async function saveNyMaskin() {
     const res  = await apiFetch('/api/machines', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     closeNyMaskin();
     await loadMaskiner();
+    _maskinkortBackPage = 'maskiner';
     openMaskinkort(res.nr);
   } catch (e) {
     errEl.textContent = e.message || 'Kunde inte spara maskinen.';
@@ -5748,13 +5757,23 @@ let _msokTimer = null;
 function onMsokInput(val) {
   clearTimeout(_msokTimer);
   const badge = document.getElementById('msok-badge');
-  const card  = document.getElementById('msok-card');
   if (val.trim().length < 3) {
     badge.className = 'machine-lookup-badge';
-    card.style.display = 'none';
     return;
   }
-  _msokTimer = setTimeout(() => loadMsok(val.trim()), 400);
+  _msokTimer = setTimeout(() => {
+    const nr = val.trim().toUpperCase();
+    badge.textContent = 'Söker…';
+    badge.className = 'machine-lookup-badge visible';
+    apiFetch('/api/machines/' + encodeURIComponent(nr))
+      .then(m => {
+        if (!m) { badge.textContent = 'Maskinen hittades inte'; badge.className = 'machine-lookup-badge error visible'; return; }
+        badge.textContent = '✓ ' + (m.kund || m.agare || nr);
+        badge.className = 'machine-lookup-badge visible';
+        openMaskinkortFromMsok(nr);
+      })
+      .catch(() => { badge.textContent = 'Kunde inte hämta maskindata'; badge.className = 'machine-lookup-badge error visible'; });
+  }, 400);
 }
 
 async function loadMsok(nr) {
@@ -6558,7 +6577,7 @@ function renderMaskiner(maskiner) {
     return;
   }
   list.innerHTML = maskiner.map(m => `
-    <div class="ov-row" onclick="openMaskinkort('${m.nr}')">
+    <div class="ov-row" onclick="_maskinkortBackPage='maskiner';openMaskinkort('${m.nr}')">
       <div class="ov-row-info">
         <div class="ov-row-title">${m.nr} — ${m.kund || m.anlaggning || '–'}</div>
         <div class="ov-row-sub">${[m.fabrikat, m.modell].filter(Boolean).join(' ')}${m.anlaggning ? ' · ' + m.anlaggning : ''}${m.stad ? ' · ' + m.stad : ''}</div>
@@ -6569,10 +6588,29 @@ function renderMaskiner(maskiner) {
     </div>`).join('');
 }
 
+function openMaskinkortFromMsok(nr) {
+  _maskinkortBackPage = 'maskin-sok';
+  openMaskinkort(nr);
+}
+
+let _maskinkortBackPage = 'maskiner';
+
 async function openMaskinkort(nr) {
   _currentMaskinNr = nr;
   showPage('maskinkort');
   document.getElementById('maskinkort-title').textContent = 'Maskinkort – ' + nr;
+
+  // Tillbaka-knapp: anpassa baserat på varifrån vi kom
+  const backBtn = document.getElementById('maskinkort-back-btn');
+  if (backBtn) {
+    if (_maskinkortBackPage === 'maskin-sok') {
+      backBtn.textContent = '← Maskin';
+      backBtn.onclick = function() { showPage('maskin-sok'); };
+    } else {
+      backBtn.textContent = '← Maskinregister';
+      backBtn.onclick = function() { showPage('maskiner'); };
+    }
+  }
 
   // Koppla QR-knappen till rätt maskinnummer
   const qrBar = document.getElementById('maskinkort-qr-bar');
@@ -6608,8 +6646,53 @@ async function openMaskinkort(nr) {
     if (clogDatum) clogDatum.value = today;
     loadHydrauliklogg(nr);
     loadCylinderlogg(nr);
+    // Protokollknappar baserat på maskintyp
+    const detectedType = typeof detectMachineType === 'function' ? detectMachineType(machine?.beskrivning || '') : 'default';
+    const protokollList = MASKINTYP_PROTOKOLL[detectedType] || MASKINTYP_PROTOKOLL['default'];
+    const protokollSec = document.getElementById('maskinkort-protokoll-section');
+    const protokollBtns = document.getElementById('maskinkort-protokoll-btns');
+    if (protokollSec && protokollBtns) {
+      protokollBtns.innerHTML = protokollList.map(p => {
+        if (p.page) return `<button class="save-btn" style="width:100%;font-size:15px;padding:14px;" onclick="showPage('${p.page}')">${p.label}</button>`;
+        return `<button class="save-btn" style="width:100%;font-size:15px;padding:14px;" onclick="msokOpenProtocol('${p.type}','${nr}')">${p.label}</button>`;
+      }).join('');
+      protokollSec.style.display = '';
+    }
+    // Visa/dölj redigeringskontroller baserat på roll
+    applyMaskinkortRoleView(currentUser && currentUser.role === 'admin');
   } catch(e) {
     document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
+  }
+}
+
+function applyMaskinkortRoleView(isAdmin) {
+  // Notering-formuläret: visa för alla (tekniker kan lägga till anteckningar)
+  const noteForm = document.getElementById('maskinkort-note-form');
+  if (noteForm) noteForm.style.display = '';
+
+  if (isAdmin) return;
+
+  // Tekniker: disabla alla redigeringsfält i maskinkort-info
+  const info = document.getElementById('maskinkort-info');
+  if (info) {
+    info.querySelectorAll('input, textarea, select').forEach(el => {
+      el.disabled = true;
+      el.style.background = 'var(--surface)';
+      el.style.cursor = 'default';
+      el.style.color = 'var(--fg)';
+    });
+    info.querySelectorAll('button').forEach(el => { el.style.display = 'none'; });
+  }
+  // Dölj QR-bar och utskriftsknapp för tekniker (ej nödvändiga)
+  // Håll typskylt-upload och hydrauliklogg dolda
+  ['typskylt-upload-wrap','hlog-add-btn','clog-add-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Dölj bilduppladdning i maskinkort (admin-funktion)
+  const fotoWrap = document.getElementById('mk-foto-wrap');
+  if (fotoWrap) {
+    fotoWrap.querySelectorAll('label[for], input[type=file], button').forEach(el => { el.style.display = 'none'; });
   }
 }
 
