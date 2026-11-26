@@ -5815,12 +5815,20 @@ async function loadMsok(nr) {
     const instCard = document.getElementById('msok-inst-card');
     const instDiv  = document.getElementById('msok-inst');
     const instFields = [
-      ['Mått A', m.inst_a], ['Mått B bak', m.inst_b_bak], ['Mått B fram', m.inst_b_fram],
-      ['Mått C', m.inst_c], ['Mått C2', m.inst_c2], ['Marköppning', m.inst_mark_oppning],
-      ['Placering', m.inst_placering], ['Underlag', m.inst_underlag],
-      ['Panelhöjd', m.inst_panelhojd], ['Panel', m.inst_panel],
-      ['Krok', m.inst_krok], ['Typ', m.inst_typ],
-      ['El-intag (A)', m.inst_el], ['Elintaget sitter', m.inst_elintag],
+      ['A – Hjul ytterlängd (mm)', m.inst_a],
+      ['B – Bakhjul ytterbredd (mm)', m.inst_b_bak],
+      ['B – Framhjul ytterbredd (mm)', m.inst_b_fram],
+      ['C – Höjd, lock stängt (mm)', m.inst_c],
+      ['C2 – Höjd, lock öppet (mm)', m.inst_c2],
+      ['Mått mark till öppning (mm)', m.inst_mark_oppning],
+      ['Maskinens placering', m.inst_placering],
+      ['Underlag', m.inst_underlag],
+      ['Panelhöjd fr. mark (mm)', m.inst_panelhojd],
+      ['Panel', m.inst_panel],
+      ['Krok', m.inst_krok],
+      ['Typ', m.inst_typ],
+      ['El-intag (A)', m.inst_el],
+      ['Elintaget sitter', m.inst_elintag],
     ];
     const fi = (lbl, val) => `<div><span style="color:var(--fg-muted);font-size:12px;">${lbl}</span><div style="font-weight:600;">${val || '–'}</div></div>`;
     instDiv.innerHTML = instFields.map(([l,v]) => fi(l,v)).join('');
