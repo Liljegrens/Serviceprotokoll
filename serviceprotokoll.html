@@ -806,6 +806,12 @@
         <div id="msok-reservdelar" style="font-size:14px;line-height:1.9;"></div>
       </div>
 
+      <!-- Installation -->
+      <div id="msok-inst-card" class="checklist-card" style="padding:16px;margin-bottom:12px;display:none;">
+        <h3 style="margin:0 0 10px;">Installationsdata</h3>
+        <div id="msok-inst" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:14px;"></div>
+      </div>
+
       <!-- Servicehistorik -->
       <div id="msok-historik-card" class="checklist-card" style="padding:16px;margin-bottom:12px;display:none;">
         <h3 style="margin:0 0 10px;">Servicehistorik</h3>
@@ -5787,22 +5793,39 @@ async function loadMsok(nr) {
     document.getElementById('msok-upload-maskin').dataset.nr = nr.toUpperCase();
     document.getElementById('msok-upload-skylt').dataset.nr  = nr.toUpperCase();
 
-    // Reservdelar
+    // Reservdelar – alltid synliga med alla titlar
     const resvCard = document.getElementById('msok-reservdelar-card');
     const resvDiv  = document.getElementById('msok-reservdelar');
-    const resvItems = [
-      m.vantskruv    ? `Väntskruv (töm.dörr): ${m.vantskruv}` : '',
-      m.el_intag     ? `El-intag: ${m.el_intag}` : '',
-      m.kontaktor    ? `Kontaktor: ${m.kontaktor}` : '',
-      m.motorskydd   ? `Motorskydd: ${m.motorskydd}` : '',
-      m.startnyckel  ? `Startnyckel: ${m.startnyckel}` : '',
-      m.reservdelar_ovrigt ? `Övrigt: ${m.reservdelar_ovrigt}` : '',
-    ].filter(Boolean);
-    if (resvItems.length) {
-      resvDiv.innerHTML = resvItems.map(r => `<div>• ${r}</div>`).join('');
-      resvCard.style.display = '';
+    const rv = (lbl, val) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);"><span style="color:var(--fg-muted);">${lbl}</span><span style="font-weight:600;">${val || '–'}</span></div>`;
+    resvDiv.innerHTML = [
+      rv('Väntskruv (töm.dörr)', m.vantskruv),
+      rv('El-intag', m.el_intag),
+      rv('Kontaktor', m.kontaktor),
+      rv('Motorskydd', m.motorskydd),
+      rv('Startnyckel', m.startnyckel),
+      m.reservdelar_ovrigt ? `<div style="margin-top:8px;font-size:13px;color:var(--fg-muted);">Övrigt: ${m.reservdelar_ovrigt}</div>` : '',
+    ].join('');
+    resvCard.style.display = '';
+
+    // Installationsdata
+    const instCard = document.getElementById('msok-inst-card');
+    const instDiv  = document.getElementById('msok-inst');
+    const instFields = [
+      ['Mått A', m.inst_a], ['Mått B bak', m.inst_b_bak], ['Mått B fram', m.inst_b_fram],
+      ['Mått C', m.inst_c], ['Mått C2', m.inst_c2], ['Marköppning', m.inst_mark_oppning],
+      ['Placering', m.inst_placering], ['Underlag', m.inst_underlag],
+      ['Panelhöjd', m.inst_panelhojd], ['Panel', m.inst_panel],
+      ['Krok', m.inst_krok], ['Typ', m.inst_typ],
+      ['El-intag (A)', m.inst_el], ['Elintaget sitter', m.inst_elintag],
+    ];
+    const hasInst = instFields.some(([,v]) => v);
+    if (hasInst) {
+      const fi = (lbl, val) => `<div><span style="color:var(--fg-muted);font-size:12px;">${lbl}</span><div style="font-weight:600;">${val || '–'}</div></div>`;
+      instDiv.innerHTML = instFields.map(([l,v]) => fi(l,v)).join('');
+      if (m.inst_underlag_beskriv) instDiv.innerHTML += `<div style="grid-column:1/-1;margin-top:4px;font-size:13px;color:var(--fg-muted);">Underlag/förutsättningar: ${m.inst_underlag_beskriv}</div>`;
+      instCard.style.display = '';
     } else {
-      resvCard.style.display = 'none';
+      instCard.style.display = 'none';
     }
 
     // Servicehistorik
