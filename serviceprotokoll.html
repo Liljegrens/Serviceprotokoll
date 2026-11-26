@@ -5822,15 +5822,10 @@ async function loadMsok(nr) {
       ['Krok', m.inst_krok], ['Typ', m.inst_typ],
       ['El-intag (A)', m.inst_el], ['Elintaget sitter', m.inst_elintag],
     ];
-    const hasInst = instFields.some(([,v]) => v);
-    if (hasInst) {
-      const fi = (lbl, val) => `<div><span style="color:var(--fg-muted);font-size:12px;">${lbl}</span><div style="font-weight:600;">${val || '–'}</div></div>`;
-      instDiv.innerHTML = instFields.map(([l,v]) => fi(l,v)).join('');
-      if (m.inst_underlag_beskriv) instDiv.innerHTML += `<div style="grid-column:1/-1;margin-top:4px;font-size:13px;color:var(--fg-muted);">Underlag/förutsättningar: ${m.inst_underlag_beskriv}</div>`;
-      instCard.style.display = '';
-    } else {
-      instCard.style.display = 'none';
-    }
+    const fi = (lbl, val) => `<div><span style="color:var(--fg-muted);font-size:12px;">${lbl}</span><div style="font-weight:600;">${val || '–'}</div></div>`;
+    instDiv.innerHTML = instFields.map(([l,v]) => fi(l,v)).join('');
+    if (m.inst_underlag_beskriv) instDiv.innerHTML += `<div style="grid-column:1/-1;margin-top:4px;font-size:13px;color:var(--fg-muted);">Underlag/förutsättningar: ${m.inst_underlag_beskriv}</div>`;
+    instCard.style.display = '';
 
     // Servicehistorik
     const histCard = document.getElementById('msok-historik-card');
