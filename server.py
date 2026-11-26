@@ -624,11 +624,12 @@ def get_machine_image_slot(nr, slot):
 
 @app.route('/api/machines/<path:nr>', methods=['GET'])
 def get_machine(nr):
-    nr_clean = nr.replace('-', '').upper()
+    def normalize(s):
+        return s.replace('-','').replace('/','').replace(' ','').upper()
+    nr_clean = normalize(nr)
     with get_db() as db:
         rows = db.execute('SELECT * FROM machines', ()).fetchall()
-    # Samla alla maskiner vars nr utan bindestreck matchar sökningen
-    matches = [dict(r) for r in rows if r['nr'].replace('-','').upper() == nr_clean]
+    matches = [dict(r) for r in rows if normalize(r['nr']) == nr_clean]
     if not matches:
         return jsonify(None), 404
     if len(matches) == 1:
