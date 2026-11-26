@@ -5768,7 +5768,7 @@ let _homeMsokTimer = null;
 function onHomeMsokInput(val) {
   clearTimeout(_homeMsokTimer);
   const badge = document.getElementById('home-msok-badge');
-  if (val.trim().length < 3) { badge.className = 'machine-lookup-badge'; return; }
+  if (val.trim().length < 3) { badge.className = 'machine-lookup-badge'; badge.innerHTML = ''; return; }
   _homeMsokTimer = setTimeout(() => {
     const nr = val.trim().toUpperCase();
     badge.textContent = 'Söker…';
@@ -5776,11 +5776,20 @@ function onHomeMsokInput(val) {
     apiFetch('/api/machines/' + encodeURIComponent(nr))
       .then(m => {
         if (!m) { badge.textContent = 'Maskinen hittades inte'; badge.className = 'machine-lookup-badge error visible'; return; }
-        badge.textContent = '✓ ' + (m.kund || m.agare || nr);
-        badge.className = 'machine-lookup-badge visible';
+        if (m.multiple) {
+          // Flera träffar – visa valknappar
+          badge.className = 'machine-lookup-badge visible';
+          badge.innerHTML = '<div style="margin-bottom:4px;font-size:12px;">Flera maskiner hittades – välj:</div>' +
+            m.matches.map(mm => `<button onclick="document.getElementById('home-msok-nr').value='';document.getElementById('home-msok-badge').className='machine-lookup-badge';openMaskinkortFromMsok('${mm.nr}')"
+              style="display:block;width:100%;text-align:left;padding:8px 10px;margin:3px 0;border:1.5px solid var(--border);border-radius:7px;background:var(--card);color:var(--fg);cursor:pointer;font-size:14px;">
+              <strong>${mm.nr}</strong>${mm.kund || mm.agare ? ' · ' + (mm.kund || mm.agare) : ''}${mm.beskrivning ? '<br><span style="font-size:12px;color:var(--fg-muted);">' + mm.beskrivning + '</span>' : ''}
+            </button>`).join('');
+          return;
+        }
         document.getElementById('home-msok-nr').value = '';
         badge.className = 'machine-lookup-badge';
-        openMaskinkortFromMsok(nr);
+        badge.innerHTML = '';
+        openMaskinkortFromMsok(m.nr);
       })
       .catch(() => { badge.textContent = 'Kunde inte hämta maskindata'; badge.className = 'machine-lookup-badge error visible'; });
   }, 400);

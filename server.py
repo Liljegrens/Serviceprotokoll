@@ -624,11 +624,21 @@ def get_machine_image_slot(nr, slot):
 
 @app.route('/api/machines/<path:nr>', methods=['GET'])
 def get_machine(nr):
+    nr_clean = nr.replace('-', '').upper()
     with get_db() as db:
+        # Exakt träff först
         row = db.execute('SELECT * FROM machines WHERE UPPER(nr)=UPPER(?)', (nr,)).fetchone()
-    if not row:
+        if row:
+            return jsonify(dict(row))
+        # Fuzzy: jämför nr utan bindestreck
+        rows = db.execute('SELECT * FROM machines', ()).fetchall()
+        matches = [dict(r) for r in rows if r['nr'].replace('-','').upper() == nr_clean]
+    if not matches:
         return jsonify(None), 404
-    return jsonify(dict(row))
+    if len(matches) == 1:
+        return jsonify(matches[0])
+    # Flera träffar – returnera lista
+    return jsonify({'multiple': True, 'matches': matches})
 
 @app.route('/api/machines/<path:nr>', methods=['PATCH'])
 def patch_machine(nr):
