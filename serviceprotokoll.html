@@ -685,6 +685,11 @@
   </div>
 
   <div class="home-grid">
+    <div class="home-tile" onclick="showPage('maskin-sok')">
+      <div class="tile-icon">🔍</div>
+      <div class="tile-label">Maskin</div>
+      <div class="tile-sub">Sök & välj åtgärd</div>
+    </div>
     <div class="home-tile" onclick="showPage('serviceprotokoll')">
       <div class="tile-icon">🔧</div>
       <div class="tile-label">Serviceprotokoll</div>
@@ -734,6 +739,55 @@
       <div class="recent-empty">Laddar...</div>
     </div>
     <div id="recent-admin-link"></div>
+  </div>
+</div>
+
+<!-- ═══════════ MASKIN SÖK PAGE ═══════════ -->
+<div id="maskin-sok-page" style="display:none;">
+  <div class="top-bar">
+    <button class="back-btn" onclick="showPage('home')">← Hem</button>
+    <h1>Maskin</h1>
+    <span></span>
+  </div>
+  <div class="protocol-body">
+
+    <div class="header-card">
+      <h2>Sök maskin</h2>
+      <div class="field-grid">
+        <div class="field-group" style="grid-column:1/-1;">
+          <label>Objektnummer</label>
+          <input type="text" id="msok-nr" placeholder="t.ex. 500100" style="font-size:18px;padding:12px;" oninput="onMsokInput(this.value)" autocomplete="off">
+        </div>
+      </div>
+      <div id="msok-badge" class="machine-lookup-badge"></div>
+    </div>
+
+    <!-- Maskinkort (läs-only) -->
+    <div id="msok-card" style="display:none;">
+      <div class="checklist-card" style="padding:16px;margin-bottom:12px;">
+        <h3 id="msok-title" style="margin:0 0 12px;"></h3>
+        <div id="msok-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:14px;"></div>
+      </div>
+
+      <!-- Reservdelar -->
+      <div id="msok-reservdelar-card" class="checklist-card" style="padding:16px;margin-bottom:12px;display:none;">
+        <h3 style="margin:0 0 10px;">Reservdelar</h3>
+        <div id="msok-reservdelar" style="font-size:14px;line-height:1.9;"></div>
+      </div>
+
+      <!-- Servicehistorik -->
+      <div id="msok-historik-card" class="checklist-card" style="padding:16px;margin-bottom:12px;display:none;">
+        <h3 style="margin:0 0 10px;">Servicehistorik</h3>
+        <div id="msok-historik" style="font-size:13px;"></div>
+      </div>
+
+      <!-- Protokollknappar -->
+      <div class="checklist-card" style="padding:16px;margin-bottom:24px;">
+        <h3 style="margin:0 0 12px;">Starta</h3>
+        <div id="msok-actions" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -3358,6 +3412,7 @@ function showPage(page) {
   const pages = {
     'login':              ['login-page',              'flex'],
     'home':               ['home-page',               'flex'],
+    'maskin-sok':         ['maskin-sok-page',          'block'],
     'serviceprotokoll':   ['serviceprotokoll-page',   'block'],
     'egenkontroller':     ['egenkontroller-page',      'block'],
     'dokument':           ['dokument-page',            'block'],
@@ -5629,6 +5684,136 @@ function openLeverans() {
     </div>`).join('');
   // Signaturer
   ['kund','tekniker'].forEach(id => initSig(id));
+}
+
+// ═══════════════════════════════════════════════════
+// MASKIN SÖK
+// ═══════════════════════════════════════════════════
+
+// Protokoll tillgängliga per maskintyp
+const MASKINTYP_PROTOKOLL = {
+  'kaly':    [{ label: 'Serviceprotokoll Kärlvändare',       type: 'vandare-kaly' }],
+  'balp':    [{ label: 'Serviceprotokoll Balpressar',        page: 'balp' }],
+  'skruv':   [{ label: 'Serviceprotokoll Skruvkomprimator',  type: 'skruv' }],
+  'rs':      [{ label: 'Storservice Komprimator R-S',        type: 'vandare-stor' }],
+  'default': [
+    { label: 'Serviceprotokoll Komprimator – Verkstad',      type: 'komprimator' },
+    { label: 'Serviceprotokoll Komprimator – Hos kund',      type: 'komprimator-b' },
+  ],
+};
+
+let _msokTimer = null;
+
+function onMsokInput(val) {
+  clearTimeout(_msokTimer);
+  const badge = document.getElementById('msok-badge');
+  const card  = document.getElementById('msok-card');
+  if (val.trim().length < 3) {
+    badge.className = 'machine-lookup-badge';
+    card.style.display = 'none';
+    return;
+  }
+  _msokTimer = setTimeout(() => loadMsok(val.trim()), 400);
+}
+
+async function loadMsok(nr) {
+  const badge = document.getElementById('msok-badge');
+  const card  = document.getElementById('msok-card');
+  badge.textContent = 'Söker…';
+  badge.className = 'machine-lookup-badge visible';
+  try {
+    const m = await apiFetch('/api/machines/' + encodeURIComponent(nr.toUpperCase()));
+    if (!m) { badge.textContent = 'Maskinen hittades inte'; badge.className = 'machine-lookup-badge error visible'; card.style.display = 'none'; return; }
+
+    badge.textContent = '✓ ' + (m.kund || m.agare || nr);
+    badge.className = 'machine-lookup-badge visible';
+
+    // Titel
+    document.getElementById('msok-title').textContent = `${m.nr || nr} · ${m.beskrivning || m.modell || '–'}`;
+
+    // Fält
+    const fields = document.getElementById('msok-fields');
+    const f = (lbl, val) => val ? `<div><span style="color:var(--fg-muted);font-size:12px;">${lbl}</span><div style="font-weight:600;">${val}</div></div>` : '';
+    fields.innerHTML = [
+      f('Kund / ägare', m.agare || m.kund),
+      f('Anläggning', m.anlaggning),
+      f('Adress', m.adress ? `${m.adress}${m.stad ? ', ' + m.stad : ''}` : ''),
+      f('Kontakt', m.kontakt),
+      f('Telefon', m.telefon),
+      f('Fabrikat', m.fabrikat),
+      f('Modell', m.modell),
+      f('Årsmodell', m.arsmodell),
+      f('Serviceavtal', m.serviceavtal ? ({'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'}[m.serviceavtal] || m.serviceavtal + ' ggr/år') : ''),
+    ].join('');
+
+    // Reservdelar
+    const resvCard = document.getElementById('msok-reservdelar-card');
+    const resvDiv  = document.getElementById('msok-reservdelar');
+    const resvItems = [
+      m.vantskruv    ? `Väntskruv (töm.dörr): ${m.vantskruv}` : '',
+      m.el_intag     ? `El-intag: ${m.el_intag}` : '',
+      m.kontaktor    ? `Kontaktor: ${m.kontaktor}` : '',
+      m.motorskydd   ? `Motorskydd: ${m.motorskydd}` : '',
+      m.startnyckel  ? `Startnyckel: ${m.startnyckel}` : '',
+      m.reservdelar_ovrigt ? `Övrigt: ${m.reservdelar_ovrigt}` : '',
+    ].filter(Boolean);
+    if (resvItems.length) {
+      resvDiv.innerHTML = resvItems.map(r => `<div>• ${r}</div>`).join('');
+      resvCard.style.display = '';
+    } else {
+      resvCard.style.display = 'none';
+    }
+
+    // Servicehistorik
+    const histCard = document.getElementById('msok-historik-card');
+    const histDiv  = document.getElementById('msok-historik');
+    try {
+      const hist = await apiFetch('/api/protocols/' + encodeURIComponent(nr.toUpperCase()));
+      if (hist && hist.length) {
+        histDiv.innerHTML = hist.slice(0,5).map(h => {
+          const s = summarizeStatus(h.items);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span>${h.datum||'–'} · ${protocolTypeLabel(h.type)} · ${h.tekniker||'–'}</span>
+            <span style="display:flex;gap:4px;">
+              <span class="badge ok">${s.ok} OK</span>
+              ${s.bevaka ? `<span class="badge bevaka">${s.bevaka} Bev.</span>` : ''}
+              ${s.akut   ? `<span class="badge akut">${s.akut} Akut</span>` : ''}
+            </span>
+          </div>`;
+        }).join('');
+        histCard.style.display = '';
+      } else {
+        histDiv.innerHTML = '<span style="color:var(--fg-muted);font-size:13px;">Inga tidigare protokoll.</span>';
+        histCard.style.display = '';
+      }
+    } catch { histCard.style.display = 'none'; }
+
+    // Protokollknappar baserat på maskintyp
+    const detectedType = detectMachineType(m.beskrivning || '');
+    const protokoll = MASKINTYP_PROTOKOLL[detectedType] || MASKINTYP_PROTOKOLL['default'];
+    const actionsDiv = document.getElementById('msok-actions');
+    actionsDiv.innerHTML = protokoll.map(p => {
+      if (p.page) {
+        return `<button class="save-btn" style="width:100%;font-size:15px;padding:14px;" onclick="showPage('${p.page}')">${p.label}</button>`;
+      }
+      return `<button class="save-btn" style="width:100%;font-size:15px;padding:14px;" onclick="msokOpenProtocol('${p.type}','${nr}')">${p.label}</button>`;
+    }).join('');
+
+    card.style.display = '';
+  } catch(e) {
+    badge.textContent = 'Kunde inte hämta maskindata';
+    badge.className = 'machine-lookup-badge error visible';
+    card.style.display = 'none';
+  }
+}
+
+function msokOpenProtocol(type, nr) {
+  openProtocol(type);
+  // Förifyll maskinnummer
+  setTimeout(() => {
+    const inp = document.getElementById('f-maskin');
+    if (inp) { inp.value = nr.toUpperCase(); inp.dispatchEvent(new Event('input')); }
+  }, 100);
 }
 
 function onLevMaskinInput(val) {
