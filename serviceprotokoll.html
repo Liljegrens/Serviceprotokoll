@@ -6681,7 +6681,12 @@ async function openMaskinkort(nr) {
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/notes'),
       apiFetch('/api/machines/' + encodeURIComponent(nr) + '/typskylt').catch(() => null)
     ]);
-    renderMaskinkortInfo(machine);
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    if (isAdmin) {
+      renderMaskinkortInfo(machine);
+    } else {
+      renderMaskinkortReadOnly(machine);
+    }
     renderMaskinkortStats(history);
     renderMaskinkortHistorik(history);
     renderMaskinkortNotes(notes);
@@ -6707,66 +6712,66 @@ async function openMaskinkort(nr) {
       protokollSec.style.display = '';
     }
     // Visa/dölj redigeringskontroller baserat på roll
-    applyMaskinkortRoleView(currentUser && currentUser.role === 'admin');
+    if (!isAdmin) applyMaskinkortRoleView(false);
   } catch(e) {
     document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Fel: ' + e.message + '</div>';
   }
 }
 
 function applyMaskinkortRoleView(isAdmin) {
-  // Notering-formuläret: visa för alla (tekniker kan lägga till anteckningar)
-  const noteForm = document.getElementById('maskinkort-note-form');
-  if (noteForm) noteForm.style.display = '';
-
   if (isAdmin) return;
-
-  // Tekniker: konvertera maskinkort-info till läs-only text
-  const info = document.getElementById('maskinkort-info');
-  if (info) {
-    info.querySelectorAll('input[type=text], input[type=number], textarea').forEach(el => {
-      const val = el.value.trim();
-      const span = document.createElement('div');
-      span.style.cssText = 'padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);min-height:36px;color:' + (val ? 'var(--fg)' : 'var(--fg-muted)') + ';';
-      span.textContent = val || '–';
-      el.parentNode.replaceChild(span, el);
-    });
-    info.querySelectorAll('select').forEach(el => {
-      const val = el.options[el.selectedIndex]?.text || '–';
-      const span = document.createElement('div');
-      span.style.cssText = 'padding:8px 10px;font-size:14px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);min-height:36px;color:' + (el.value ? 'var(--fg)' : 'var(--fg-muted)') + ';';
-      span.textContent = el.value ? val : '–';
-      el.parentNode.replaceChild(span, el);
-    });
-    // Dölj radio/checkbox-grupper och ersätt med text
-    info.querySelectorAll('.radio-group').forEach(rg => {
-      const checked = [...rg.querySelectorAll('input:checked')].map(i => i.closest('label') ? i.closest('label').textContent.trim() : i.nextElementSibling?.textContent.trim()).filter(Boolean);
-      const span = document.createElement('div');
-      span.style.cssText = 'padding:8px 0;font-size:14px;font-weight:600;color:' + (checked.length ? 'var(--fg)' : 'var(--fg-muted)') + ';';
-      span.textContent = checked.length ? checked.join(', ') : '–';
-      rg.parentNode.replaceChild(span, rg);
-    });
-    info.querySelectorAll('button').forEach(el => { el.style.display = 'none'; });
-    // Dölj h2-sektionstitlar som är admin-specifika
-    info.querySelectorAll('h2').forEach(h => {
-      const txt = h.textContent.trim();
-      if (['Serviceavtal','Manöverinstruktion'].includes(txt)) {
-        let next = h.nextElementSibling;
-        while (next && next.tagName !== 'H2') { next.style.display = 'none'; next = next.nextElementSibling; }
-        h.style.display = 'none';
-      }
-    });
-  }
-  // Dölj QR-bar och utskriftsknapp för tekniker (ej nödvändiga)
-  // Håll typskylt-upload och hydrauliklogg dolda
-  ['typskylt-upload-wrap','hlog-add-btn','clog-add-btn'].forEach(id => {
+  // Dölj admin-specifika delar utanför maskinkort-info
+  ['typskylt-upload-wrap','hlog-add-btn','clog-add-btn','maskinkort-qr-bar'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  // Dölj bilduppladdning i maskinkort (admin-funktion)
-  const fotoWrap = document.getElementById('mk-foto-wrap');
-  if (fotoWrap) {
-    fotoWrap.querySelectorAll('label[for], input[type=file], button').forEach(el => { el.style.display = 'none'; });
-  }
+}
+
+function renderMaskinkortReadOnly(m) {
+  if (!m) { document.getElementById('maskinkort-info').innerHTML = '<div style="color:#c62828;">Maskin ej hittad i register.</div>'; return; }
+  const f = (lbl, val) => val ? `<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:14px;"><span style="color:var(--fg-muted);min-width:140px;flex-shrink:0;">${lbl}</span><span style="font-weight:600;">${val}</span></div>` : `<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:14px;"><span style="color:var(--fg-muted);min-width:140px;flex-shrink:0;">${lbl}</span><span style="color:var(--fg-muted);">–</span></div>`;
+  const avtalMap = {'1':'1 gång/år','2':'2 gånger/år','4':'4 gånger/år','6':'6 gånger/år'};
+  const krokText = (m.inst_krok||'').split(',').map(v=>v.trim()).filter(Boolean).join(', ') || null;
+  const panelText = (m.inst_panel||'').split(',').map(v=>v.trim()).filter(Boolean).join(', ') || null;
+  document.getElementById('maskinkort-info').innerHTML = `
+    <div style="background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+      <div style="background:var(--brand);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Maskinuppgifter</div>
+      <div style="padding:4px 14px 8px;">
+        ${f('Kund', m.kund)}${f('Anläggning', m.anlaggning)}${f('Adress', m.adress ? (m.adress + (m.stad ? ', '+m.stad : '')) : m.stad)}${f('Kontakt', m.kontakt)}${f('Telefon', m.telefon)}${f('Fabrikat', m.fabrikat)}${f('Modell', m.modell)}${f('Årsmodell', m.arsmodell)}${f('Tillv.nr', m.tillvnr)}${f('Ägare', m.agare)}${f('Serviceavtal', avtalMap[m.serviceavtal]||m.serviceavtal)}${f('Mot kaj', m.mot_kaj||'nej')}${m.beskrivning?f('Beskrivning',m.beskrivning):''}${m.notering?f('Notering',m.notering):''}
+      </div>
+    </div>
+    <div style="background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-top:10px;">
+      <div style="background:var(--brand);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Reservdelar</div>
+      <div style="padding:4px 14px 8px;">
+        ${f('Hydraulfilter', m.hydraulfilter)}${f('Hydraulolja', m.hydraulolja)}${f('Hydraulslangar', m.hydraulslangar)}${f('Gasdämpare', m.gasdampare)}${f('Vantskruv', m.vantskruv)}${f('El-intag', m.el_intag)}${f('Kontaktor', m.kontaktor)}${f('Motorskydd', m.motorskydd)}${f('Startnyckel', m.startnyckel)}${f('Cylinderpackningar', m.cylinder_packningar)}${m.reservdelar_ovrigt?f('Övrigt',m.reservdelar_ovrigt):''}
+      </div>
+    </div>
+    <div style="background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-top:10px;">
+      <div style="background:var(--brand);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Installationsdata</div>
+      <div style="padding:4px 14px 8px;">
+        ${f('A – Hjul ytterlängd', m.inst_a ? m.inst_a+' mm' : null)}${f('B – Bakhjul ytterbredd', m.inst_b_bak ? m.inst_b_bak+' mm' : null)}${f('B – Framhjul ytterbredd', m.inst_b_fram ? m.inst_b_fram+' mm' : null)}${f('C – Höjd, lock stängt', m.inst_c ? m.inst_c+' mm' : null)}${f('C2 – Höjd, lock öppet', m.inst_c2 ? m.inst_c2+' mm' : null)}${f('Mark till öppning', m.inst_mark_oppning ? m.inst_mark_oppning+' mm' : null)}${f('Panelhöjd fr. mark', m.inst_panelhojd ? m.inst_panelhojd+' mm' : null)}${f('Placering', m.inst_placering)}${f('Underlag', m.inst_underlag)}${f('Tömningstyp', m.inst_typ)}${f('Krokplacering', krokText)}${f('Panelplacering', panelText)}${f('Elintag', m.inst_el)}${f('Elintaget sitter', m.inst_elintag)}${m.inst_underlag_beskriv?f('Förutsättningar',m.inst_underlag_beskriv):''}
+      </div>
+    </div>
+    ${m.instruktion ? `<div style="background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-top:10px;"><div style="background:var(--brand);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Manöverinstruktion</div><div style="padding:10px 14px;font-size:14px;line-height:1.6;">${m.instruktion.replace(/\n/g,'<br>')}</div></div>` : ''}
+    <div style="margin-top:10px;background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+      <div style="background:var(--brand);color:#fff;padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Bilder</div>
+      <div style="padding:12px 14px;display:flex;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--fg-muted);margin-bottom:5px;">MASKIN</div>
+          <div style="width:160px;height:120px;border-radius:6px;overflow:hidden;border:1.5px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;">
+            <img src="/api/machines/${m.nr}/image/maskin" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML='<span style=color:var(--fg-muted);font-size:12px;>Inget foto</span>'">
+          </div>
+          <div style="margin-top:6px;"><label for="ro-upload-maskin" style="padding:6px 12px;font-size:12px;font-weight:700;border:none;background:var(--brand);color:#fff;border-radius:5px;cursor:pointer;display:inline-block;">📷 Ladda upp</label><input type="file" id="ro-upload-maskin" accept="image/*" capture="environment" style="display:none;" onchange="msokUploadImage(this,'maskin')" data-nr="${m.nr}"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--fg-muted);margin-bottom:5px;">SKYLT</div>
+          <div style="width:160px;height:120px;border-radius:6px;overflow:hidden;border:1.5px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;">
+            <img src="/api/machines/${m.nr}/image/skylt" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML='<span style=color:var(--fg-muted);font-size:12px;>Inget foto</span>'">
+          </div>
+          <div style="margin-top:6px;"><label for="ro-upload-skylt" style="padding:6px 12px;font-size:12px;font-weight:700;border:none;background:var(--brand);color:#fff;border-radius:5px;cursor:pointer;display:inline-block;">📷 Ladda upp</label><input type="file" id="ro-upload-skylt" accept="image/*" capture="environment" style="display:none;" onchange="msokUploadImage(this,'skylt')" data-nr="${m.nr}"></div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderMaskinkortInfo(m) {
