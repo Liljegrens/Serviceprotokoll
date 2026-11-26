@@ -684,6 +684,17 @@
     <button class="load-btn" onclick="doLogout()">Logga ut</button>
   </div>
 
+  <!-- Snabbsök maskin direkt från startsidan -->
+  <div style="padding:0 16px 20px;">
+    <div style="position:relative;">
+      <input type="text" id="home-msok-nr" placeholder="Objektnummer – t.ex. 500100"
+        style="width:100%;box-sizing:border-box;font-size:17px;padding:13px 16px 13px 44px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--fg);outline:none;"
+        oninput="onHomeMsokInput(this.value)" autocomplete="off">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none;">🔍</span>
+    </div>
+    <div id="home-msok-badge" class="machine-lookup-badge" style="margin-top:6px;"></div>
+  </div>
+
   <div class="home-grid">
     <div class="home-tile" onclick="showPage('maskin-sok')">
       <div class="tile-icon">🔍</div>
@@ -5753,6 +5764,28 @@ const MASKINTYP_PROTOKOLL = {
 };
 
 let _msokTimer = null;
+
+let _homeMsokTimer = null;
+function onHomeMsokInput(val) {
+  clearTimeout(_homeMsokTimer);
+  const badge = document.getElementById('home-msok-badge');
+  if (val.trim().length < 3) { badge.className = 'machine-lookup-badge'; return; }
+  _homeMsokTimer = setTimeout(() => {
+    const nr = val.trim().toUpperCase();
+    badge.textContent = 'Söker…';
+    badge.className = 'machine-lookup-badge visible';
+    apiFetch('/api/machines/' + encodeURIComponent(nr))
+      .then(m => {
+        if (!m) { badge.textContent = 'Maskinen hittades inte'; badge.className = 'machine-lookup-badge error visible'; return; }
+        badge.textContent = '✓ ' + (m.kund || m.agare || nr);
+        badge.className = 'machine-lookup-badge visible';
+        document.getElementById('home-msok-nr').value = '';
+        badge.className = 'machine-lookup-badge';
+        openMaskinkortFromMsok(nr);
+      })
+      .catch(() => { badge.textContent = 'Kunde inte hämta maskindata'; badge.className = 'machine-lookup-badge error visible'; });
+  }, 400);
+}
 
 function onMsokInput(val) {
   clearTimeout(_msokTimer);
